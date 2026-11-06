@@ -16,6 +16,13 @@ L'artisan choisit un ou plusieurs métiers à l'inscription (modifiable dans « 
 - **Calcul de quantité** (📐 à côté de « Qté ») : longueur × largeur/hauteur × nombre − ouvertures
 - **Mention TVA à taux réduit** conforme à la loi de finances 2025 : la certification du client figure sur le devis signé (plus de formulaire Cerfa), avec la clause spécifique 5,5 % si des travaux d'amélioration énergétique sont présents
 
+## Import des catalogues fournisseurs
+Catalogue → « 📥 Importer un catalogue fournisseur » (`/app/catalogue/import`) :
+- **Excel / CSV** (lecture dans le téléphone, SheetJS) : détection automatique de l'en-tête et des colonnes (référence, désignation, prix net, unité, famille, marque), modifiables.
+- **PDF / photo** : lecture par l'IA (fonction Supabase `lire-catalogue`, même secret `ANTHROPIC_API_KEY` que le scan).
+- Remise fournisseur %, coefficient de vente, TVA, métier ; sélection des articles ; import par paquets.
+- Réimporter un tarif du même fournisseur **met à jour les prix** des références existantes (fonction SQL `import_supplier_items`).
+
 ## Modifier le catalogue de départ
 1. Modifier `data/catalogue.ts`.
 2. `npm run catalogue` régénère `supabase/catalogue.sql`.

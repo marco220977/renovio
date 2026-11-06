@@ -28,7 +28,7 @@ export type Client = {
 };
 
 export type CatalogItem = {
-  id: string; trade?: string | null; category: string; label: string; description?: string; unit: string;
+  id: string; trade?: string | null; supplier?: string | null; ref?: string | null; price_updated_at?: string | null; category: string; label: string; description?: string; unit: string;
   unit_price: number; vat_rate: number; cost_price?: number;
 };
 

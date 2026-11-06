@@ -7,6 +7,7 @@ import { LEGAL } from "@/lib/legal";
 import { addDays, computeTotals, dateFr, eur, sectionTotals, STATUS_COLOR, STATUS_LABEL, VAT_RATES } from "@/lib/calc";
 import { example, TRADE } from "@/lib/trades";
 import TradeSelect from "@/components/TradeSelect";
+import { itemText, loadCatalog } from "@/lib/catalog";
 import { downloadPdf, pdfBase64, sharePdf } from "@/lib/pdf";
 import { useCompany } from "@/components/CompanyContext";
 import Header from "@/components/Header";
@@ -42,7 +43,7 @@ function Editor() {
   useEffect(() => {
     const s = sb();
     s.from("clients").select("*").order("name").then(({ data }) => setClients(data || []));
-    s.from("catalog_items").select("*").order("category").order("label").then(({ data }) => setCatalog(data || []));
+    loadCatalog().then(setCatalog);
     if (isNew) {
       const kind = (params.get("kind") as Doc["kind"]) || "quote";
       let dup: Partial<Doc> = {};
@@ -431,7 +432,7 @@ function Editor() {
         const q = catQ.trim().toLowerCase();
         // une recherche porte sur tout le catalogue, sans tenir compte des filtres
         const shown = catalog.filter((c) => q
-          ? `${c.label} ${c.category} ${c.description || ""}`.toLowerCase().includes(q)
+          ? itemText(c).includes(q)
           : (catTrade === "all" || c.trade === catTrade) && (catCat === "all" || c.category === catCat));
         const trades = Array.from(new Set(catalog.map((c) => c.trade).filter(Boolean))) as string[];
         return (
@@ -442,7 +443,7 @@ function Editor() {
                 {catQ && <button className="absolute right-3 top-1/2 -translate-y-1/2 text-xl text-slate-400" onClick={() => setCatQ("")} aria-label="Effacer">×</button>}
               </div>
               {catalog.length === 0 && (
-                <button className="btn-primary mb-3 w-full" onClick={async () => { await sb().rpc("complete_my_catalog"); const { data } = await sb().from("catalog_items").select("*").order("category").order("label"); setCatalog(data || []); }}>
+                <button className="btn-primary mb-3 w-full" onClick={async () => { await sb().rpc("complete_my_catalog"); setCatalog(await loadCatalog()); }}>
                   📚 Charger le catalogue type
                 </button>
               )}
@@ -463,15 +464,16 @@ function Editor() {
               {q && <p className="mb-2 text-xs text-slate-500">{shown.length} résultat(s) dans tout le catalogue</p>}
             </div>
             <div className="-mx-1 min-h-0 flex-1 space-y-2 overflow-y-auto px-1 pb-4">
-              {shown.map((c) => (
+              {shown.slice(0, 150).map((c) => (
                 <button key={c.id} className="card w-full text-left" onClick={() => {
                   set({ lines: [...doc.lines, { label: c.label, description: c.description, qty: 1, unit: c.unit, unit_price: Number(c.unit_price), vat_rate: Number(c.vat_rate), cost_price: Number(c.cost_price) || 0 }] });
                   setModal("");
                 }}>
-                  <p className="text-xs text-slate-400">{c.trade && c.trade !== "commun" && TRADE[c.trade] ? `${TRADE[c.trade].emoji} ` : ""}{c.category}</p>
+                  <p className="text-xs text-slate-400">{c.trade && c.trade !== "commun" && TRADE[c.trade] ? `${TRADE[c.trade].emoji} ` : ""}{c.category}{c.supplier ? ` · 🏪 ${c.supplier}` : ""}{c.ref ? ` · réf. ${c.ref}` : ""}</p>
                   <div className="flex justify-between gap-2"><span className="font-semibold">{c.label}</span><span className="whitespace-nowrap">{eur(c.unit_price)}</span></div>
                 </button>
               ))}
+              {shown.length > 150 && <p className="text-center text-xs text-slate-500">… et {shown.length - 150} autres : précisez la recherche</p>}
               {catalog.length > 0 && shown.length === 0 && (
                 <div className="py-8 text-center text-sm text-slate-500">
                   <p className="mb-3">Aucun article ne correspond.</p>

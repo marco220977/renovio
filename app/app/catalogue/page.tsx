@@ -6,6 +6,8 @@ import Header from "@/components/Header";
 import Modal from "@/components/Modal";
 import type { CatalogItem } from "@/lib/types";
 import { useCompany } from "@/components/CompanyContext";
+import Link from "next/link";
+import { itemText, loadCatalog } from "@/lib/catalog";
 import { TRADE, TRADES, tradeLabel } from "@/lib/trades";
 
 export default function Catalogue() {
@@ -15,9 +17,10 @@ export default function Catalogue() {
   const [cat, setCat] = useState("all");
   const [msg, setMsg] = useState("");
   const [trade, setTrade] = useState("all");
+  const [supp, setSupp] = useState("all");
   const [addTrade, setAddTrade] = useState(false);
   const { company } = useCompany();
-  const load = () => sb().from("catalog_items").select("*").order("category").order("label").then(({ data }) => setItems(data || []));
+  const load = () => loadCatalog().then(setItems);
   useEffect(() => {
     load();
     const m = new URLSearchParams(location.search).get("metier");
@@ -39,9 +42,10 @@ export default function Catalogue() {
   }
 
   const trades = Array.from(new Set(items.map((i) => i.trade).filter(Boolean))) as string[];
-  const inTrade = items.filter((i) => trade === "all" || i.trade === trade);
+  const suppliers = Array.from(new Set(items.map((i) => i.supplier).filter(Boolean))) as string[];
+  const inTrade = items.filter((i) => (trade === "all" || i.trade === trade) && (supp === "all" || (supp === "_mine" ? !i.supplier : i.supplier === supp)));
   const cats = Array.from(new Set(inTrade.map((i) => i.category)));
-  const shown = inTrade.filter((i) => (cat === "all" || i.category === cat) && (!q || `${i.label} ${i.category}`.toLowerCase().includes(q.toLowerCase())));
+  const shown = inTrade.filter((i) => (cat === "all" || i.category === cat) && (!q || itemText(i).includes(q.toLowerCase())));
 
   return (
     <>
@@ -52,10 +56,18 @@ export default function Catalogue() {
             <p className="mb-3 text-sm text-slate-600">{company?.trades?.length ? `Démarrez avec le catalogue type de vos métiers : ${tradeLabel(company.trades)} (prix modifiables).` : "Choisissez vos métiers pour charger un catalogue type (prix modifiables)."}</p>
             {company?.trades?.length ? <button className="btn-primary w-full" onClick={() => starter()}>Charger le catalogue type</button>
               : <button className="btn-primary w-full" onClick={() => setAddTrade(true)}>Choisir un métier</button>}
+            <Link href="/app/catalogue/import" className="btn-ghost mt-2 w-full">📥 Importer un catalogue fournisseur</Link>
           </div>
         )}
         {msg && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{msg}</p>}
         {items.length > 0 && <input className="input" placeholder={`Rechercher parmi ${items.length} articles…`} value={q} onChange={(e) => setQ(e.target.value)} />}
+        {suppliers.length > 0 && (
+          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+            {["all", "_mine", ...suppliers].map((x) => (
+              <button key={x} onClick={() => { setSupp(x); setCat("all"); }} className={`chip whitespace-nowrap border py-1.5 ${supp === x ? "border-ink bg-ink text-white" : "border-slate-200 bg-white"}`}>{x === "all" ? "Tous fournisseurs" : x === "_mine" ? "Mes prestations" : `🏪 ${x}`}</button>
+            ))}
+          </div>
+        )}
         {(trades.length > 1 || trade !== "all") && (
           <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
             {["all", ...trades].map((t) => (
@@ -74,10 +86,11 @@ export default function Catalogue() {
           <div className="grid grid-cols-2 gap-2">
             <button className="btn-ghost text-sm" onClick={() => starter()}>📚 Compléter mon catalogue</button>
             <button className="btn-ghost text-sm" onClick={() => setAddTrade(true)}>＋ Articles d'un autre métier</button>
+            <Link href="/app/catalogue/import" className="btn-ghost col-span-2 text-sm">📥 Importer un catalogue fournisseur (Excel, CSV, PDF)</Link>
           </div>
         )}
         {cats.map((c) => {
-          const rows = shown.filter((i) => i.category === c);
+          const rows = shown.filter((i) => i.category === c).slice(0, 200);
           if (!rows.length) return null;
           return (
             <div key={c}>
@@ -85,7 +98,8 @@ export default function Catalogue() {
               <div className="space-y-2">
                 {rows.map((i) => (
                   <button key={i.id} className="card flex w-full justify-between gap-3 text-left" onClick={() => setEdit(i)}>
-                    <span className="font-medium">{i.label}</span>
+                    <span className="min-w-0"><span className="block font-medium">{i.label}</span>
+                      {(i.supplier || i.ref) && <span className="block text-xs text-slate-500">{[i.supplier && `🏪 ${i.supplier}`, i.ref && `réf. ${i.ref}`, Number(i.cost_price) ? `achat ${eur(i.cost_price!)}` : ""].filter(Boolean).join(" · ")}</span>}</span>
                     <span className="whitespace-nowrap text-sm">{eur(i.unit_price)}<span className="text-slate-400"> /{i.unit}</span></span>
                   </button>
                 ))}
@@ -118,6 +132,10 @@ export default function Catalogue() {
                 {TRADES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
               </select></div>
             <div><label className="label">Désignation</label><input className="input" value={edit.label || ""} onChange={(e) => setEdit({ ...edit, label: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="label">Fournisseur</label><input className="input" value={edit.supplier || ""} onChange={(e) => setEdit({ ...edit, supplier: e.target.value || null })} /></div>
+              <div><label className="label">Référence</label><input className="input" value={edit.ref || ""} onChange={(e) => setEdit({ ...edit, ref: e.target.value || null })} /></div>
+            </div>
             <div><label className="label">Description</label><textarea className="input" rows={2} value={edit.description || ""} onChange={(e) => setEdit({ ...edit, description: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-2">
               <div><label className="label">Prix HT</label><input className="input" inputMode="decimal" value={edit.unit_price ?? ""} onChange={(e) => setEdit({ ...edit, unit_price: e.target.value as any })} /></div>

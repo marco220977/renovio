@@ -663,3 +663,41 @@ alter table contracts add column if not exists trade text;
 alter table maintenance_reports add column if not exists trade text;
 create index if not exists documents_trade on documents(company_id, trade);
 create index if not exists chantiers_trade on chantiers(company_id, trade);
+
+-- ---------- V2.2 : import des catalogues fournisseurs ----------
+alter table catalog_items add column if not exists supplier text;
+alter table catalog_items add column if not exists ref text;
+alter table catalog_items add column if not exists price_updated_at timestamptz;
+create unique index if not exists catalog_supplier_ref on catalog_items(company_id, supplier, ref) where ref is not null and supplier is not null;
+
+create or replace function import_supplier_items(p_supplier text, p_items jsonb, p_update boolean default true)
+returns json language plpgsql security definer set search_path = public as $$
+declare cid uuid := my_company_id(); ins int := 0; upd int := 0; it jsonb; existing uuid;
+begin
+  if cid is null or not is_supervisor() then raise exception 'Réservé au superviseur'; end if;
+  if coalesce(trim(p_supplier), '') = '' then raise exception 'Nom du fournisseur manquant'; end if;
+  for it in select * from jsonb_array_elements(p_items) loop
+    existing := null;
+    if coalesce(it->>'ref', '') <> '' then
+      select id into existing from catalog_items where company_id = cid and supplier = p_supplier and ref = it->>'ref';
+    end if;
+    if existing is not null then
+      if p_update then
+        update catalog_items set label = coalesce(nullif(it->>'label', ''), label),
+          cost_price = (it->>'cost_price')::numeric, unit_price = (it->>'unit_price')::numeric,
+          unit = coalesce(nullif(it->>'unit', ''), unit), price_updated_at = now()
+        where id = existing;
+        upd := upd + 1;
+      end if;
+    else
+      insert into catalog_items (company_id, trade, category, label, description, unit, unit_price, vat_rate, cost_price, supplier, ref, price_updated_at)
+      values (cid, nullif(it->>'trade', ''), coalesce(nullif(it->>'category', ''), p_supplier), left(it->>'label', 300), nullif(it->>'description', ''),
+        coalesce(nullif(it->>'unit', ''), 'u'), coalesce((it->>'unit_price')::numeric, 0), coalesce((it->>'vat_rate')::numeric, 10),
+        coalesce((it->>'cost_price')::numeric, 0), p_supplier, nullif(it->>'ref', ''), now());
+      ins := ins + 1;
+    end if;
+  end loop;
+  return json_build_object('inserted', ins, 'updated', upd);
+end $$;
+revoke execute on function import_supplier_items(text, jsonb, boolean) from public, anon;
+grant execute on function import_supplier_items(text, jsonb, boolean) to authenticated;
