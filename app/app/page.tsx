@@ -6,6 +6,7 @@ import { eur, STATUS_COLOR, STATUS_LABEL } from "@/lib/calc";
 import { memberName, useCompany } from "@/components/CompanyContext";
 import type { Doc } from "@/lib/types";
 import { modules } from "@/lib/trades";
+import TradeTiles from "@/components/TradeTiles";
 
 function SupDashboard() {
   const { company } = useCompany();
@@ -61,6 +62,8 @@ function SupDashboard() {
           ? <Link href="/app/entretien/visite/nouveau" className="btn-primary py-4">🔧 Visite d'entretien</Link>
           : <Link href="/app/chantiers/nouveau" className="btn-primary py-4">🏗️ Nouveau chantier</Link>}
       </div>
+
+      <TradeTiles trades={company?.trades} />
 
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Encaissé ce mois" value={eur(paidMonth)} sub="Voir l'évolution →" href="/app/chiffre-affaires" />

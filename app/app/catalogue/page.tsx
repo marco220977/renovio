@@ -18,7 +18,11 @@ export default function Catalogue() {
   const [addTrade, setAddTrade] = useState(false);
   const { company } = useCompany();
   const load = () => sb().from("catalog_items").select("*").order("category").order("label").then(({ data }) => setItems(data || []));
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const m = new URLSearchParams(location.search).get("metier");
+    if (m) setTrade(m);
+  }, []);
 
   async function save() {
     if (!edit?.label) return;
@@ -52,7 +56,7 @@ export default function Catalogue() {
         )}
         {msg && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{msg}</p>}
         {items.length > 0 && <input className="input" placeholder={`Rechercher parmi ${items.length} articles…`} value={q} onChange={(e) => setQ(e.target.value)} />}
-        {trades.length > 1 && (
+        {(trades.length > 1 || trade !== "all") && (
           <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
             {["all", ...trades].map((t) => (
               <button key={t} onClick={() => { setTrade(t); setCat("all"); }} className={`chip whitespace-nowrap border py-1.5 ${trade === t ? "border-flame bg-flame text-white" : "border-slate-200 bg-white"}`}>{t === "all" ? "Tous métiers" : t === "commun" ? "🧾 Commun" : `${TRADE[t]?.emoji || ""} ${TRADE[t]?.label || t}`}</button>
