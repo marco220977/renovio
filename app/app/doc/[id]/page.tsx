@@ -423,41 +423,61 @@ function Editor() {
       </div>
 
       {/* Modales */}
-      {modal === "catalog" && (
-        <Modal title="Catalogue" onClose={() => setModal("")}>
-          <input className="input mb-3" placeholder="Rechercher…" value={catQ} onChange={(e) => setCatQ(e.target.value)} />
-          {catalog.length === 0 && (
-            <button className="btn-primary w-full" onClick={async () => { await sb().rpc("complete_my_catalog"); const { data } = await sb().from("catalog_items").select("*").order("category").order("label"); setCatalog(data || []); }}>
-              📚 Charger le catalogue type
-            </button>
-          )}
-          {new Set(catalog.map((c) => c.trade).filter(Boolean)).size > 1 && (
-            <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1">
-              {["all", ...Array.from(new Set(catalog.map((c) => c.trade).filter(Boolean))) as string[]].map((t) => (
-                <button key={t} onClick={() => { setCatTrade(t); setCatCat("all"); }} className={`chip whitespace-nowrap border py-1.5 ${catTrade === t ? "border-flame bg-flame text-white" : "border-slate-200 bg-white"}`}>{t === "all" ? "Tous métiers" : t === "commun" ? "🧾 Commun" : `${TRADE[t]?.emoji || ""} ${TRADE[t]?.label || t}`}</button>
-              ))}
+      {modal === "catalog" && (() => {
+        const q = catQ.trim().toLowerCase();
+        // une recherche porte sur tout le catalogue, sans tenir compte des filtres
+        const shown = catalog.filter((c) => q
+          ? `${c.label} ${c.category} ${c.description || ""}`.toLowerCase().includes(q)
+          : (catTrade === "all" || c.trade === catTrade) && (catCat === "all" || c.category === catCat));
+        const trades = Array.from(new Set(catalog.map((c) => c.trade).filter(Boolean))) as string[];
+        return (
+          <Modal tall title="Catalogue" onClose={() => setModal("")}>
+            <div className="shrink-0">
+              <div className="relative mb-3">
+                <input className="input pr-10" placeholder="Rechercher dans tout le catalogue…" value={catQ} onChange={(e) => setCatQ(e.target.value)} />
+                {catQ && <button className="absolute right-3 top-1/2 -translate-y-1/2 text-xl text-slate-400" onClick={() => setCatQ("")} aria-label="Effacer">×</button>}
+              </div>
+              {catalog.length === 0 && (
+                <button className="btn-primary mb-3 w-full" onClick={async () => { await sb().rpc("complete_my_catalog"); const { data } = await sb().from("catalog_items").select("*").order("category").order("label"); setCatalog(data || []); }}>
+                  📚 Charger le catalogue type
+                </button>
+              )}
+              {!q && trades.length > 1 && (
+                <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                  {["all", ...trades].map((t) => (
+                    <button key={t} onClick={() => { setCatTrade(t); setCatCat("all"); }} className={`chip whitespace-nowrap border py-1.5 ${catTrade === t ? "border-flame bg-flame text-white" : "border-slate-200 bg-white"}`}>{t === "all" ? "Tous métiers" : t === "commun" ? "🧾 Commun" : `${TRADE[t]?.emoji || ""} ${TRADE[t]?.label || t}`}</button>
+                  ))}
+                </div>
+              )}
+              {!q && catalog.length > 0 && (
+                <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                  {["all", ...Array.from(new Set(catalog.filter((c) => catTrade === "all" || c.trade === catTrade).map((c) => c.category)))].map((c) => (
+                    <button key={c} onClick={() => setCatCat(c)} className={`chip whitespace-nowrap border py-1.5 ${catCat === c ? "border-ink bg-ink text-white" : "border-slate-200 bg-white"}`}>{c === "all" ? "Tout" : c}</button>
+                  ))}
+                </div>
+              )}
+              {q && <p className="mb-2 text-xs text-slate-500">{shown.length} résultat(s) dans tout le catalogue</p>}
             </div>
-          )}
-          {catalog.length > 0 && (
-            <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
-              {["all", ...Array.from(new Set(catalog.filter((c) => catTrade === "all" || c.trade === catTrade).map((c) => c.category)))].map((c) => (
-                <button key={c} onClick={() => setCatCat(c)} className={`chip whitespace-nowrap border py-1.5 ${catCat === c ? "border-ink bg-ink text-white" : "border-slate-200 bg-white"}`}>{c === "all" ? "Tout" : c}</button>
+            <div className="-mx-1 min-h-0 flex-1 space-y-2 overflow-y-auto px-1 pb-4">
+              {shown.map((c) => (
+                <button key={c.id} className="card w-full text-left" onClick={() => {
+                  set({ lines: [...doc.lines, { label: c.label, description: c.description, qty: 1, unit: c.unit, unit_price: Number(c.unit_price), vat_rate: Number(c.vat_rate), cost_price: Number(c.cost_price) || 0 }] });
+                  setModal("");
+                }}>
+                  <p className="text-xs text-slate-400">{c.trade && c.trade !== "commun" && TRADE[c.trade] ? `${TRADE[c.trade].emoji} ` : ""}{c.category}</p>
+                  <div className="flex justify-between gap-2"><span className="font-semibold">{c.label}</span><span className="whitespace-nowrap">{eur(c.unit_price)}</span></div>
+                </button>
               ))}
+              {catalog.length > 0 && shown.length === 0 && (
+                <div className="py-8 text-center text-sm text-slate-500">
+                  <p className="mb-3">Aucun article ne correspond.</p>
+                  <button className="btn-ghost" onClick={() => { setCatQ(""); setCatTrade("all"); setCatCat("all"); }}>Effacer la recherche et les filtres</button>
+                </div>
+              )}
             </div>
-          )}
-          <div className="space-y-2">
-            {catalog.filter((c) => (catTrade === "all" || c.trade === catTrade) && (catCat === "all" || c.category === catCat) && (!catQ || `${c.label} ${c.category}`.toLowerCase().includes(catQ.toLowerCase()))).map((c) => (
-              <button key={c.id} className="card w-full text-left" onClick={() => {
-                set({ lines: [...doc.lines, { label: c.label, description: c.description, qty: 1, unit: c.unit, unit_price: Number(c.unit_price), vat_rate: Number(c.vat_rate), cost_price: Number(c.cost_price) || 0 }] });
-                setModal("");
-              }}>
-                <p className="text-xs text-slate-400">{c.category}</p>
-                <div className="flex justify-between"><span className="font-semibold">{c.label}</span><span>{eur(c.unit_price)}</span></div>
-              </button>
-            ))}
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
 
       {metre !== null && (
         <Modal title="📐 Calcul de la quantité" onClose={() => setMetre(null)}>
