@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import jsPDF from "jspdf";
 import { sb } from "@/lib/supabase";
 import { useExample } from "@/lib/useExample";
+import TradeSelect from "@/components/TradeSelect";
 import { addDays, dateFr } from "@/lib/calc";
 import { toDataUrl } from "@/lib/pdf";
 import { memberName, useCompany, type Member } from "@/components/CompanyContext";
@@ -42,8 +43,9 @@ function NewChantier() {
   useEffect(() => {
     sb().from("clients").select("*").order("name").then(({ data }) => setClients(data || []));
     const docId = params.get("doc");
+    if (params.get("metier")) setC((x) => ({ ...x, trade: params.get("metier") }));
     if (docId) sb().from("documents").select("*").eq("id", docId).single().then(({ data: d }) => {
-      if (d) setC((x) => ({ ...x, title: d.title || `Chantier ${d.client_snapshot?.name || ""}`, client_id: d.client_id, document_id: d.id, address: d.site_address }));
+      if (d) setC((x) => ({ ...x, title: d.title || `Chantier ${d.client_snapshot?.name || ""}`, client_id: d.client_id, document_id: d.id, address: d.site_address, trade: x.trade || d.trade || null }));
     });
   }, [params]);
 
@@ -63,6 +65,7 @@ function NewChantier() {
       <Header back title="Nouveau chantier" />
       <div className="space-y-3 p-4">
         {err && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{err}</p>}
+        <TradeSelect value={(c as any).trade} onChange={(v) => setC({ ...c, trade: v } as any)} />
         <div><label className="label">Nom du chantier</label><input className="input" placeholder={exampleOf("chantier")} value={c.title || ""} onChange={(e) => setC({ ...c, title: e.target.value })} /></div>
         <div><label className="label">Client</label>
           <select className="input" value={c.client_id || ""} onChange={(e) => { const x = clients.find((k) => k.id === e.target.value); setC({ ...c, client_id: e.target.value, address: c.address || (x ? [x.address, x.zip, x.city].filter(Boolean).join(" ") : "") }); }}>

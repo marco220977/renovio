@@ -3,12 +3,13 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useExample } from "@/lib/useExample";
+import TradeSelect from "@/components/TradeSelect";
 import Header from "@/components/Header";
 import Modal from "@/components/Modal";
 import type { Client } from "@/lib/types";
 import { memberName, useCompany } from "@/components/CompanyContext";
 
-type Iv = { id?: string; assigned_to?: string | null; title: string; client_id?: string | null; document_id?: string | null; address?: string; starts_at: string; duration_min: number; technician?: string; status: string; notes?: string; clients?: { name: string; phone?: string } | null };
+type Iv = { id?: string; trade?: string | null; assigned_to?: string | null; title: string; client_id?: string | null; document_id?: string | null; address?: string; starts_at: string; duration_min: number; technician?: string; status: string; notes?: string; clients?: { name: string; phone?: string } | null };
 
 const startOfWeek = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
 const localInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
@@ -38,7 +39,10 @@ function Planning() {
       if (cid) {
         const c = (data || []).find((x: Client) => x.id === cid);
         const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0);
-        setEdit({ title: "Intervention", client_id: cid, document_id: params.get("doc"), address: c ? [c.address, c.zip, c.city].filter(Boolean).join(" ") : "", starts_at: d.toISOString(), duration_min: 240, status: "planned" });
+        setEdit({ title: "Intervention", client_id: cid, document_id: params.get("doc"), address: c ? [c.address, c.zip, c.city].filter(Boolean).join(" ") : "", starts_at: d.toISOString(), duration_min: 240, status: "planned", trade: params.get("metier") || null });
+      } else if (params.get("metier")) {
+        const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0);
+        setEdit({ title: "", starts_at: d.toISOString(), duration_min: 120, status: "planned", trade: params.get("metier") });
       }
     });
   }, [params]);
@@ -53,7 +57,7 @@ function Planning() {
 
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(week); d.setDate(d.getDate() + i); return d; });
   const shift = (n: number) => { const d = new Date(week); d.setDate(d.getDate() + 7 * n); setWeek(d); };
-  const newAt = (d: Date) => { const x = new Date(d); x.setHours(8, 0, 0, 0); setEdit({ title: "", starts_at: x.toISOString(), duration_min: 120, status: "planned", assigned_to: who !== "all" && who !== "none" ? who : isSup ? null : me?.user_id, technician: (() => { const m = team.find((t) => t.user_id === (who !== "all" && who !== "none" ? who : isSup ? "" : me?.user_id)); return m ? memberName(m) : ""; })() }); };
+  const newAt = (d: Date) => { const x = new Date(d); x.setHours(8, 0, 0, 0); setEdit({ title: "", trade: params.get("metier") || null, starts_at: x.toISOString(), duration_min: 120, status: "planned", assigned_to: who !== "all" && who !== "none" ? who : isSup ? null : me?.user_id, technician: (() => { const m = team.find((t) => t.user_id === (who !== "all" && who !== "none" ? who : isSup ? "" : me?.user_id)); return m ? memberName(m) : ""; })() }); };
 
   return (
     <>
@@ -98,6 +102,7 @@ function Planning() {
       {edit && (
         <Modal title={edit.id ? "Intervention" : "Nouvelle intervention"} onClose={() => setEdit(null)}>
           <div className="space-y-3">
+            <TradeSelect value={edit.trade} onChange={(v) => setEdit({ ...edit, trade: v })} />
             <input className="input" placeholder={`Intitulé (${exampleOf("planning").toLowerCase() || "ex : intervention"})`} value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} />
             <select className="input" value={edit.client_id || ""} onChange={(e) => {
               const c = clients.find((x) => x.id === e.target.value);

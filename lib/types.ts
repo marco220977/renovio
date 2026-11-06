@@ -1,3 +1,5 @@
+export type WithTrade = { trade?: string | null };
+
 export type Line = {
   /** "section" = titre de lot (ex : Lot 1 — Démolition), sans prix */
   kind?: "section";
@@ -30,7 +32,7 @@ export type CatalogItem = {
   unit_price: number; vat_rate: number; cost_price?: number;
 };
 
-export type Doc = {
+export type Doc = WithTrade & {
   id: string; kind: "quote" | "invoice" | "credit"; number?: string; status: string;
   client_id?: string; client_snapshot?: Partial<Client>; title?: string; site_address?: string;
   issue_date?: string; due_date?: string; valid_until?: string; lines: Line[];

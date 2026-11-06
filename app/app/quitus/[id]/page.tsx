@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useExample } from "@/lib/useExample";
+import TradeSelect from "@/components/TradeSelect";
 import { addDays, dateFr } from "@/lib/calc";
 import { useCompany } from "@/components/CompanyContext";
 import Header from "@/components/Header";
@@ -35,17 +36,17 @@ function Editor() {
     (async () => {
       const { data: { user } } = await s.auth.getUser();
       const { data: me } = await s.from("members").select("full_name").eq("user_id", user?.id).maybeSingle();
-      const base: Reception = { id: "", status: "draft", reserves: [], reception_date: addDays(0), works_end_date: addDays(0), company_signer: me?.full_name || "" };
+      const base: Reception = { id: "", status: "draft", reserves: [], reception_date: addDays(0), works_end_date: addDays(0), company_signer: me?.full_name || "", trade: params.get("metier") || null };
       let docId = params.get("doc");
       const chId = params.get("chantier");
       if (chId) {
         const { data: ch } = await s.from("chantiers").select("*").eq("id", chId).single();
-        if (ch) { Object.assign(base, { chantier_id: ch.id, client_id: ch.client_id, client_snapshot: ch.client_snapshot, address: ch.address, works: ch.title }); docId = docId || ch.document_id; }
+        if (ch) { Object.assign(base, { chantier_id: ch.id, client_id: ch.client_id, client_snapshot: ch.client_snapshot, address: ch.address, works: ch.title, trade: base.trade || ch.trade || null }); docId = docId || ch.document_id; }
       }
       if (docId) {
         const { data: d } = await s.from("documents").select("*").eq("id", docId).single();
         if (d) Object.assign(base, {
-          document_id: d.id, client_id: base.client_id || d.client_id, client_snapshot: base.client_snapshot || d.client_snapshot,
+          document_id: d.id, trade: base.trade || d.trade || null, client_id: base.client_id || d.client_id, client_snapshot: base.client_snapshot || d.client_snapshot,
           address: base.address || d.site_address,
           works: [d.title || base.works, ...(d.lines || []).map((l: any) => `• ${l.label}`)].filter(Boolean).join("\n") + `\n(selon devis n° ${d.number})`,
         });
@@ -113,7 +114,8 @@ function Editor() {
             </select>
           ) : <p className="font-semibold">{r.client_snapshot?.name}</p>}
           <div><label className="label">Lieu des travaux</label><input className="input" disabled={!editable} value={r.address || ""} onChange={(e) => set({ address: e.target.value })} /></div>
-          <div><label className="label">Nature des travaux</label><textarea className="input text-sm" rows={4} disabled={!editable} value={r.works || ""} onChange={(e) => set({ works: e.target.value })} placeholder="Ex : Remplacement chaudière gaz par PAC air/eau 8 kW" /></div>
+          <TradeSelect value={r.trade} disabled={!editable} onChange={(v) => set({ trade: v })} />
+          <div><label className="label">Nature des travaux</label><textarea className="input text-sm" rows={4} disabled={!editable} value={r.works || ""} onChange={(e) => set({ works: e.target.value })} placeholder={exampleOf("quote")} /></div>
           <div className="grid grid-cols-2 gap-2">
             <div><label className="label">Fin des travaux</label><input type="date" className="input" disabled={!editable} value={r.works_end_date || ""} onChange={(e) => set({ works_end_date: e.target.value })} /></div>
             <div><label className="label">Réception</label><input type="date" className="input" disabled={!editable} value={r.reception_date || ""} onChange={(e) => set({ reception_date: e.target.value })} /></div>

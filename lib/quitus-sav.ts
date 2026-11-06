@@ -9,6 +9,7 @@ import { box, clientLines, equipLines, footer, header, paragraph, signatures } f
 
 export type Reserve = { label: string; deadline?: string; lifted_at?: string | null };
 export type Reception = {
+  trade?: string | null;
   id: string; number?: string; status: string; chantier_id?: string | null; document_id?: string | null;
   client_id?: string | null; client_snapshot?: any; address?: string; works?: string; works_end_date?: string;
   reception_date?: string; with_reserves?: boolean; reserves: Reserve[]; notes?: string;
@@ -16,6 +17,7 @@ export type Reception = {
   company_signer?: string; reserves_lifted_at?: string | null; sent_at?: string; sent_to?: string; created_at?: string;
 };
 export type Ticket = {
+  trade?: string | null;
   id: string; number?: string; status: string; priority?: string; origin?: string; client_id?: string | null;
   client_snapshot?: any; address?: string; equipment: Equipment; contract_id?: string | null; chantier_id?: string | null;
   warranty?: string; problem?: string; scheduled_at?: string | null; technician?: string; diagnosis?: string;

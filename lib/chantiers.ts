@@ -2,6 +2,7 @@
 import { sb } from "./supabase";
 
 export type Chantier = {
+  trade?: string | null;
   id: string; title: string; status: string; client_id?: string | null; client_snapshot?: any; document_id?: string | null;
   address?: string; start_date?: string; end_date?: string; notes?: string; cover_path?: string | null; created_at?: string;
 };

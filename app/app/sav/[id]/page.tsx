@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useExample } from "@/lib/useExample";
 import { modules } from "@/lib/trades";
+import TradeSelect from "@/components/TradeSelect";
 import { addDays, dateFr } from "@/lib/calc";
 import { memberName, useCompany } from "@/components/CompanyContext";
 import Header from "@/components/Header";
@@ -47,7 +48,7 @@ function Editor() {
     (async () => {
       const { data: { user } } = await s.auth.getUser();
       const { data: mine } = await s.from("members").select("full_name, role").eq("user_id", user?.id).maybeSingle();
-      const base: Ticket = { id: "", status: "open", priority: "normal", origin: "Téléphone", equipment: {}, photos: [], warranty: "hors_garantie", client_id: params.get("client") || null,
+      const base: Ticket = { id: "", status: "open", priority: "normal", origin: "Téléphone", equipment: {}, photos: [], warranty: "hors_garantie", client_id: params.get("client") || null, trade: params.get("metier") || null,
         ...(mine?.role === "technician" ? { assigned_to: user?.id, technician: mine.full_name || "" } : {}) } as Ticket;
       const cid = params.get("contract");
       if (cid) {
@@ -129,7 +130,7 @@ function Editor() {
     const saved = await save(); if (!saved) return;
     const vat = company!.vat_exempt ? 0 : 10;
     const { data, error } = await sb().from("documents").insert({
-      kind: "invoice", status: "draft", client_id: saved.client_id, client_snapshot: saved.client_snapshot, title: `Intervention SAV ${saved.number}`,
+      kind: "invoice", status: "draft", client_id: saved.client_id, client_snapshot: saved.client_snapshot, title: `Intervention SAV ${saved.number}`, trade: saved.trade || null,
       site_address: saved.address, issue_date: addDays(0), due_date: addDays(company!.payment_terms_days ?? 30),
       lines: [
         { label: `Intervention SAV n° ${saved.number}`, description: [saved.diagnosis && `Diagnostic : ${saved.diagnosis}`, saved.actions && `Travaux : ${saved.actions}`].filter(Boolean).join("\n"), qty: 1, unit: "forfait", unit_price: 0, vat_rate: vat },
@@ -171,6 +172,7 @@ function Editor() {
             <div><label className="label">Origine</label><select className="input" disabled={closed} value={t.origin} onChange={(e) => set({ origin: e.target.value })}>{ORIGINS.map((o) => <option key={o}>{o}</option>)}</select></div>
             <div><label className="label">Priorité</label><select className="input" disabled={closed} value={t.priority} onChange={(e) => set({ priority: e.target.value })}><option value="normal">Normale</option><option value="urgent">🚨 Urgente</option></select></div>
           </div>
+          <TradeSelect value={t.trade} disabled={closed} onChange={(v) => set({ trade: v })} />
           <div><label className="label">Problème signalé</label><textarea className="input text-sm" rows={3} disabled={closed} placeholder={exampleOf("sav")} value={t.problem || ""} onChange={(e) => set({ problem: e.target.value })} /></div>
           <div>
             <label className="label">Prise en charge</label>

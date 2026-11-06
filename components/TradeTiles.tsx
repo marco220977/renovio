@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { tradesOf } from "@/lib/trades";
 
-/** Accueil : un rectangle par corps de métier de l'entreprise, qui ouvre ses prestations dans le catalogue */
+/** Accueil : un rectangle par corps de métier de l'entreprise, qui ouvre son espace métier */
 export default function TradeTiles({ trades }: { trades?: string[] | null }) {
   const list = tradesOf(trades);
   const [count, setCount] = useState<Record<string, number>>({});
@@ -24,7 +24,7 @@ export default function TradeTiles({ trades }: { trades?: string[] | null }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         {list.map((t) => (
-          <Link key={t.id} href={`/app/catalogue?metier=${t.id}`} className="card flex items-center gap-3 !p-3 active:scale-[0.98]">
+          <Link key={t.id} href={`/app/metier/${t.id}`} className="card flex items-center gap-3 !p-3 active:scale-[0.98]">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-2xl">{t.emoji}</span>
             <span className="min-w-0">
               <span className="block text-sm font-bold leading-tight">{t.label}</span>

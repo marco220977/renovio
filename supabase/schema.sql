@@ -652,3 +652,14 @@ grant execute on function my_role() to authenticated;
 alter function prevent_issued_delete() set search_path = public;
 alter function protect_plan() set search_path = public;
 alter function protect_issued_invoice() set search_path = public;
+
+-- ---------- V2.1 : rattachement au métier (espace par métier) ----------
+alter table documents add column if not exists trade text;
+alter table chantiers add column if not exists trade text;
+alter table receptions add column if not exists trade text;
+alter table sav_tickets add column if not exists trade text;
+alter table interventions add column if not exists trade text;
+alter table contracts add column if not exists trade text;
+alter table maintenance_reports add column if not exists trade text;
+create index if not exists documents_trade on documents(company_id, trade);
+create index if not exists chantiers_trade on chantiers(company_id, trade);

@@ -6,6 +6,7 @@ import { sb } from "@/lib/supabase";
 import { LEGAL } from "@/lib/legal";
 import { addDays, computeTotals, dateFr, eur, sectionTotals, STATUS_COLOR, STATUS_LABEL, VAT_RATES } from "@/lib/calc";
 import { example, TRADE } from "@/lib/trades";
+import TradeSelect from "@/components/TradeSelect";
 import { downloadPdf, pdfBase64, sharePdf } from "@/lib/pdf";
 import { useCompany } from "@/components/CompanyContext";
 import Header from "@/components/Header";
@@ -46,7 +47,8 @@ function Editor() {
       const kind = (params.get("kind") as Doc["kind"]) || "quote";
       let dup: Partial<Doc> = {};
       try { dup = JSON.parse(sessionStorage.getItem("dup") || "{}"); sessionStorage.removeItem("dup"); } catch {}
-      setDoc({ id: "", kind, status: "draft", lines: [], issue_date: addDays(0), client_id: params.get("client") || undefined, ...dup });
+      setDoc({ id: "", kind, status: "draft", lines: [], issue_date: addDays(0), client_id: params.get("client") || undefined, trade: params.get("metier") || null, ...dup });
+      if (params.get("metier")) setCatTrade(params.get("metier")!);
     } else {
       s.from("documents").select("*").eq("id", id).single().then(({ data }) => setDoc(data));
     }
@@ -91,7 +93,7 @@ function Editor() {
       title: cur.title, site_address: cur.site_address, issue_date: cur.issue_date, due_date: cur.due_date || null,
       valid_until: cur.valid_until || null, lines: cur.lines, discount_pct: cur.discount_pct || 0,
       deposit_pct: cur.deposit_pct || 0, total_ht: totals.ht, total_vat: totals.vat, total_ttc: totals.ttc,
-      notes: cur.notes, source_quote_id: cur.source_quote_id || null,
+      notes: cur.notes, source_quote_id: cur.source_quote_id || null, trade: cur.trade || null,
       signed_at: cur.signed_at || null, signer_name: cur.signer_name || null, signature_data: cur.signature_data || null, signer_photo: cur.signer_photo || null,
       paid_at: cur.paid_at || null, payment_method: cur.payment_method || null, number: cur.number || null,
     };
@@ -134,7 +136,7 @@ function Editor() {
       total_ht: saved.total_ht, total_vat: saved.total_vat, total_ttc: saved.total_ttc,
       issue_date: addDays(0), due_date: addDays(company!.payment_terms_days ?? 30),
       notes: `Facture établie selon devis n° ${saved.number}${saved.signed_at ? ` accepté le ${dateFr(saved.signed_at)}` : ""}.`,
-      source_quote_id: saved.id,
+      source_quote_id: saved.id, trade: saved.trade || null,
     }).select().single();
     if (error) return setErr(error.message);
     await s.from("documents").update({ status: "invoiced" }).eq("id", saved.id);
@@ -152,7 +154,7 @@ function Editor() {
       discount_pct: doc!.discount_pct, total_ht: Math.round(totals.ht * k * 100) / 100,
       total_vat: Math.round(totals.vat * k * 100) / 100, total_ttc: Math.round(totals.ttc * k * 100) / 100,
       issue_date: addDays(0), due_date: addDays(0),
-      notes: `Facture d'acompte de ${pct} % sur devis n° ${doc!.number}.`, source_quote_id: doc!.id,
+      notes: `Facture d'acompte de ${pct} % sur devis n° ${doc!.number}.`, source_quote_id: doc!.id, trade: doc!.trade || null,
     }).select().single();
     if (error) return setErr(error.message);
     router.push(`/app/doc/${data.id}`);
@@ -167,7 +169,7 @@ function Editor() {
       lines: doc!.lines.map((l) => ({ ...l, qty: -Number(l.qty) })), discount_pct: doc!.discount_pct,
       total_ht: -Number(doc!.total_ht), total_vat: -Number(doc!.total_vat), total_ttc: -Number(doc!.total_ttc),
       issue_date: addDays(0), notes: `Avoir annulant la facture n° ${doc!.number} du ${dateFr(doc!.issue_date)}.`,
-      source_quote_id: doc!.id,
+      source_quote_id: doc!.id, trade: doc!.trade || null,
     }).select().single();
     if (error) return setErr(error.message);
     await s.from("documents").update({ status: "canceled" }).eq("id", doc!.id);
@@ -175,7 +177,7 @@ function Editor() {
   }
 
   async function duplicate() {
-    sessionStorage.setItem("dup", JSON.stringify({ lines: doc!.lines, title: doc!.title, discount_pct: doc!.discount_pct, client_id: doc!.client_id, site_address: doc!.site_address }));
+    sessionStorage.setItem("dup", JSON.stringify({ lines: doc!.lines, title: doc!.title, trade: doc!.trade, discount_pct: doc!.discount_pct, client_id: doc!.client_id, site_address: doc!.site_address }));
     location.href = `/app/doc/nouveau?kind=quote`;
   }
 
@@ -277,7 +279,8 @@ function Editor() {
             <p className="text-sm text-slate-500">{[doc.client_snapshot.phone, doc.client_snapshot.email].filter(Boolean).join(" · ")}</p>
           )}
           {doc.sent_at && <p className="text-xs text-green-700">📧 Envoyé le {new Date(doc.sent_at).toLocaleString("fr-FR")} à {doc.sent_to}</p>}
-          <div><label className="label">Objet</label><input className="input" disabled={!editable} placeholder={example(company?.trades, "quote") || "Ex : Rénovation salle de bain"} value={doc.title || ""} onChange={(e) => set({ title: e.target.value })} /></div>
+          <TradeSelect value={doc.trade} disabled={!editable} onChange={(v) => set({ trade: v })} />
+          <div><label className="label">Objet</label><input className="input" disabled={!editable} placeholder={example(doc.trade ? [doc.trade] : company?.trades, "quote") || "Ex : Rénovation salle de bain"} value={doc.title || ""} onChange={(e) => set({ title: e.target.value })} /></div>
           <div><label className="label">Adresse du chantier</label><input className="input" disabled={!editable} value={doc.site_address || ""} onChange={(e) => set({ site_address: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="label">Date</label><input type="date" className="input" disabled={!editable} value={doc.issue_date || ""} onChange={(e) => set({ issue_date: e.target.value })} /></div>
