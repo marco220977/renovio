@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/config";
+import { LEGAL } from "@/lib/legal";
 
 export const maxDuration = 30;
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
 
   const isQuote = doc.kind === "quote";
   const label = isQuote ? "devis" : doc.kind === "credit" ? "avoir" : "facture";
-  const signUrl = `${process.env.NEXT_PUBLIC_APP_URL || origin}/signer/${doc.public_token}`;
+  const signUrl = `${LEGAL.url}/signer/${doc.public_token}`;
   const name = doc.client_snapshot?.name || "";
 
   const body = isQuote
@@ -147,7 +148,7 @@ async function sendInvite(s: any, body: any) {
   const { data: inv } = await s.from("invitations").select("*").eq("id", body.id).single();
   if (!inv) return NextResponse.json({ error: "Invitation introuvable" }, { status: 404 });
   const { data: co } = await s.from("companies").select("*").single();
-  const link = `${process.env.NEXT_PUBLIC_APP_URL || body.origin}/rejoindre/${inv.token}`;
+  const link = `${LEGAL.url}/rejoindre/${inv.token}`;
   const role = inv.role === "technician" ? "technicien" : "superviseur";
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#0f1b2d;max-width:560px">
     ${co.logo_url ? `<img src="${co.logo_url}" alt="" style="max-height:60px;margin-bottom:16px">` : ""}

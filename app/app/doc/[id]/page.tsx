@@ -3,6 +3,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
+import { LEGAL } from "@/lib/legal";
 import { addDays, computeTotals, dateFr, eur, sectionTotals, STATUS_COLOR, STATUS_LABEL, VAT_RATES } from "@/lib/calc";
 import { example, TRADE } from "@/lib/trades";
 import { downloadPdf, pdfBase64, sharePdf } from "@/lib/pdf";
@@ -78,7 +79,7 @@ function Editor() {
   };
   const metreQty = Math.max(0, Math.round(((Number(metreV.a.replace(",", ".")) || 0) * (Number(metreV.b.replace(",", ".")) || 1) * (Number(metreV.n) || 1) - (Number(metreV.d.replace(",", ".")) || 0)) * 100) / 100);
   const client = clients.find((c) => c.id === doc.client_id);
-  const publicUrl = `${typeof window !== "undefined" ? location.origin : ""}/signer/${doc.public_token}`;
+  const publicUrl = `${LEGAL.url}/signer/${doc.public_token}`;
 
   async function save(extra: Partial<Doc> = {}): Promise<Doc | null> {
     setBusy(true); setErr("");

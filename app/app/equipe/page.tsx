@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
+import { LEGAL } from "@/lib/legal";
 import { sendMail } from "@/lib/send";
 import Header from "@/components/Header";
 import Modal from "@/components/Modal";
@@ -47,7 +48,7 @@ export default function Equipe() {
     catch (e: any) { setErr(`Invitation créée mais e-mail non envoyé (${e.message}). Partagez le lien manuellement.`); }
   }
 
-  const link = (inv: Inv) => `${location.origin}/rejoindre/${inv.token}`;
+  const link = (inv: Inv) => `${LEGAL.url}/rejoindre/${inv.token}`;
 
   return (
     <>
