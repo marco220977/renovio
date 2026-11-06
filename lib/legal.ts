@@ -2,7 +2,7 @@
 // Tout champ commençant par "[" s'affiche surligné en jaune sur les pages légales.
 export const LEGAL = {
   app: process.env.NEXT_PUBLIC_APP_NAME || "Rénovio",
-  url: process.env.NEXT_PUBLIC_APP_URL || "https://renovio.vercel.app",
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://renovio-two.vercel.app",
   editor: "[Nom ou raison sociale de l'éditeur]",
   form: "[Forme juridique : entreprise individuelle (micro-entreprise) / SASU…]",
   capital: "",
