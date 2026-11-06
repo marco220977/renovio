@@ -633,3 +633,22 @@ end $$;
 drop trigger if exists trg_report_done on maintenance_reports;
 create trigger trg_report_done after update on maintenance_reports
   for each row execute function report_done_update_contract();
+
+-- ---------- Sécurité : droits d'exécution des fonctions ----------
+revoke execute on function handle_new_user() from public, anon, authenticated;
+revoke execute on function report_done_update_contract() from public, anon, authenticated;
+revoke execute on function complete_my_catalog(text[]) from public, anon;
+revoke execute on function is_supervisor() from public, anon;
+revoke execute on function my_company_id() from public, anon;
+revoke execute on function my_role() from public, anon;
+revoke execute on function next_number(text) from public, anon;
+revoke execute on function remove_member(uuid) from public, anon;
+revoke execute on function set_member_role(uuid, text) from public, anon;
+revoke execute on function update_my_name(text) from public, anon;
+revoke execute on function sign_public_quote(uuid, text, text, text) from public, anon, authenticated;
+grant execute on function is_supervisor() to authenticated;
+grant execute on function my_company_id() to authenticated;
+grant execute on function my_role() to authenticated;
+alter function prevent_issued_delete() set search_path = public;
+alter function protect_plan() set search_path = public;
+alter function protect_issued_invoice() set search_path = public;
