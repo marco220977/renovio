@@ -1,0 +1,19 @@
+import "./globals.css";
+import type { Metadata, Viewport } from "next";
+
+const APP = process.env.NEXT_PUBLIC_APP_NAME || "Rénovio";
+
+export const metadata: Metadata = {
+  title: `${APP} — Devis et factures pour les artisans de la rénovation`,
+  description: "Créez vos devis sur le chantier, faites-les signer sur place, facturez en un clic.",
+  manifest: "/manifest.json",
+};
+export const viewport: Viewport = { themeColor: "#0f1b2d", width: "device-width", initialScale: 1, maximumScale: 1 };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="fr">
+      <body>{children}</body>
+    </html>
+  );
+}
