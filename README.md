@@ -1,3 +1,35 @@
+# Rénovio — mise en relation particuliers et artisans de la rénovation
+
+Le particulier décrit ses travaux, l'IA en fait un cahier des charges avec une estimation du budget, les artisans de son secteur
+répondent avec un devis pré-rempli par l'IA à partir de leurs propres tarifs. Le client compare les offres (classées par score) et signe en ligne.
+
+Next.js 14 · Supabase (comptes, base, stockage photos, fonction IA) · Claude (fonction `travaux-ia`)
+
+## Parcours
+- **Client** (`/client`) : nouvelle demande en 4 étapes (description + photos → questions de l'IA → cahier des charges + budget → coordonnées),
+  suivi des demandes, comparatif des offres classées sur 100 (prix 40, avis 30, délai 15, profil 15), alerte « prix très bas »,
+  PDF du devis, choix + signature au doigt, avis après chantier.
+- **Artisan** (`/artisan`) : demandes ouvertes de ses métiers et départements, devis généré par l'IA avec ses tarifs puis modifiable ligne par ligne,
+  une seule offre par demande (modifiable une fois, retirable), invisible des autres artisans ; coordonnées du client reçues seulement s'il est retenu.
+  Onglets Mes offres, Tarifs (tarifs de départ par métier en 1 clic), Profil (SIRET, décennale, RGE, départements, franchise de TVA).
+
+## Règles (dans la base, fichier `supabase/mise-en-relation.sql`)
+- Demande ouverte 72 h (48 h si urgent) ou jusqu'à 5 offres.
+- Pour répondre : SIRET à 14 chiffres + décennale valide + métier et département correspondants.
+- Totaux des devis recalculés côté serveur. L'artisan ne peut pas cocher lui-même « Vérifié » : c'est l'admin (rôle `admin` dans `profils`).
+
+## Installation
+1. Supabase → SQL Editor : `supabase/schema.sql`, `supabase/catalogue.sql` (tarifs de départ), puis `supabase/mise-en-relation.sql`.
+2. Edge Functions : déployer `supabase/functions/travaux-ia/index.ts` ; secret `ANTHROPIC_API_KEY` (et facultatif `ANTHROPIC_MODEL`).
+3. Vercel : variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL`.
+
+## Pas encore fait (V1)
+Paiement des artisans (crédits / abonnement Stripe), messagerie client-artisan, notifications e-mail, back-office admin,
+analyse des photos par l'IA côté artisan, CGU/CGV adaptées à la mise en relation (les pages `/legal` sont celles de l'ancienne appli).
+
+---
+
+# Ancienne appli devis (branche main)
 # Rénovio — SaaS devis & factures pour tous les artisans de la rénovation
 
 Déclinaison multi-métiers de Chantio. Next.js 14 · Supabase (comptes, base, stockage, fonction de scan) · Stripe (abonnements) · Claude (scan de plaque) · Vercel ou Netlify (hébergement)

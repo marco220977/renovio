@@ -19,12 +19,13 @@ export async function middleware(req: NextRequest) {
     }
   );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && req.nextUrl.pathname.startsWith("/app")) {
+  if (!user && (req.nextUrl.pathname.startsWith("/client") || req.nextUrl.pathname.startsWith("/artisan"))) {
     const url = req.nextUrl.clone();
     url.pathname = "/connexion";
+    url.search = `?role=${req.nextUrl.pathname.startsWith("/artisan") ? "artisan" : "client"}`;
     return NextResponse.redirect(url);
   }
   return res;
 }
 
-export const config = { matcher: ["/app/:path*"] };
+export const config = { matcher: ["/client/:path*", "/artisan/:path*"] };

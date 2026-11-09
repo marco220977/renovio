@@ -4,8 +4,8 @@ import type { Metadata, Viewport } from "next";
 const APP = process.env.NEXT_PUBLIC_APP_NAME || "Rénovio";
 
 export const metadata: Metadata = {
-  title: `${APP} — Devis et factures pour les artisans de la rénovation`,
-  description: "Créez vos devis sur le chantier, faites-les signer sur place, facturez en un clic.",
+  title: `${APP} — Vos travaux de rénovation, les devis des artisans de votre secteur`,
+  description: "Décrivez vos travaux, l'IA prépare le cahier des charges et des artisans vérifiés vous envoient leur devis.",
   manifest: "/manifest.json",
 };
 export const viewport: Viewport = { themeColor: "#0f1b2d", width: "device-width", initialScale: 1, maximumScale: 1 };

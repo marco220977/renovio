@@ -1,7 +1,7 @@
 {
-  "name": "Rénovio — Devis & factures bâtiment",
+  "name": "Rénovio — Travaux de rénovation",
   "short_name": "Rénovio",
-  "start_url": "/app",
+  "start_url": "/connexion",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0f1b2d",
