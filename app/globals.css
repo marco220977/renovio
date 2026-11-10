@@ -14,3 +14,4 @@ body { @apply bg-slate-50 text-ink antialiased; }
 .chip { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold; }
 .legal h2 { @apply mt-8 text-lg font-bold text-ink; }
 .legal ul { @apply list-disc space-y-1 pl-5; }
+.legal ol { @apply list-decimal space-y-1 pl-5; }

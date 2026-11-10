@@ -60,7 +60,7 @@ function Form() {
 
   async function reset() {
     if (!email) return setMsg("Saisissez votre e-mail d'abord.");
-    await sb().auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/connexion` });
+    await sb().auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/mot-de-passe` });
     setMsg("E-mail de réinitialisation envoyé.");
   }
 
@@ -94,7 +94,7 @@ function Form() {
         {signup && (
           <label className="flex items-start gap-2 text-xs text-slate-600">
             <input type="checkbox" className="mt-0.5" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
-            <span>J'accepte les <a href="/legal/cgv" target="_blank" className="text-brand underline">conditions générales</a> et la <a href="/legal/confidentialite" target="_blank" className="text-brand underline">politique de confidentialité</a>.</span>
+            <span>J'accepte les <a href="/legal/cgu" target="_blank" className="text-brand underline">conditions générales d'utilisation</a>{role === "artisan" && <>, les <a href="/legal/cgv" target="_blank" className="text-brand underline">conditions générales de vente</a></>} et la <a href="/legal/confidentialite" target="_blank" className="text-brand underline">politique de confidentialité</a>.</span>
           </label>
         )}
         {msg && <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">{msg}</p>}

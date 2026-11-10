@@ -13,7 +13,7 @@ const atoutsArtisan = [
   ["🔒", "Pas d'enchère au moins cher", "Une seule offre par artisan, invisible des concurrents. Le client compare aussi les avis et le délai."],
 ];
 
-export default function Home() {
+export default function Home({ searchParams }: { searchParams?: { compte?: string } }) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
       <div className="mx-auto max-w-3xl px-5 pb-16">
@@ -22,6 +22,7 @@ export default function Home() {
           <Link href="/connexion" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
 
+        {searchParams?.compte === "supprime" && <p className="rounded-xl bg-green-50 p-3 text-center text-sm text-green-900">Votre compte a bien été supprimé.</p>}
         <section className="pt-8 text-center">
           <span className="chip bg-flame-light text-flame">★ Travaux de rénovation</span>
           <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
@@ -70,7 +71,8 @@ export default function Home() {
         <footer className="mt-16 space-y-2 text-center text-xs text-slate-400">
           <p className="flex flex-wrap justify-center gap-4">
             <Link href="/legal/mentions-legales">Mentions légales</Link>
-            <Link href="/legal/cgv">CGU</Link>
+            <Link href="/legal/cgu">CGU</Link>
+            <Link href="/legal/cgv">CGV artisans</Link>
             <Link href="/legal/confidentialite">Confidentialité</Link>
           </p>
           <p>© {new Date().getFullYear()} Rénovio</p>

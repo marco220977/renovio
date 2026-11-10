@@ -18,6 +18,7 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
   const router = useRouter();
   const path = usePathname();
   const [profil, setProfil] = useState<Profil | null>(null);
+  const [nonLus, setNonLus] = useState(0);
 
   async function charger() {
     const s = sb();
@@ -28,8 +29,11 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
     const r = data.role as Role;
     if (r !== role && r !== "admin") return router.replace(r === "artisan" ? "/artisan" : "/client");
     setProfil(data as Profil);
+    const q = s.from("messages").select("id", { count: "exact", head: true }).eq("lu", false).eq("auteur", role === "artisan" ? "client" : "artisan");
+    const { count } = role === "artisan" ? await q.eq("artisan_id", user.id) : await q;
+    setNonLus(count || 0);
   }
-  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!profil) return <div className="flex min-h-screen items-center justify-center text-slate-400">Chargement…</div>;
 
@@ -52,7 +56,9 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
           <div className="mx-auto flex max-w-2xl">
             {nav.map(([href, ico, label]) => (
               <Link key={href} href={href} className={`flex flex-1 flex-col items-center py-2 text-[11px] font-semibold ${actif(href) ? "text-flame" : "text-slate-500"}`}>
-                <span className="text-xl leading-none">{ico}</span>{label}
+                <span className="relative text-xl leading-none">{ico}
+                  {nonLus > 0 && (href === "/client" || href === "/artisan/offres") && <span className="absolute -right-2 -top-1 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white">{nonLus}</span>}
+                </span>{label}
               </Link>
             ))}
           </div>

@@ -17,7 +17,7 @@ export default function Page() {
       <h2>Hébergement</h2>
       <ul>
         <li>Application : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis — vercel.com</li>
-        <li>Base de données et fichiers : Supabase Inc. (serveurs situés dans l'Union européenne, Francfort, Allemagne) — supabase.com</li>
+        <li>Base de données et fichiers : Supabase Inc. (serveurs situés dans l'Union européenne, à Paris, France) — supabase.com</li>
       </ul>
 
       <h2>Propriété intellectuelle</h2>
@@ -27,7 +27,7 @@ export default function Page() {
       </p>
 
       <h2>Données personnelles</h2>
-      <p>Le traitement des données personnelles est décrit dans la politique de confidentialité et dans l'accord de sous-traitance.</p>
+      <p>Le traitement des données personnelles est décrit dans la politique de confidentialité.</p>
     </LegalPage>
   );
 }

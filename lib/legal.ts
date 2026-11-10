@@ -13,6 +13,6 @@ export const LEGAL = {
   email: "[adresse e-mail de contact]",
   director: "Marco [NOM]",
   city: "[Ville du siège]",
-  price: "29 € HT par mois",
-  updated: "5 novembre 2026",
+  mediateur: "[Nom et site du médiateur de la consommation choisi]",
+  updated: "10 novembre 2026",
 };

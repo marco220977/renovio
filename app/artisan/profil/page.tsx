@@ -3,7 +3,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
-import { Deconnexion, Erreur, Info, useProfil } from "@/components/Espace";
+import { Erreur, Info, useProfil } from "@/components/Espace";
+import MonCompte from "@/components/MonCompte";
 import { errMsg, type Artisan } from "@/lib/mer";
 
 function Fiche() {
@@ -41,6 +42,25 @@ function Fiche() {
     setDeps(departements.join(", ")); setOk("Profil enregistré.");
   }
 
+  async function envoyerAttestation(f?: File) {
+    if (!f) return;
+    if (f.size > 10e6) return setErr("Fichier trop lourd (10 Mo maximum).");
+    setErr(""); setOk("");
+    const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${profil.id}/decennale-${Date.now()}.${ext}`;
+    const s = sb();
+    const { error } = await s.storage.from("attestations").upload(path, f, { contentType: f.type });
+    if (error) return setErr(errMsg(error));
+    const { error: e2 } = await s.from("artisans").update({ decennale_doc: path }).eq("id", profil.id);
+    if (e2) return setErr(errMsg(e2));
+    set({ decennale_doc: path }); setOk("Attestation envoyée.");
+  }
+
+  async function voirAttestation() {
+    const { data } = await sb().storage.from("attestations").createSignedUrl(a!.decennale_doc!, 600);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
+
   const champ = (k: keyof Artisan, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
     <div><label className="label">{label}</label>
       <input className="input" value={(a[k] as string) || ""} onChange={(e) => set({ [k]: e.target.value } as Partial<Artisan>)} {...props} /></div>
@@ -73,6 +93,19 @@ function Fiche() {
       <div className="card space-y-3">
         {champ("decennale", "Assurance décennale (assureur et n° de contrat)")}
         {champ("decennale_fin", "Valable jusqu'au", { type: "date" })}
+        <div>
+          <label className="label">Attestation d'assurance (photo ou PDF)</label>
+          {a.decennale_doc ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-green-700">✔ Attestation envoyée</span>
+              <button type="button" className="text-brand underline" onClick={voirAttestation}>Voir</button>
+              <label className="cursor-pointer text-brand underline">Remplacer<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
+            </div>
+          ) : (
+            <label className="btn-ghost w-full cursor-pointer">📎 Envoyer mon attestation<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
+          )}
+          <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénovio, pour vérifier votre profil et vous donner le badge « Vérifié ».</p>
+        </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.rge} onChange={(e) => set({ rge: e.target.checked })} /> Certifié RGE</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.tva_franchise} onChange={(e) => set({ tva_franchise: e.target.checked })} /> Franchise de TVA (micro-entreprise, art. 293 B)</label>
         <div><label className="label">Présentation (visible par les clients)</label>
@@ -83,7 +116,7 @@ function Fiche() {
       {ok && <p className="text-sm text-green-700">{ok}</p>}
       <button className="btn-primary w-full py-3.5" onClick={enregistrer}>Enregistrer</button>
       <a href="/artisan/abonnement" className="btn-ghost w-full">💳 Mon abonnement</a>
-      <Deconnexion />
+      <MonCompte role="artisan" />
     </div>
   );
 }

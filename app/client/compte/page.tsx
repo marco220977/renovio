@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { sb } from "@/lib/supabase";
-import { Deconnexion, Erreur, useProfil } from "@/components/Espace";
+import { Erreur, useProfil } from "@/components/Espace";
+import MonCompte from "@/components/MonCompte";
 import { errMsg } from "@/lib/mer";
 
 export default function Compte() {
@@ -29,7 +30,7 @@ export default function Compte() {
         {msg && <p className="text-sm text-green-700">{msg}</p>}
         <button className="btn-primary w-full" onClick={enregistrer}>Enregistrer</button>
       </div>
-      <Deconnexion />
+      <MonCompte role="client" />
     </div>
   );
 }

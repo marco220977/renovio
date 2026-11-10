@@ -199,7 +199,8 @@ export default function Admin() {
                 <span className="text-slate-500">Forme</span><span>{a.forme || "—"}</span>
                 <span className="text-slate-500">Adresse</span><span>{[a.adresse, a.cp, a.ville].filter(Boolean).join(" ") || "—"}</span>
                 <span className="text-slate-500">Décennale</span>
-                <span className={a.decennale_fin && new Date(a.decennale_fin) < new Date() ? "text-red-600" : ""}>{a.decennale || "—"}{a.decennale_fin && ` (fin ${dateFr(a.decennale_fin)})`}</span>
+                <span className={a.decennale_fin && new Date(a.decennale_fin) < new Date() ? "text-red-600" : ""}>{a.decennale || "—"}{a.decennale_fin && ` (fin ${dateFr(a.decennale_fin)})`}
+                  {a.decennale_doc ? <button className="ml-1 text-brand underline" onClick={async () => { const { data } = await sb().storage.from("attestations").createSignedUrl(a.decennale_doc!, 600); if (data?.signedUrl) window.open(data.signedUrl, "_blank"); }}>attestation ↗</button> : <span className="ml-1 text-xs text-red-600">(pas d'attestation)</span>}</span>
                 <span className="text-slate-500">RGE / TVA</span><span>{a.rge ? "RGE" : "non RGE"} · {a.tva_franchise ? "franchise" : "assujetti"}</span>
                 <span className="text-slate-500">Abonnement</span><span>{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"}{a.abonnement_fin && ` (jusqu'au ${dateFr(a.abonnement_fin)})`}</span>
                 <span className="text-slate-500">Départements</span><span>{a.departements?.join(", ") || "—"}</span>

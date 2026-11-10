@@ -416,3 +416,73 @@ begin
 end $$;
 revoke execute on function formule_active(artisans) from public, anon;
 grant execute on function formule_active(artisans) to authenticated;
+
+-- ---------- Suppression de compte, export des données, attestations (ajout du 10/11/2026) ----------
+alter table artisans add column if not exists decennale_doc text;
+
+create or replace function supprimer_mon_compte_mer() returns void
+language plpgsql security definer set search_path = public, auth as $$
+declare uid uuid := auth.uid(); p profils; a artisans;
+begin
+  if uid is null then raise exception 'Non connecté'; end if;
+  select * into p from profils where id = uid;
+  if not found then raise exception 'Profil introuvable'; end if;
+  if p.role = 'admin' then raise exception 'Le compte administrateur ne peut pas être supprimé depuis l''appli'; end if;
+  if exists (select 1 from demandes where client_id = uid and statut = 'en_cours') then
+    raise exception 'Vous avez choisi un artisan pour une demande en cours : renoncez à ce choix ou signez avant de supprimer votre compte.';
+  end if;
+  select * into a from artisans where id = uid;
+  if found then
+    if exists (select 1 from offres where artisan_id = uid and statut in ('choisie', 'confirmee')) then
+      raise exception 'Un client vous a choisi et attend votre devis définitif : retirez-vous de ce chantier avant de supprimer votre compte.';
+    end if;
+    if a.stripe_subscription_id is not null and formule_active(a) <> 'gratuit' and coalesce(current_setting('renovio.stripe_annule', true), '') <> '1' then
+      raise exception 'Résiliez d''abord votre abonnement (page Abonnement).';
+    end if;
+  end if;
+  delete from auth.users where id = uid;
+end $$;
+revoke execute on function supprimer_mon_compte_mer() from public, anon;
+grant execute on function supprimer_mon_compte_mer() to authenticated;
+
+create or replace function mes_donnees() returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'profil', (select row_to_json(p) from profils p where p.id = auth.uid()),
+    'entreprise', (select to_jsonb(a) - 'stripe_customer_id' - 'stripe_subscription_id' from artisans a where a.id = auth.uid()),
+    'tarifs', (select coalesce(json_agg(t), '[]') from tarifs t where t.artisan_id = auth.uid()),
+    'demandes', (select coalesce(json_agg(d), '[]') from demandes d where d.client_id = auth.uid()),
+    'coordonnees_demandes', (select coalesce(json_agg(c), '[]') from demande_contacts c where c.demande_id in (select id from demandes where client_id = auth.uid())),
+    'offres', (select coalesce(json_agg(o), '[]') from offres o where o.artisan_id = auth.uid() or o.demande_id in (select id from demandes where client_id = auth.uid())),
+    'messages', (select coalesce(json_agg(m), '[]') from messages m where m.artisan_id = auth.uid() or m.demande_id in (select id from demandes where client_id = auth.uid())),
+    'avis', (select coalesce(json_agg(v), '[]') from avis v where v.client_id = auth.uid() or v.artisan_id = auth.uid()),
+    'exporte_le', now()
+  );
+$$;
+revoke execute on function mes_donnees() from public, anon;
+grant execute on function mes_donnees() to authenticated;
+
+insert into storage.buckets (id, name, public) values ('attestations', 'attestations', false) on conflict (id) do nothing;
+drop policy if exists attestations_i on storage.objects;
+create policy attestations_i on storage.objects for insert to authenticated
+  with check (bucket_id = 'attestations' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists attestations_u on storage.objects;
+create policy attestations_u on storage.objects for update to authenticated
+  using (bucket_id = 'attestations' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists attestations_r on storage.objects;
+create policy attestations_r on storage.objects for select to authenticated
+  using (bucket_id = 'attestations' and ((storage.foldername(name))[1] = auth.uid()::text or est_admin()));
+drop policy if exists attestations_d on storage.objects;
+create policy attestations_d on storage.objects for delete to authenticated
+  using (bucket_id = 'attestations' and (storage.foldername(name))[1] = auth.uid()::text);
+
+alter table artisans add column if not exists abonnement_resilie boolean not null default false;
+create or replace function mon_quota() returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'abonnement', formule_active(a), 'fin', case when formule_active(a) <> 'gratuit' then a.abonnement_fin end,
+    'quota', quota_offres(formule_active(a)), 'bonus', a.bonus_offres, 'resilie', a.abonnement_resilie,
+    'stripe', a.stripe_subscription_id is not null,
+    'utilise', (select count(*) from offres o where o.artisan_id = a.id and o.created_at >= date_trunc('month', now()))
+  ) from artisans a where a.id = auth.uid();
+$$;

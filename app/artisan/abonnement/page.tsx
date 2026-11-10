@@ -6,7 +6,7 @@ import { dateFr } from "@/lib/calc";
 import { Erreur, Info } from "@/components/Espace";
 import { FORMULES } from "@/lib/mer";
 
-type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number };
+type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; resilie?: boolean; stripe?: boolean };
 
 function Abonnement() {
   const params = useSearchParams();
@@ -14,7 +14,18 @@ function Abonnement() {
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
 
-  useEffect(() => { sb().rpc("mon_quota").then(({ data }) => setQ(data as Quota)); }, []);
+  const charger = () => sb().rpc("mon_quota").then(({ data }) => setQ(data as Quota));
+  useEffect(() => { charger(); }, []);
+
+  async function resilier(annuler = false) {
+    if (!annuler && !confirm("Résilier votre abonnement ? Il reste actif jusqu'à la fin du mois payé, puis vous repassez en Découverte (3 offres par mois).")) return;
+    setErr(""); setBusy("resilier");
+    const r = await fetch("/api/abonnement/resilier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ annuler }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy("");
+    if (!r.ok) return setErr(j.error || "Erreur");
+    setQ(q && { ...q, resilie: j.resilie, fin: j.fin || q.fin }); setTimeout(charger, 4000);
+  }
 
   async function aller(route: string, body?: unknown, cle = "") {
     setErr(""); setBusy(cle || route);
@@ -42,8 +53,18 @@ function Abonnement() {
           )}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
           {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} offre(s) bonus en réserve</p>}
-          {payant && q.fin === null && <p className="text-xs text-green-700">🎁 Formule offerte par Rénovio</p>}
-          {payant && <button className="btn-ghost w-full" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Gérer / résilier mon abonnement</button>}
+          {payant && !q.stripe && <p className="text-xs text-green-700">🎁 Formule offerte par Rénovio</p>}
+          {payant && q.stripe && (q.resilie ? (
+            <>
+              <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">Abonnement résilié : il s'arrête {q.fin ? `le ${dateFr(q.fin)}` : "à la fin du mois payé"}.</p>
+              <button className="btn-ghost w-full" disabled={!!busy} onClick={() => resilier(true)}>Annuler la résiliation</button>
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <button className="btn-ghost flex-1" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Factures / carte</button>
+              <button className="btn-danger flex-1" disabled={!!busy} onClick={() => resilier()}>Résilier</button>
+            </div>
+          ))}
         </div>
       )}
       <p className="text-sm text-slate-600">Le compteur repart à zéro le 1ᵉʳ de chaque mois. Une modification d'offre ne compte pas. Sans engagement, résiliable à tout moment.</p>
@@ -59,13 +80,13 @@ function Abonnement() {
             </div>
             {f.id === actuelle.id ? <p className="text-center text-sm font-semibold text-green-700">✔ Votre formule</p>
               : f.prix === 0 ? null
-              : payant ? <button className="btn-ghost w-full" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Changer de formule</button>
+              : q?.stripe ? <button className="btn-ghost w-full" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Changer de formule</button>
               : <button className="btn-brand w-full" disabled={!!busy} onClick={() => aller("/api/abonnement", { plan: f.id }, f.id)}>{busy === f.id ? "…" : `Choisir ${f.nom}`}</button>}
           </div>
         ))}
       </div>
       <Erreur msg={err} />
-      <p className="text-xs text-slate-400">Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénovio : les travaux se règlent directement entre vous et le client.</p>
+      <p className="text-xs text-slate-400">En vous abonnant, vous acceptez les <a href="/legal/cgv" className="underline">conditions générales de vente</a>. Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénovio : les travaux se règlent directement entre vous et le client.</p>
     </div>
   );
 }

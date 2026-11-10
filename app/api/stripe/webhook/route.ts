@@ -20,7 +20,8 @@ export async function POST(req: Request) {
     await sbAdmin().from("artisans").update({
       abonnement: actif && plan ? plan : "gratuit",
       abonnement_fin: actif && fin ? new Date(fin * 1000 + 3 * 864e5).toISOString() : null, // 3 jours de marge
-      stripe_subscription_id: sub.id,
+      stripe_subscription_id: actif ? sub.id : null,
+      abonnement_resilie: actif && !!sub.cancel_at_period_end,
     }).eq("stripe_customer_id", sub.customer as string);
   }
   return NextResponse.json({ received: true });

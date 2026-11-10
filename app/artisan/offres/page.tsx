@@ -11,6 +11,14 @@ type Ligne = Offre & { demandes: { titre?: string; cp: string; ville?: string } 
 export default function MesOffres() {
   const { profil } = useProfil();
   const [liste, setListe] = useState<Ligne[] | null>(null);
+  const [nonLus, setNonLus] = useState<Record<string, number>>({});
+  useEffect(() => {
+    sb().from("messages").select("demande_id").eq("artisan_id", profil.id).eq("lu", false).eq("auteur", "client").then(({ data }) => {
+      const n: Record<string, number> = {};
+      (data || []).forEach((m: { demande_id: string }) => { n[m.demande_id] = (n[m.demande_id] || 0) + 1; });
+      setNonLus(n);
+    });
+  }, [profil.id]);
 
   useEffect(() => {
     sb().from("offres").select("*, demandes(titre, cp, ville)").eq("artisan_id", profil.id)
@@ -40,6 +48,7 @@ export default function MesOffres() {
           </div>
           <p className="text-sm text-slate-500">{o.numero} · {o.demandes?.ville} {o.demandes?.cp} · {dateFr(o.updated_at)}</p>
           <p className="font-semibold">{eur(o.total_ttc)} TTC</p>
+          {nonLus[o.demande_id] > 0 && <p className="text-sm font-semibold text-red-600">💬 {nonLus[o.demande_id]} nouveau(x) message(s)</p>}
         </Link>
       ))}
     </div>

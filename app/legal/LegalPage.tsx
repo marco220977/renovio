@@ -14,9 +14,9 @@ export default function LegalPage({ title, children }: { title: string; children
       <article className="legal mt-6 space-y-4 text-[15px] leading-relaxed text-slate-700">{children}</article>
       <nav className="mt-12 flex flex-wrap gap-4 border-t pt-6 text-sm text-slate-500">
         <Link href="/legal/mentions-legales">Mentions légales</Link>
-        <Link href="/legal/cgv">CGU / CGV</Link>
+        <Link href="/legal/cgu">CGU</Link>
+        <Link href="/legal/cgv">CGV artisans</Link>
         <Link href="/legal/confidentialite">Confidentialité</Link>
-        <Link href="/legal/sous-traitance">Sous-traitance RGPD</Link>
       </nav>
     </main>
   );

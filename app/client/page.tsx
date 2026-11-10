@@ -13,6 +13,14 @@ export default function MesDemandes() {
   const [liste, setListe] = useState<Ligne[] | null>(null);
   const { profil } = useProfil();
   const [brouillon, setBrouillon] = useState<Brouillon | null>(null);
+  const [nonLus, setNonLus] = useState<Record<string, number>>({});
+  useEffect(() => {
+    sb().from("messages").select("demande_id").eq("lu", false).eq("auteur", "artisan").then(({ data }) => {
+      const n: Record<string, number> = {};
+      (data || []).forEach((m: { demande_id: string }) => { n[m.demande_id] = (n[m.demande_id] || 0) + 1; });
+      setNonLus(n);
+    });
+  }, []);
   useEffect(() => { const b = lireBrouillon(profil.id).data; if (aDuContenu(b)) setBrouillon(b); }, [profil.id]);
 
   useEffect(() => {
@@ -60,6 +68,7 @@ export default function MesDemandes() {
               <span className={`chip shrink-0 ${color}`}>{label}</span>
             </div>
             <p className="text-sm text-slate-500">{d.ville || d.cp} · créée le {dateFr(d.created_at)}</p>
+            {nonLus[d.id] > 0 && <p className="text-sm font-semibold text-red-600">💬 {nonLus[d.id]} nouveau(x) message(s)</p>}
             {st !== "brouillon" && st !== "annulee" && (
               <p className="text-sm font-semibold">
                 {nb} offre{nb > 1 ? "s" : ""} reçue{nb > 1 ? "s" : ""}
