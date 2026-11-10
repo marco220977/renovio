@@ -85,6 +85,9 @@ function Abonnement() {
           </div>
         ))}
       </div>
+      <a href="/artisan/parrainage" className="card flex items-center justify-between !p-3 text-sm">
+        <span>🎁 Parrainez un artisan : <b>+5 offres</b> pour vous</span><b className="text-brand">→</b>
+      </a>
       <Erreur msg={err} />
       <p className="text-xs text-slate-400">En vous abonnant, vous acceptez les <a href="/legal/cgv" className="underline">conditions générales de vente</a>. Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénovio : les travaux se règlent directement entre vous et le client.</p>
     </div>

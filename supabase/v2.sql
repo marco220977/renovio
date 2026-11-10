@@ -486,3 +486,133 @@ language sql stable security definer set search_path = public as $$
     'utilise', (select count(*) from offres o where o.artisan_id = a.id and o.created_at >= date_trunc('month', now()))
   ) from artisans a where a.id = auth.uid();
 $$;
+
+-- ---------- Parrainage entre artisans (ajout du 10/11/2026) ----------
+-- Filleul : 3 offres bonus à l'inscription. Parrain : 5 offres bonus à la 1re offre envoyée par le filleul.
+
+
+alter table artisans add column if not exists code_parrain text unique;
+alter table artisans add column if not exists parrain_id uuid references artisans(id) on delete set null;
+alter table artisans add column if not exists parrainage_recompense boolean not null default false;
+
+create or replace function nouveau_code_parrain() returns text language plpgsql set search_path = public, extensions as $$
+declare c text;
+begin
+  loop
+    c := upper(translate(substr(encode(gen_random_bytes(6), 'base64'), 1, 6), '+/=0O1IL', 'XYZ2Q3JK'));
+    exit when not exists (select 1 from artisans where code_parrain = c);
+  end loop;
+  return c;
+end $$;
+create or replace function artisan_code_parrain() returns trigger language plpgsql as $$
+begin
+  if new.code_parrain is null then new.code_parrain := nouveau_code_parrain(); end if;
+  return new;
+end $$;
+drop trigger if exists trg_code_parrain on artisans;
+create trigger trg_code_parrain before insert on artisans for each row execute function artisan_code_parrain();
+update artisans set code_parrain = nouveau_code_parrain() where code_parrain is null;
+
+create or replace function nom_parrain(p_code text) returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif(trim(raison_sociale), ''), 'un artisan Rénovio') from artisans where code_parrain = upper(trim(p_code)) and statut = 'actif';
+$$;
+grant execute on function nom_parrain(text) to anon, authenticated;
+
+create or replace function mes_filleuls() returns table (raison_sociale text, inscrit_le timestamptz, recompense boolean)
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif(trim(a.raison_sociale), ''), 'Artisan'), a.created_at, a.parrainage_recompense
+  from artisans a where a.parrain_id = auth.uid() order by a.created_at desc;
+$$;
+revoke execute on function mes_filleuls() from public, anon;
+grant execute on function mes_filleuls() to authenticated;
+
+create or replace function handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare cid uuid; inv invitations%rowtype; t text[]; r text; par uuid;
+begin
+  if new.raw_user_meta_data->>'app' = 'mer' then
+    r := case when new.raw_user_meta_data->>'role' = 'artisan' then 'artisan' else 'client' end;
+    insert into profils (id, role, nom, telephone, email)
+      values (new.id, r, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'phone', new.email)
+      on conflict (id) do nothing;
+    if r = 'artisan' then
+      select coalesce(array_agg(x), '{}') into t
+        from jsonb_array_elements_text(coalesce(new.raw_user_meta_data->'trades', '[]'::jsonb)) x;
+      select id into par from artisans where code_parrain = upper(trim(coalesce(new.raw_user_meta_data->>'parrain', ''))) and statut = 'actif';
+      insert into artisans (id, raison_sociale, email, telephone, metiers, parrain_id, bonus_offres)
+        values (new.id, new.raw_user_meta_data->>'company_name', new.email, new.raw_user_meta_data->>'phone', t,
+                par, case when par is not null then 3 else 0 end)
+        on conflict (id) do nothing;
+    end if;
+    return new;
+  end if;
+  if new.raw_user_meta_data ? 'invite_token' then
+    select * into inv from invitations
+      where token = (new.raw_user_meta_data->>'invite_token')::uuid and accepted_at is null
+        and lower(email) = lower(new.email);
+    if found then
+      insert into members (user_id, company_id, role, full_name, email)
+        values (new.id, inv.company_id, inv.role, coalesce(new.raw_user_meta_data->>'full_name', inv.full_name), new.email);
+      update invitations set accepted_at = now() where id = inv.id;
+      return new;
+    end if;
+  end if;
+  select coalesce(array_agg(x), '{}') into t
+    from jsonb_array_elements_text(coalesce(new.raw_user_meta_data->'trades', '[]'::jsonb)) x;
+  insert into companies (name, email, trades)
+    values (coalesce(new.raw_user_meta_data->>'company_name', 'Mon entreprise'), new.email, t)
+    returning id into cid;
+  insert into members (user_id, company_id, role, full_name, email)
+    values (new.id, cid, 'owner', new.raw_user_meta_data->>'full_name', new.email);
+  perform seed_catalog(cid);
+  return new;
+end $$;
+
+create or replace function envoyer_offre_v2(p_demande uuid, p_lignes jsonb, p_delai int, p_duree int, p_message text, p_validite int default 30)
+returns offres
+language plpgsql security definer set search_path = public as $$
+declare a artisans; q int; n int; o offres;
+begin
+  select * into a from artisans where id = auth.uid();
+  if found and not exists (select 1 from offres where demande_id = p_demande and artisan_id = a.id) then
+    q := quota_offres(formule_active(a));
+    select count(*) into n from offres where artisan_id = a.id and created_at >= date_trunc('month', now());
+    if q is not null and n >= q then
+      if a.bonus_offres > 0 then
+        perform set_config('renovio.systeme', '1', true);
+        update artisans set bonus_offres = bonus_offres - 1 where id = a.id;
+        perform set_config('renovio.systeme', '', true);
+      else
+        raise exception 'Limite de % offres ce mois-ci atteinte. Passez à une formule supérieure dans « Abonnement ».', q;
+      end if;
+    end if;
+  end if;
+  o := envoyer_offre(p_demande, p_lignes, p_delai, p_duree, p_message, p_validite);
+  if a.parrain_id is not null and not a.parrainage_recompense then
+    perform set_config('renovio.systeme', '1', true);
+    update artisans set bonus_offres = bonus_offres + 5 where id = a.parrain_id;
+    update artisans set parrainage_recompense = true where id = a.id;
+    perform set_config('renovio.systeme', '', true);
+  end if;
+  return o;
+end $$;
+
+create or replace function protege_artisan() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(current_setting('request.jwt.claims', true)::json->>'role', '') in ('authenticated', 'anon')
+     and not est_admin() and coalesce(current_setting('renovio.systeme', true), '') <> '1' then
+    if tg_op = 'INSERT' then
+      new.verifie := false; new.statut := 'actif'; new.abonnement := 'gratuit'; new.abonnement_fin := null;
+      new.stripe_customer_id := null; new.stripe_subscription_id := null; new.bonus_offres := 0;
+      new.parrain_id := null; new.parrainage_recompense := false; new.code_parrain := nouveau_code_parrain();
+    else
+      new.verifie := old.verifie; new.statut := old.statut; new.abonnement := old.abonnement; new.abonnement_fin := old.abonnement_fin;
+      new.stripe_customer_id := old.stripe_customer_id; new.stripe_subscription_id := old.stripe_subscription_id;
+      new.bonus_offres := old.bonus_offres; new.parrain_id := old.parrain_id;
+      new.parrainage_recompense := old.parrainage_recompense; new.code_parrain := old.code_parrain;
+    end if;
+  end if;
+  return new;
+end $$;

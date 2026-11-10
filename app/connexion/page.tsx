@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -23,7 +23,10 @@ function Form() {
   const params = useSearchParams();
   const router = useRouter();
   const [signup, setSignup] = useState(params.get("mode") === "signup");
-  const [role, setRole] = useState<"client" | "artisan">(params.get("role") === "artisan" ? "artisan" : "client");
+  const parrain = (params.get("parrain") || "").toUpperCase();
+  const [role, setRole] = useState<"client" | "artisan">(params.get("role") === "artisan" || parrain ? "artisan" : "client");
+  const [nomParrain, setNomParrain] = useState("");
+  useEffect(() => { if (parrain) sb().rpc("nom_parrain", { p_code: parrain }).then(({ data }) => setNomParrain((data as string) || "")); }, [parrain]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -43,7 +46,7 @@ function Form() {
       const { data, error } = await s.auth.signUp({
         email, password,
         options: {
-          data: { app: "mer", role, full_name: name, phone, company_name: company, trades },
+          data: { app: "mer", role, full_name: name, phone, company_name: company, trades, ...(role === "artisan" && parrain ? { parrain } : {}) },
           emailRedirectTo: `${location.origin}/${role}`,
         },
       });
@@ -69,6 +72,9 @@ function Form() {
       <form onSubmit={submit} className="card w-full max-w-md space-y-4 p-6">
         <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">vio</span></Link>
         <h1 className="text-2xl font-extrabold">{signup ? "Créer mon compte" : "Connexion"}</h1>
+        {signup && nomParrain && role === "artisan" && (
+          <p className="rounded-xl bg-flame-light p-3 text-sm">🎁 Invité par <b>{nomParrain}</b> : <b>3 offres bonus</b> offertes à l'inscription.</p>
+        )}
         {signup && (
           <>
             <div className="grid grid-cols-2 gap-2">

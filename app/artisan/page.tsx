@@ -50,6 +50,9 @@ export default function DemandesDispo() {
           <b className="text-brand">Abonnement →</b>
         </Link>
       )}
+      {quota && quota.quota !== null && quota.utilise >= quota.quota && !quota.bonus && (
+        <Link href="/artisan/parrainage" className="block text-center text-sm font-semibold text-brand">🎁 Gagnez des offres en parrainant un artisan →</Link>
+      )}
       {liste === null && <p className="text-slate-400">Chargement…</p>}
       {liste?.length === 0 && !manque.length && (
         <div className="card text-center text-sm text-slate-600">

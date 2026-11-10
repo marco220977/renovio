@@ -28,6 +28,7 @@ export default function Page() {
         <li>Une « offre » est une première réponse à une demande. La modification d'une offre, le devis définitif après visite et les avenants ne sont pas décomptés.</li>
         <li>Le compteur repart à zéro le premier jour de chaque mois civil. Les offres non utilisées ne sont pas reportées.</li>
         <li>L'Éditeur peut offrir une formule pour une durée déterminée ou des offres bonus ; à l'échéance, l'Artisan repasse en formule Découverte. Les offres bonus sont utilisées une fois la limite mensuelle atteinte.</li>
+        <li>Parrainage : un Artisan inscrit avec le lien d'un autre Artisan reçoit 3 offres bonus ; le parrain reçoit 5 offres bonus lorsque son filleul envoie sa première offre. Les offres bonus n'ont pas de valeur monétaire et ne sont ni remboursables ni cessibles. L'Éditeur peut annuler les bonus obtenus par des comptes fictifs.</li>
         <li>L'abonnement donne accès aux demandes : il ne garantit aucun nombre de demandes, de choix par les Clients ou de chantiers.</li>
         <li>La formule souscrite n'a aucune influence sur le classement des offres.</li>
       </ul>
