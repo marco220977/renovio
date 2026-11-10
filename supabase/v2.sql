@@ -356,3 +356,63 @@ grant execute on function quota_offres(text), mon_quota(), totaux_devis(jsonb, b
   marquer_lus(uuid, uuid), proposer_avenant(uuid, text, jsonb), repondre_avenant(uuid, boolean, text, text), retirer_avenant(uuid),
   retirer_offre(uuid) to authenticated;
 revoke execute on function protege_artisan() from public, anon, authenticated;
+
+-- ---------- Formule offerte pour une durée + offres bonus (ajout du 10/11/2026) ----------
+alter table artisans add column if not exists bonus_offres int not null default 0;
+
+-- Formule réellement active (une formule offerte ou payée dont la date est passée = Découverte)
+create or replace function formule_active(a artisans) returns text language sql stable as $$
+  select case when a.abonnement <> 'gratuit' and (a.abonnement_fin is null or a.abonnement_fin > now()) then a.abonnement else 'gratuit' end;
+$$;
+
+-- Protège uniquement les requêtes des utilisateurs de l'appli (pas l'admin, pas Stripe, pas l'éditeur SQL)
+create or replace function protege_artisan() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(current_setting('request.jwt.claims', true)::json->>'role', '') in ('authenticated', 'anon')
+     and not est_admin() and coalesce(current_setting('renovio.systeme', true), '') <> '1' then
+    if tg_op = 'INSERT' then
+      new.verifie := false; new.statut := 'actif'; new.abonnement := 'gratuit'; new.abonnement_fin := null;
+      new.stripe_customer_id := null; new.stripe_subscription_id := null; new.bonus_offres := 0;
+    else
+      new.verifie := old.verifie; new.statut := old.statut; new.abonnement := old.abonnement; new.abonnement_fin := old.abonnement_fin;
+      new.stripe_customer_id := old.stripe_customer_id; new.stripe_subscription_id := old.stripe_subscription_id;
+      new.bonus_offres := old.bonus_offres;
+    end if;
+  end if;
+  return new;
+end $$;
+
+create or replace function mon_quota() returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'abonnement', formule_active(a), 'fin', case when formule_active(a) <> 'gratuit' then a.abonnement_fin end,
+    'quota', quota_offres(formule_active(a)), 'bonus', a.bonus_offres,
+    'utilise', (select count(*) from offres o where o.artisan_id = a.id and o.created_at >= date_trunc('month', now()))
+  ) from artisans a where a.id = auth.uid();
+$$;
+
+-- Les offres bonus servent une fois la limite du mois atteinte
+create or replace function envoyer_offre_v2(p_demande uuid, p_lignes jsonb, p_delai int, p_duree int, p_message text, p_validite int default 30)
+returns offres
+language plpgsql security definer set search_path = public as $$
+declare a artisans; q int; n int;
+begin
+  select * into a from artisans where id = auth.uid();
+  if found and not exists (select 1 from offres where demande_id = p_demande and artisan_id = a.id) then
+    q := quota_offres(formule_active(a));
+    select count(*) into n from offres where artisan_id = a.id and created_at >= date_trunc('month', now());
+    if q is not null and n >= q then
+      if a.bonus_offres > 0 then
+        perform set_config('renovio.systeme', '1', true);
+        update artisans set bonus_offres = bonus_offres - 1 where id = a.id;
+        perform set_config('renovio.systeme', '', true);
+      else
+        raise exception 'Limite de % offres ce mois-ci atteinte. Passez à une formule supérieure dans « Abonnement ».', q;
+      end if;
+    end if;
+  end if;
+  return envoyer_offre(p_demande, p_lignes, p_delai, p_duree, p_message, p_validite);
+end $$;
+revoke execute on function formule_active(artisans) from public, anon;
+grant execute on function formule_active(artisans) to authenticated;

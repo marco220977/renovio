@@ -6,7 +6,7 @@ import { dateFr } from "@/lib/calc";
 import { Erreur, Info } from "@/components/Espace";
 import { FORMULES } from "@/lib/mer";
 
-type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number };
+type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number };
 
 function Abonnement() {
   const params = useSearchParams();
@@ -40,7 +40,9 @@ function Abonnement() {
           {q.quota !== null && (
             <div className="h-2 rounded-full bg-slate-200"><div className={`h-full rounded-full ${q.utilise >= q.quota ? "bg-red-500" : "bg-flame"}`} style={{ width: `${Math.min(100, (q.utilise / q.quota) * 100)}%` }} /></div>
           )}
-          {payant && q.fin && <p className="text-xs text-slate-500">Renouvellement vers le {dateFr(q.fin)}</p>}
+          {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
+          {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} offre(s) bonus en réserve</p>}
+          {payant && q.fin === null && <p className="text-xs text-green-700">🎁 Formule offerte par Rénovio</p>}
           {payant && <button className="btn-ghost w-full" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Gérer / résilier mon abonnement</button>}
         </div>
       )}

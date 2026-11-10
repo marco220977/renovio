@@ -213,12 +213,7 @@ export default function Admin() {
                 return <p key={o.id} className="flex justify-between gap-2 border-b border-slate-100 py-1"><span>{d?.titre || "Demande"} <span className={`chip ${STATUT_OFFRE[o.statut][1]}`}>{STATUT_OFFRE[o.statut][0]}</span></span><b>{eur(o.total_ttc)}</b></p>;
               })}
             </div>
-            <div className="flex shrink-0 items-center gap-2 pt-3 text-sm">
-              <span className="text-slate-500">Formule offerte :</span>
-              <select className="input !py-1.5" value={a.abonnement || "gratuit"} onChange={(e) => majArtisan(a.id, { abonnement: e.target.value as Artisan["abonnement"], abonnement_fin: null })}>
-                {FORMULES.map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
-              </select>
-            </div>
+            <Offrir a={a} maj={(p) => majArtisan(a.id, p)} />
             <div className="flex shrink-0 gap-2 pt-2">
               {a.statut === "suspendu"
                 ? <button className="btn-ghost flex-1" onClick={() => majArtisan(a.id, { statut: "actif" })}>Réactiver</button>
@@ -272,6 +267,51 @@ export default function Admin() {
           </Modal>
         );
       })()}
+    </div>
+  );
+}
+
+/** Offrir une formule pour une durée, ou des offres en bonus */
+function Offrir({ a, maj }: { a: Artisan; maj: (p: Partial<Artisan>) => Promise<void> }) {
+  const [formule, setFormule] = useState<string>(a.abonnement && a.abonnement !== "gratuit" ? a.abonnement : "pro");
+  const [mois, setMois] = useState("1");
+  const actif = a.abonnement && a.abonnement !== "gratuit" && (!a.abonnement_fin || new Date(a.abonnement_fin) > new Date());
+  const nom = (id?: string) => FORMULES.find((f) => f.id === id)?.nom || "Découverte";
+
+  async function offrir() {
+    let fin: string | null = null;
+    if (mois !== "0") { const d = new Date(); d.setMonth(d.getMonth() + Number(mois)); fin = d.toISOString(); }
+    if (!confirm(`Offrir la formule ${nom(formule)} ${mois === "0" ? "sans limite de durée" : `pendant ${mois} mois`} ?`)) return;
+    await maj({ abonnement: formule as Artisan["abonnement"], abonnement_fin: fin });
+  }
+
+  return (
+    <div className="shrink-0 space-y-2 border-t border-slate-200 pt-3 text-sm">
+      <p className="font-semibold">🎁 Offrir</p>
+      <p className="text-xs text-slate-500">
+        Actuellement : <b>{actif ? nom(a.abonnement) : "Découverte"}</b>
+        {actif && (a.abonnement_fin ? ` jusqu'au ${dateFr(a.abonnement_fin)}` : " sans limite")}
+        {a.stripe_subscription_id && actif && " (payé via Stripe)"}
+        {` · ${a.bonus_offres || 0} offre(s) bonus`}
+      </p>
+      <div className="flex gap-2">
+        <select className="input !py-1.5" value={formule} onChange={(e) => setFormule(e.target.value)}>
+          {FORMULES.filter((f) => f.prix > 0).map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
+        </select>
+        <select className="input !py-1.5" value={mois} onChange={(e) => setMois(e.target.value)}>
+          {[["1", "1 mois"], ["3", "3 mois"], ["6", "6 mois"], ["12", "12 mois"], ["0", "Sans limite"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <button className="btn-brand !px-3" onClick={offrir}>Offrir</button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {[3, 5, 10].map((n) => (
+          <button key={n} className="btn-ghost !px-3 !py-1.5 text-xs" onClick={() => maj({ bonus_offres: (a.bonus_offres || 0) + n })}>+{n} offres bonus</button>
+        ))}
+        {actif && !a.stripe_subscription_id && (
+          <button className="btn-ghost !px-3 !py-1.5 text-xs text-red-600" onClick={() => confirm("Retirer la formule offerte ?") && maj({ abonnement: "gratuit", abonnement_fin: null })}>Retirer la formule</button>
+        )}
+      </div>
+      <p className="text-[11px] text-slate-400">Les offres bonus servent une fois la limite du mois atteinte, et ne s'effacent pas d'un mois à l'autre.</p>
     </div>
   );
 }

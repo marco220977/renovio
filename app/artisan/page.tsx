@@ -11,7 +11,7 @@ export default function DemandesDispo() {
   const { profil } = useProfil();
   const [a, setA] = useState<Artisan | null>(null);
   const [liste, setListe] = useState<Demande[] | null>(null);
-  const [quota, setQuota] = useState<{ quota: number | null; utilise: number } | null>(null);
+  const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -45,8 +45,8 @@ export default function DemandesDispo() {
         </Link>
       )}
       {quota && quota.quota !== null && (
-        <Link href="/artisan/abonnement" className={`card flex items-center justify-between !p-3 text-sm ${quota.utilise >= quota.quota ? "border-red-300 bg-red-50" : ""}`}>
-          <span>{quota.utilise >= quota.quota ? "🔒 Limite d'offres atteinte ce mois-ci" : `📨 ${quota.quota - quota.utilise} offre(s) restante(s) ce mois-ci`}</span>
+        <Link href="/artisan/abonnement" className={`card flex items-center justify-between !p-3 text-sm ${quota.utilise >= quota.quota && !quota.bonus ? "border-red-300 bg-red-50" : ""}`}>
+          <span>{quota.utilise >= quota.quota ? (quota.bonus ? `🎁 ${quota.bonus} offre(s) bonus disponible(s)` : "🔒 Limite d'offres atteinte ce mois-ci") : `📨 ${quota.quota - quota.utilise} offre(s) restante(s) ce mois-ci${quota.bonus ? ` + ${quota.bonus} bonus` : ""}`}</span>
           <b className="text-brand">Abonnement →</b>
         </Link>
       )}
