@@ -1,11 +1,12 @@
 "use client";
 // Nouvelle demande en 4 étapes : description → questions de l'IA → cahier des charges → coordonnées et publication.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
 import { CahierVue } from "@/components/Vues";
 import { Erreur, useProfil } from "@/components/Espace";
+import { aDuContenu, ecrireBrouillon, ecrirePhotos, effacerBrouillon, lireBrouillon } from "@/lib/brouillon";
 import { DELAIS, compresser, dataUrlToBlob, departementDe, errMsg, ia, type Cahier, type Question } from "@/lib/mer";
 
 type Photo = { grande: string; petite: string };
@@ -38,6 +39,37 @@ export default function Nouvelle() {
   const [demandeId, setDemandeId] = useState<string | null>(null);
 
   const petites = () => photos.map((p) => p.petite);
+
+  // ---- Sauvegarde automatique ----
+  const pret = useRef(false);
+  const [repris, setRepris] = useState(false);
+  useEffect(() => {
+    const { data: b, photos: ph } = lireBrouillon(profil.id);
+    if (b && aDuContenu(b)) {
+      setEtape(Number(b.etape) || 1); setDescription(String(b.description || "")); setCp(String(b.cp || ""));
+      setVille(String(b.ville || "")); setDelai(String(b.delai || DELAIS[2])); setQuestions((b.questions as Question[]) || []);
+      setReponses((b.reponses as Record<string, string>) || {}); setTitre(String(b.titre || "")); setCahier((b.cahier as Cahier) || null);
+      setMetiers((b.metiers as string[]) || []); setAdresse(String(b.adresse || ""));
+      if (b.nom) setNom(String(b.nom)); if (b.tel) setTel(String(b.tel)); if (b.email) setEmail(String(b.email));
+      setDemandeId((b.demandeId as string) || null); setPhotos(ph); setRepris(true);
+    }
+    pret.current = true;
+  }, [profil.id]);
+  useEffect(() => {
+    if (!pret.current) return;
+    const t = setTimeout(() => ecrireBrouillon(profil.id, {
+      etape, description, cp, ville, delai, questions, reponses, titre, cahier, metiers, nom, tel, email, adresse, demandeId,
+    }), 400);
+    return () => clearTimeout(t);
+  }, [profil.id, etape, description, cp, ville, delai, questions, reponses, titre, cahier, metiers, nom, tel, email, adresse, demandeId]);
+  useEffect(() => { if (pret.current) ecrirePhotos(profil.id, photos); }, [profil.id, photos]);
+
+  function recommencer() {
+    if (!confirm("Effacer la demande en cours et recommencer ?")) return;
+    effacerBrouillon(profil.id);
+    setEtape(1); setDescription(""); setCp(""); setVille(""); setDelai(DELAIS[2]); setPhotos([]); setQuestions([]);
+    setReponses({}); setTitre(""); setCahier(null); setMetiers([]); setAdresse(""); setDemandeId(null); setRepris(false); setErr("");
+  }
 
   async function ajouterPhotos(files: FileList | null) {
     if (!files) return;
@@ -103,6 +135,7 @@ export default function Nouvelle() {
       if (e2) throw e2;
       const { error: e3 } = await s.rpc("publier_demande", { p_id: id });
       if (e3) throw e3;
+      effacerBrouillon(profil.id);
       router.replace(`/client/demande/${id}?publiee=1`);
     } catch (e) { setErr(errMsg(e)); setBusy(""); }
   }
@@ -110,9 +143,14 @@ export default function Nouvelle() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs font-semibold uppercase text-slate-400">Étape {etape} sur 4</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase text-slate-400">Étape {etape} sur 4 · <span className="normal-case">💾 sauvegarde auto</span></p>
+          {(etape > 1 || description) && <button type="button" className="text-xs text-slate-500 underline" onClick={recommencer}>Recommencer</button>}
+        </div>
         <div className="mt-1 h-1.5 rounded-full bg-slate-200"><div className="h-full rounded-full bg-flame transition-all" style={{ width: `${etape * 25}%` }} /></div>
       </div>
+
+      {repris && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">↩️ Votre demande en cours a été reprise là où vous l'aviez laissée.</p>}
 
       {etape === 1 && (
         <div className="space-y-4">

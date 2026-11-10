@@ -3,12 +3,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
 import { dateFr } from "@/lib/calc";
+import { aDuContenu, lireBrouillon, type Brouillon } from "@/lib/brouillon";
+import { useProfil } from "@/components/Espace";
 import { STATUT_DEMANDE, statutDemande, tempsRestant, type Demande } from "@/lib/mer";
 
 type Ligne = Demande & { offres: { count: number }[] };
 
 export default function MesDemandes() {
   const [liste, setListe] = useState<Ligne[] | null>(null);
+  const { profil } = useProfil();
+  const [brouillon, setBrouillon] = useState<Brouillon | null>(null);
+  useEffect(() => { const b = lireBrouillon(profil.id).data; if (aDuContenu(b)) setBrouillon(b); }, [profil.id]);
 
   useEffect(() => {
     (async () => {
@@ -26,8 +31,17 @@ export default function MesDemandes() {
         <h1 className="text-2xl font-extrabold">Mes demandes</h1>
         <Link href="/client/nouvelle" className="btn-brand !py-2 text-sm">＋ Nouvelle</Link>
       </div>
+      {brouillon && (
+        <Link href="/client/nouvelle" className="card block space-y-1 border-2 border-dashed border-flame">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-bold">{brouillon.titre || String(brouillon.description || "").slice(0, 60) || "Nouvelle demande"}</p>
+            <span className="chip shrink-0 bg-flame-light text-flame">En cours · étape {String(brouillon.etape || 1)}/4</span>
+          </div>
+          <p className="text-sm font-semibold text-brand">Reprendre ma demande →</p>
+        </Link>
+      )}
       {liste === null && <p className="text-slate-400">Chargement…</p>}
-      {liste?.length === 0 && (
+      {liste?.length === 0 && !brouillon && (
         <div className="card space-y-3 text-center">
           <p className="text-4xl">🏗️</p>
           <p className="font-semibold">Aucune demande pour l'instant</p>
