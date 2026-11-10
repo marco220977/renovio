@@ -167,7 +167,7 @@ export default function Nouvelle() {
               <p className="font-semibold">{q.question}</p>
               {q.type === "choix" && q.options?.length ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {[...q.options, "Je ne sais pas"].map((o) => (
+                  {Array.from(new Set([...q.options, "Je ne sais pas"])).map((o) => (
                     <button key={o} type="button" onClick={() => setReponses({ ...reponses, [q.id]: o })}
                       className={`chip border py-1.5 ${reponses[q.id] === o ? "border-ink bg-ink text-white" : "border-slate-200 bg-white text-slate-700"}`}>{o}</button>
                   ))}

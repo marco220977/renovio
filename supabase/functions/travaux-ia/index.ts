@@ -2,7 +2,7 @@
 //  - action "questions" : comprend la demande du client et pose 3 à 6 questions
 //  - action "cahier"    : rédige le cahier des charges + fourchette de budget
 //  - action "devis"     : pré-remplit le devis de l'artisan à partir de ses tarifs
-// Secret requis : ANTHROPIC_API_KEY (déjà utilisé par scan-plaque). Optionnel : ANTHROPIC_MODEL.
+// Secret requis : ANTHROPIC_API_KEY (Supabase > Edge Functions > Secrets). Optionnel : ANTHROPIC_MODEL.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -19,8 +19,29 @@ const IDS = ["plomberie", "chauffage", "electricite", "maconnerie", "platrerie",
   "menuiserie", "couverture", "facade", "agencement", "exterieur", "multiservice"];
 
 const BASE = `Tu es un conducteur de travaux expérimenté en rénovation de l'habitat en France. Tu aides des particuliers à décrire leurs travaux
-et des artisans à chiffrer. Tu écris en français simple. Tu réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises.
+et des artisans à chiffrer. Tu écris en français simple. Tu réponds en remplissant l'outil « repondre ». Sois concis : désignations courtes, pas de phrases inutiles.
 Identifiants de métiers autorisés : ${METIERS}. Utilise seulement ces identifiants (avant les parenthèses).`;
+
+
+const str = { type: "string" };
+const num = { type: "number" };
+const arr = (items: unknown) => ({ type: "array", items });
+const SCHEMAS: Record<string, unknown> = {
+  questions: { type: "object", required: ["titre", "metiers", "questions"], properties: {
+    titre: str, metiers: arr(str), resume: str,
+    questions: arr({ type: "object", required: ["id", "question", "type"], properties: {
+      id: str, question: str, type: { type: "string", enum: ["choix", "texte", "nombre"] }, options: arr(str), unite: str } }) } },
+  cahier: { type: "object", required: ["titre", "metiers", "resume", "lots", "budget_min", "budget_max"], properties: {
+    titre: str, metiers: arr(str), resume: str, budget_min: num, budget_max: num,
+    points_attention: arr(str), hypotheses: arr(str),
+    lots: arr({ type: "object", required: ["titre", "postes"], properties: {
+      titre: str, metier: str,
+      postes: arr({ type: "object", required: ["designation"], properties: { designation: str, quantite: num, unite: str, precisions: str } }) } }) } },
+  devis: { type: "object", required: ["lignes"], properties: {
+    hypotheses: arr(str), delai_jours: num, duree_jours: num,
+    lignes: arr({ type: "object", required: ["label", "qty", "unit", "unit_price", "vat_rate"], properties: {
+      kind: { type: "string", enum: ["section", "ligne"] }, label: str, description: str, qty: num, unit: str, unit_price: num, vat_rate: num } }) } },
+};
 
 function prompt(action: string, b: any): string {
   if (action === "questions") return `${BASE}
@@ -84,12 +105,15 @@ Deno.serve(async (req) => {
   }
   content.push({ type: "text", text });
 
+  // Réponse forcée dans un « formulaire » (outil) : le JSON est toujours valide
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5-5",
-      max_tokens: action === "questions" ? 1500 : 6000,
+      max_tokens: action === "questions" ? 3000 : 16000,
+      tools: [{ name: "repondre", description: "Donne la réponse au format demandé.", input_schema: SCHEMAS[action] }],
+      tool_choice: { type: "tool", name: "repondre" },
       messages: [{ role: "user", content }],
     }),
   });
@@ -98,10 +122,15 @@ Deno.serve(async (req) => {
     console.error("Anthropic error", r.status, j?.error?.message);
     return json({ error: frError(j?.error?.message || "", r.status) }, 502);
   }
-  const txt: string = j.content?.find((c: any) => c.type === "text")?.text || "";
-  let out: any;
-  try { out = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); }
-  catch { return json({ error: "Réponse de l'IA illisible, réessayez." }, 502); }
+  let out: any = j.content?.find((c: any) => c.type === "tool_use")?.input;
+  if (!out) {
+    const txt: string = j.content?.find((c: any) => c.type === "text")?.text || "";
+    try { out = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch { /* rien */ }
+  }
+  if (!out || typeof out !== "object") {
+    console.error("Réponse illisible", j.stop_reason, JSON.stringify(j.content)?.slice(0, 2000));
+    return json({ error: j.stop_reason === "max_tokens" ? "Projet trop long pour l'IA, simplifiez la description et réessayez." : "Réponse de l'IA illisible, réessayez." }, 502);
+  }
   if (Array.isArray(out.metiers)) out.metiers = out.metiers.filter((m: string) => IDS.includes(m));
   if (Array.isArray(out.lignes)) {
     out.lignes = out.lignes.map((l: any) => l.kind === "section"
