@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const m = /^data:(image\/\w+);base64,(.+)$/.exec(p || "");
     if (m) content.push({ type: "image", source: { type: "base64", media_type: m[1], data: m[2] } });
   }
-  content.push({ type: "text", text });
+  content.push({ type: "text", text: text + "\n\nRéponds uniquement en appelant l'outil « repondre »." });
 
   // Réponse forcée dans un « formulaire » (outil) : le JSON est toujours valide
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
       model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5-5",
       max_tokens: action === "questions" ? 3000 : 16000,
       tools: [{ name: "repondre", description: "Donne la réponse au format demandé.", input_schema: SCHEMAS[action] }],
-      tool_choice: { type: "tool", name: "repondre" },
+      tool_choice: { type: "auto" },
       messages: [{ role: "user", content }],
     }),
   });
@@ -125,7 +125,9 @@ Deno.serve(async (req) => {
   let out: any = j.content?.find((c: any) => c.type === "tool_use")?.input;
   if (!out) {
     const txt: string = j.content?.find((c: any) => c.type === "text")?.text || "";
-    try { out = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch { /* rien */ }
+    const brut = txt.replace(/```(json)?/g, "");
+    try { out = JSON.parse(brut.slice(brut.indexOf("{"), brut.lastIndexOf("}") + 1)); }
+    catch { try { out = JSON.parse(brut.slice(brut.indexOf("{"), brut.lastIndexOf("}") + 1).replace(/,\s*([}\]])/g, "$1")); } catch { /* rien */ } }
   }
   if (!out || typeof out !== "object") {
     console.error("Réponse illisible", j.stop_reason, JSON.stringify(j.content)?.slice(0, 2000));
