@@ -32,7 +32,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
             Expliquez ce que vous voulez faire. L'IA prépare le cahier des charges, les artisans de votre secteur vous envoient leur devis.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            <Link href="/connexion?mode=signup&role=client" className="btn bg-gradient-to-r from-ink to-brand py-4 text-lg text-white">
+            <Link href="/particuliers" className="btn bg-gradient-to-r from-ink to-brand py-4 text-lg text-white">
               🏠 J'ai des travaux
             </Link>
             <Link href="/connexion?mode=signup&role=artisan" className="btn-brand py-4 text-lg">
