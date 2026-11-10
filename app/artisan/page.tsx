@@ -11,6 +11,7 @@ export default function DemandesDispo() {
   const { profil } = useProfil();
   const [a, setA] = useState<Artisan | null>(null);
   const [liste, setListe] = useState<Demande[] | null>(null);
+  const [quota, setQuota] = useState<{ quota: number | null; utilise: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -21,6 +22,7 @@ export default function DemandesDispo() {
         s.from("demandes").select("*").eq("statut", "ouverte").gt("ferme_le", new Date().toISOString()).order("publiee_le", { ascending: false }),
         s.from("offres").select("demande_id").eq("artisan_id", profil.id),
       ]);
+      s.rpc("mon_quota").then(({ data }) => setQuota(data));
       const deja = new Set(((mes as { demande_id: string }[]) || []).map((x) => x.demande_id));
       // Les règles de la base ne renvoient que les demandes de vos métiers et départements ; on retire celles déjà traitées
       setListe(((d as Demande[]) || []).filter((x) => !deja.has(x.id) && x.client_id !== profil.id));
@@ -40,6 +42,12 @@ export default function DemandesDispo() {
       {manque.length > 0 && (
         <Link href="/artisan/profil" className="card block border-amber-300 bg-amber-50 text-sm text-amber-900">
           ⚠️ Pour voir les demandes et y répondre, complétez {manque.join(", ")}. <b>Compléter mon profil →</b>
+        </Link>
+      )}
+      {quota && quota.quota !== null && (
+        <Link href="/artisan/abonnement" className={`card flex items-center justify-between !p-3 text-sm ${quota.utilise >= quota.quota ? "border-red-300 bg-red-50" : ""}`}>
+          <span>{quota.utilise >= quota.quota ? "🔒 Limite d'offres atteinte ce mois-ci" : `📨 ${quota.quota - quota.utilise} offre(s) restante(s) ce mois-ci`}</span>
+          <b className="text-brand">Abonnement →</b>
         </Link>
       )}
       {liste === null && <p className="text-slate-400">Chargement…</p>}

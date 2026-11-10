@@ -82,6 +82,7 @@ function Fiche() {
       <Erreur msg={err} />
       {ok && <p className="text-sm text-green-700">{ok}</p>}
       <button className="btn-primary w-full py-3.5" onClick={enregistrer}>Enregistrer</button>
+      <a href="/artisan/abonnement" className="btn-ghost w-full">💳 Mon abonnement</a>
       <Deconnexion />
     </div>
   );

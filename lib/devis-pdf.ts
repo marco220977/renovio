@@ -18,6 +18,9 @@ export function versDevis(o: Offre, a: Artisan, d: Pick<Demande, "titre" | "cp" 
     o.message,
     o.delai_jours != null ? `Démarrage possible sous ${o.delai_jours} jours après accord.` : "",
     o.duree_jours ? `Durée estimée des travaux : ${o.duree_jours} jours.` : "",
+    o.statut === "envoyee" ? "Devis provisoire établi sur description et photos, sans visite : il sera confirmé ou ajusté après la visite." : "",
+    "Règlement directement auprès de l'entreprise.",
+    "Droit de rétractation : le client particulier dispose de 14 jours à compter de la signature pour se rétracter sans motif (contrat conclu à distance, art. L221-18 du Code de la consommation).",
   ].filter(Boolean).join(" ");
   const doc: Doc = {
     id: o.id, kind: "quote", number: o.numero, status: o.statut === "acceptee" ? "signed" : "sent",

@@ -8,7 +8,7 @@ import { dateFr, eur } from "@/lib/calc";
 import { TRADE } from "@/lib/trades";
 import Modal from "@/components/Modal";
 import { Etoiles, Metiers } from "@/components/Vues";
-import { STATUT_DEMANDE, STATUT_OFFRE, errMsg, statutDemande, type Artisan, type Demande, type Offre, type Profil } from "@/lib/mer";
+import { FORMULES, STATUT_DEMANDE, STATUT_OFFRE, errMsg, statutDemande, type Artisan, type Demande, type Offre, type Profil } from "@/lib/mer";
 
 type P = Profil & { created_at: string };
 type Note = { artisan_id: string; note: number; nb_avis: number };
@@ -146,7 +146,7 @@ export default function Admin() {
                   : <span className="chip shrink-0 bg-amber-100 text-amber-800">À vérifier</span>}
               </div>
               <p className="text-xs text-slate-500">{a.ville} · dép. {a.departements?.join(", ") || "—"} · {a.metiers?.map((m) => TRADE[m]?.emoji).join(" ")}</p>
-              <p className="text-xs text-slate-500">{mes.length} offre(s) · {mes.filter((o) => o.statut === "acceptee").length} gagnée(s) · <Etoiles note={notes[a.id]?.note} nb={notes[a.id]?.nb_avis} /></p>
+              <p className="text-xs text-slate-500">{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"} · {mes.length} offre(s) · {mes.filter((o) => o.statut === "acceptee").length} gagnée(s) · <Etoiles note={notes[a.id]?.note} nb={notes[a.id]?.nb_avis} /></p>
               {manque.length > 0 && <p className="text-xs text-red-600">Manque : {manque.join(", ")}</p>}
             </button>
           );
@@ -201,6 +201,7 @@ export default function Admin() {
                 <span className="text-slate-500">Décennale</span>
                 <span className={a.decennale_fin && new Date(a.decennale_fin) < new Date() ? "text-red-600" : ""}>{a.decennale || "—"}{a.decennale_fin && ` (fin ${dateFr(a.decennale_fin)})`}</span>
                 <span className="text-slate-500">RGE / TVA</span><span>{a.rge ? "RGE" : "non RGE"} · {a.tva_franchise ? "franchise" : "assujetti"}</span>
+                <span className="text-slate-500">Abonnement</span><span>{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"}{a.abonnement_fin && ` (jusqu'au ${dateFr(a.abonnement_fin)})`}</span>
                 <span className="text-slate-500">Départements</span><span>{a.departements?.join(", ") || "—"}</span>
                 <span className="text-slate-500">Inscrit le</span><span>{dateFr(a.created_at)}</span>
               </div>
@@ -212,7 +213,13 @@ export default function Admin() {
                 return <p key={o.id} className="flex justify-between gap-2 border-b border-slate-100 py-1"><span>{d?.titre || "Demande"} <span className={`chip ${STATUT_OFFRE[o.statut][1]}`}>{STATUT_OFFRE[o.statut][0]}</span></span><b>{eur(o.total_ttc)}</b></p>;
               })}
             </div>
-            <div className="flex shrink-0 gap-2 pt-3">
+            <div className="flex shrink-0 items-center gap-2 pt-3 text-sm">
+              <span className="text-slate-500">Formule offerte :</span>
+              <select className="input !py-1.5" value={a.abonnement || "gratuit"} onChange={(e) => majArtisan(a.id, { abonnement: e.target.value as Artisan["abonnement"], abonnement_fin: null })}>
+                {FORMULES.map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
+              </select>
+            </div>
+            <div className="flex shrink-0 gap-2 pt-2">
               {a.statut === "suspendu"
                 ? <button className="btn-ghost flex-1" onClick={() => majArtisan(a.id, { statut: "actif" })}>Réactiver</button>
                 : <button className="btn-danger flex-1" onClick={() => confirm("Suspendre cet artisan ? Il ne verra plus les demandes.") && majArtisan(a.id, { statut: "suspendu" })}>Suspendre</button>}

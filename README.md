@@ -23,7 +23,18 @@ Next.js 14 · Supabase (comptes, base, stockage photos, fonction IA) · Claude (
 2. Edge Functions : déployer `supabase/functions/travaux-ia/index.ts` ; secret `ANTHROPIC_API_KEY` (et facultatif `ANTHROPIC_MODEL`).
 3. Vercel : variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_URL`.
 
-## Pas encore fait (V1)
+## Version 2 (fichier `supabase/v2.sql`, à exécuter après `mise-en-relation.sql`)
+- **Signature en deux temps** : le client choisit un artisan sans engagement → coordonnées transmises → visite → devis définitif
+  (écarts avec le devis provisoire affichés ligne par ligne, alerte au-delà de +15 %) → signature. Le client peut renoncer et choisir une autre offre.
+  Droit de rétractation de 14 jours affiché et bouton « Me rétracter ». Les hausses fréquentes après visite font baisser le score de l'artisan.
+- **Messagerie** client ↔ artisan par demande (questions avant le choix) et **propositions de créneaux de visite** (accepter / refuser).
+- **Avenants** : travaux imprévus pendant le chantier, proposés par l'artisan et signés par le client dans l'appli.
+- **Abonnements artisans** (Stripe, payés à Rénovio) : Découverte 3 offres/mois gratuit, Essentiel 29 € (10), Pro 49 € (30), Illimité 79 €.
+  Variables Vercel : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL` ;
+  webhook Stripe vers `/api/stripe/webhook` (événements `customer.subscription.*`). L'admin peut aussi offrir une formule depuis /admin.
+- Aucun règlement client → artisan ne passe par l'appli.
+
+## Pas encore fait
 Paiement des artisans (crédits / abonnement Stripe), messagerie client-artisan, notifications e-mail, back-office admin,
 analyse des photos par l'IA côté artisan, CGU/CGV adaptées à la mise en relation (les pages `/legal` sont celles de l'ancienne appli).
 
