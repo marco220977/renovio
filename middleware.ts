@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
     }
   );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user && (req.nextUrl.pathname.startsWith("/client") || req.nextUrl.pathname.startsWith("/artisan"))) {
+  if (!user && (req.nextUrl.pathname.startsWith("/client") || req.nextUrl.pathname.startsWith("/artisan") || req.nextUrl.pathname.startsWith("/admin"))) {
     const url = req.nextUrl.clone();
     url.pathname = "/connexion";
     url.search = `?role=${req.nextUrl.pathname.startsWith("/artisan") ? "artisan" : "client"}`;
@@ -28,4 +28,4 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-export const config = { matcher: ["/client/:path*", "/artisan/:path*"] };
+export const config = { matcher: ["/client/:path*", "/artisan/:path*", "/admin/:path*"] };

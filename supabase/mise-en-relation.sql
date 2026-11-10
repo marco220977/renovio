@@ -453,3 +453,9 @@ grant execute on function publier_demande(uuid), annuler_demande(uuid), envoyer_
 revoke execute on function est_admin(), mes_demandes_ids(), mes_offres_demandes_ids(), demandes_attribuees_ids(), demande_visible_artisan(demandes) from public, anon;
 grant execute on function est_admin(), mes_demandes_ids(), mes_offres_demandes_ids(), demandes_attribuees_ids(), demande_visible_artisan(demandes) to authenticated;
 revoke execute on function protege_artisan() from public, anon, authenticated;
+
+-- Tableau de bord admin : l'admin peut modifier les profils (le rôle admin se donne à la main dans Supabase)
+drop policy if exists profils_u on profils;
+create policy profils_u on profils for update using (id = auth.uid() or est_admin())
+  with check ((id = auth.uid() and role in ('client', 'artisan')) or est_admin());
+-- update profils set role = 'admin' where email = 'votre@email.fr';

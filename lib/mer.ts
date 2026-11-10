@@ -7,7 +7,7 @@ export type Role = "client" | "artisan" | "admin";
 export type Profil = { id: string; role: Role; nom?: string; telephone?: string; email?: string };
 
 export type Artisan = {
-  id: string; raison_sociale?: string; forme?: string; siret?: string; adresse?: string; cp?: string; ville?: string;
+  id: string; created_at?: string; raison_sociale?: string; forme?: string; siret?: string; adresse?: string; cp?: string; ville?: string;
   telephone?: string; email?: string; metiers: string[]; departements: string[]; decennale?: string; decennale_fin?: string | null;
   rge?: boolean; tva_franchise?: boolean; presentation?: string; verifie?: boolean; statut?: string;
 };

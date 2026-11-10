@@ -16,7 +16,7 @@ async function destination(): Promise<string> {
   if (!user) return "/connexion";
   const { data } = await s.from("profils").select("role").eq("id", user.id).maybeSingle();
   if (!data) return "/bienvenue";
-  return data.role === "artisan" ? "/artisan" : "/client";
+  return data.role === "admin" ? "/admin" : data.role === "artisan" ? "/artisan" : "/client";
 }
 
 function Form() {
