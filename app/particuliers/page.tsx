@@ -82,7 +82,7 @@ export default function Particuliers() {
           </div>
         </section>
 
-        <section className="mt-16 card bg-ink text-white">
+        <section className="mt-16 rounded-2xl bg-ink p-5 text-white shadow-sm">
           <p className="text-sm font-semibold uppercase text-flame">Exemple</p>
           <p className="mt-2 text-lg font-bold">« Je veux refaire ma salle de bain de 6 m² : douche à l'italienne, meuble vasque et faïence. »</p>
           <ul className="mt-4 space-y-1 text-sm text-white/80">
