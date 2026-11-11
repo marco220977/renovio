@@ -1,8 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Rénolien — Vos travaux de rénovation, les devis des artisans de votre secteur",
-  description: "Décrivez vos travaux en 2 minutes. L'IA prépare votre cahier des charges et une estimation, des artisans vérifiés vous envoient leur devis. Gratuit et sans engagement.",
+  title: "Devis travaux de rénovation gratuits : salle de bain, plomberie, électricité…",
+  description: "Décrivez vos travaux en 2 minutes. L'IA prépare votre cahier des charges et une estimation, puis jusqu'à 5 artisans vérifiés de votre secteur vous envoient leur devis. Gratuit et sans engagement.",
+  alternates: { canonical: "/particuliers" },
 };
 
 const INSCRIPTION = "/connexion?mode=signup&role=client";
@@ -31,8 +32,14 @@ const faq = [
 ];
 
 export default function Particuliers() {
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map(([q, r]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: r } })),
+  };
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <div className="mx-auto max-w-3xl px-5 pb-28">
         <nav className="flex items-center justify-between py-5">
           <Link href="/particuliers" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></Link>
