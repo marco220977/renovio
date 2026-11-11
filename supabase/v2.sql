@@ -515,7 +515,7 @@ update artisans set code_parrain = nouveau_code_parrain() where code_parrain is 
 
 create or replace function nom_parrain(p_code text) returns text
 language sql stable security definer set search_path = public as $$
-  select coalesce(nullif(trim(raison_sociale), ''), 'un artisan Rénovio') from artisans where code_parrain = upper(trim(p_code)) and statut = 'actif';
+  select coalesce(nullif(trim(raison_sociale), ''), 'un artisan Rénolien') from artisans where code_parrain = upper(trim(p_code)) and statut = 'actif';
 $$;
 grant execute on function nom_parrain(text) to anon, authenticated;
 
