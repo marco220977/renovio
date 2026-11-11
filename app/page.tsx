@@ -70,6 +70,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
 
         <footer className="mt-16 space-y-2 text-center text-xs text-slate-400">
           <p className="flex flex-wrap justify-center gap-4">
+            <Link href="/travaux">Trouver un artisan</Link>
             <Link href="/legal/mentions-legales">Mentions légales</Link>
             <Link href="/legal/cgu">CGU</Link>
             <Link href="/legal/cgv">CGV artisans</Link>
