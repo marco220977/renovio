@@ -5,7 +5,9 @@ import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
 import { Erreur, Info, useProfil } from "@/components/Espace";
 import MonCompte from "@/components/MonCompte";
-import { errMsg, type Artisan } from "@/lib/mer";
+import { errMsg, compresser, type Artisan } from "@/lib/mer";
+import AnalyseDecennale from "@/components/AnalyseDecennale";
+import { dateFr, joursDecennale } from "@/lib/decennale";
 
 function Fiche() {
   const { profil } = useProfil();
@@ -14,6 +16,7 @@ function Fiche() {
   const [deps, setDeps] = useState("");
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+  const [analyse, setAnalyse] = useState(false);
   const [siretInfo, setSiretInfo] = useState<{ etat: "cours" | "ok" | "erreur"; texte: string } | null>(null);
 
   useEffect(() => {
@@ -46,16 +49,33 @@ function Fiche() {
 
   async function envoyerAttestation(f?: File) {
     if (!f) return;
-    if (f.size > 10e6) return setErr("Fichier trop lourd (10 Mo maximum).");
+    if (f.size > 15e6) return setErr("Fichier trop lourd (15 Mo maximum).");
     setErr(""); setOk("");
-    const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+    let fichier: Blob = f, ext = (f.name.split(".").pop() || "jpg").toLowerCase(), type = f.type;
+    if (f.type.startsWith("image/")) {
+      // Photo convertie en JPEG net (les photos de téléphone en HEIC ne sont pas lisibles par l'IA)
+      try { fichier = await (await fetch(await compresser(f, 2200, 0.88))).blob(); ext = "jpg"; type = "image/jpeg"; } catch {}
+    } else if (f.type !== "application/pdf") return setErr("Envoyez une photo ou un PDF.");
+    if (fichier.size > 10e6) return setErr("Fichier trop lourd (10 Mo maximum).");
     const path = `${profil.id}/decennale-${Date.now()}.${ext}`;
     const s = sb();
-    const { error } = await s.storage.from("attestations").upload(path, f, { contentType: f.type });
+    const { error } = await s.storage.from("attestations").upload(path, fichier, { contentType: type });
     if (error) return setErr(errMsg(error));
     const { error: e2 } = await s.from("artisans").update({ decennale_doc: path }).eq("id", profil.id);
     if (e2) return setErr(errMsg(e2));
-    set({ decennale_doc: path }); setOk("Attestation envoyée.");
+    set({ decennale_doc: path });
+    analyser();
+  }
+
+  async function analyser() {
+    setAnalyse(true); setErr(""); setOk("");
+    const { data, error } = await sb().functions.invoke("travaux-ia", { body: { action: "attestation" } });
+    setAnalyse(false);
+    let msg = data?.error;
+    if (error) { msg = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch {} }
+    if (msg) return setErr(`Attestation enregistrée, mais la lecture automatique a échoué : ${msg}`);
+    setA((x) => x && ({ ...x, decennale_analyse: data.analyse, decennale: data.decennale ?? x.decennale, decennale_fin: data.decennale_fin ?? x.decennale_fin }));
+    setOk(data.analyse?.alertes?.length ? "Attestation lue : quelques points sont à vérifier, voir ci-dessous." : "Attestation lue et contrôlée ✔");
   }
 
   async function voirAttestation() {
@@ -94,6 +114,8 @@ function Fiche() {
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold">Mon entreprise</h1>
       {params.get("bienvenue") && <Info>👋 Bienvenue ! Complétez votre fiche (SIRET, décennale, départements) pour recevoir les demandes de votre secteur.</Info>}
+      {(() => { const j = joursDecennale(a); if (j === null || j > 30) return null;
+        return <Info>{j < 0 ? `⛔ Votre assurance décennale a expiré le ${dateFr(a.decennale_analyse?.date_fin || a.decennale_fin)}. Le badge « Vérifié » est retiré : envoyez votre nouvelle attestation ci-dessous.` : `⏰ Votre assurance décennale expire ${j === 0 ? "aujourd'hui" : `dans ${j} jour${j > 1 ? "s" : ""}`}. Pensez à envoyer la nouvelle attestation dès que vous l'avez.`}</Info>; })()}
       {a.verifie ? <p className="chip bg-green-100 text-green-800">✔ Profil vérifié</p> : <p className="text-xs text-slate-500">Votre SIRET et votre décennale seront contrôlés pour obtenir le badge « Vérifié ».</p>}
 
       <div className="card space-y-3">
@@ -139,8 +161,15 @@ function Fiche() {
           ) : (
             <label className="btn-ghost w-full cursor-pointer">📎 Envoyer mon attestation<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
           )}
-          <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénolien, pour vérifier votre profil et vous donner le badge « Vérifié ».</p>
+          <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénolien. L'IA lit l'attestation (assureur, dates, activités couvertes) et la compare à votre fiche.</p>
         </div>
+        {analyse && <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">🔎 Lecture de votre attestation par l'IA… (20 secondes environ)</p>}
+        {!analyse && <AnalyseDecennale an={a.decennale_analyse} />}
+        {!analyse && a.decennale_doc && (
+          <button type="button" className="text-sm font-semibold text-brand" onClick={analyser}>
+            {a.decennale_analyse ? "🔄 Relancer la lecture (après avoir modifié vos métiers ou votre SIRET, enregistrez d'abord)" : "🔎 Faire lire mon attestation par l'IA"}
+          </button>
+        )}
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.rge} onChange={(e) => set({ rge: e.target.checked })} /> Certifié RGE</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.tva_franchise} onChange={(e) => set({ tva_franchise: e.target.checked })} /> Franchise de TVA (micro-entreprise, art. 293 B)</label>
         <div><label className="label">Présentation (visible par les clients)</label>

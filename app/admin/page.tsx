@@ -1,6 +1,8 @@
 "use client";
 // Tableau de bord administrateur : chiffres clés, artisans (vérifier / suspendre), clients, demandes.
 import { useEffect, useMemo, useState } from "react";
+import AnalyseDecennale from "@/components/AnalyseDecennale";
+import { joursDecennale, finDecennale } from "@/lib/decennale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -140,7 +142,10 @@ export default function Admin() {
 
         {onglet === "artisans" && listeArtisans.map((a) => {
           const mes = offres.filter((o) => o.artisan_id === a.id);
-          const manque = [(a.siret || "").length !== 14 && "SIRET", !a.decennale && "décennale", !a.departements?.length && "départements"].filter(Boolean);
+          const jd = joursDecennale(a);
+          const manque = [(a.siret || "").length !== 14 && "SIRET", !a.decennale && "décennale", !a.departements?.length && "départements",
+            jd !== null && jd < 0 && "décennale expirée", jd !== null && jd >= 0 && jd <= 30 && `décennale expire dans ${jd} j`,
+            a.decennale_analyse?.alertes?.length && `${a.decennale_analyse.alertes.length} alerte(s) attestation`].filter(Boolean);
           return (
             <button key={a.id} onClick={() => setFiche({ type: "artisans", id: a.id })} className="card block w-full space-y-1 text-left">
               <div className="flex items-start justify-between gap-2">
@@ -151,7 +156,7 @@ export default function Admin() {
               </div>
               <p className="text-xs text-slate-500">{a.ville} · dép. {a.departements?.join(", ") || "—"} · {a.metiers?.map((m) => TRADE[m]?.emoji).join(" ")}</p>
               <p className="text-xs text-slate-500">{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"} · {mes.length} offre(s) · {mes.filter((o) => o.statut === "acceptee").length} gagnée(s) · <Etoiles note={notes[a.id]?.note} nb={notes[a.id]?.nb_avis} /></p>
-              {manque.length > 0 && <p className="text-xs text-red-600">Manque : {manque.join(", ")}</p>}
+              {manque.length > 0 && <p className="text-xs text-red-600">À voir : {manque.join(", ")}</p>}
             </button>
           );
         })}
@@ -205,8 +210,9 @@ export default function Admin() {
                 <span className="text-slate-500">Forme</span><span>{a.forme || "—"}</span>
                 <span className="text-slate-500">Adresse</span><span>{[a.adresse, a.cp, a.ville].filter(Boolean).join(" ") || "—"}</span>
                 <span className="text-slate-500">Décennale</span>
-                <span className={a.decennale_fin && new Date(a.decennale_fin) < new Date() ? "text-red-600" : ""}>{a.decennale || "—"}{a.decennale_fin && ` (fin ${dateFr(a.decennale_fin)})`}
+                <span className={(joursDecennale(a) ?? 1) < 0 ? "text-red-600" : ""}>{a.decennale || "—"}{finDecennale(a) && ` (fin ${dateFr(finDecennale(a))})`}
                   {a.decennale_doc ? <button className="ml-1 text-brand underline" onClick={async () => { const { data } = await sb().storage.from("attestations").createSignedUrl(a.decennale_doc!, 600); if (data?.signedUrl) window.open(data.signedUrl, "_blank"); }}>attestation ↗</button> : <span className="ml-1 text-xs text-red-600">(pas d'attestation)</span>}</span>
+                {a.decennale_analyse && <div className="col-span-2"><AnalyseDecennale an={a.decennale_analyse} admin /></div>}
                 <span className="text-slate-500">RGE / TVA</span><span>{a.rge ? "RGE" : "non RGE"} · {a.tva_franchise ? "franchise" : "assujetti"}</span>
                 <span className="text-slate-500">Abonnement</span><span>{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"}{a.abonnement_fin && ` (jusqu'au ${dateFr(a.abonnement_fin)})`}</span>
                 <span className="text-slate-500">Départements</span><span>{a.departements?.join(", ") || "—"}</span>
