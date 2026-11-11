@@ -38,7 +38,7 @@ function Form() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-orange-50 p-5">
       <form onSubmit={valider} className="card w-full max-w-md space-y-4 p-6">
-        <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">vio</span></Link>
+        <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></Link>
         <h1 className="text-2xl font-extrabold">Nouveau mot de passe</h1>
         {pret && (
           <>

@@ -104,7 +104,7 @@ function Fiche() {
           ) : (
             <label className="btn-ghost w-full cursor-pointer">📎 Envoyer mon attestation<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
           )}
-          <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénovio, pour vérifier votre profil et vous donner le badge « Vérifié ».</p>
+          <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénolien, pour vérifier votre profil et vous donner le badge « Vérifié ».</p>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.rge} onChange={(e) => set({ rge: e.target.checked })} /> Certifié RGE</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.tva_franchise} onChange={(e) => set({ tva_franchise: e.target.checked })} /> Franchise de TVA (micro-entreprise, art. 293 B)</label>

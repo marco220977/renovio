@@ -53,7 +53,7 @@ function Abonnement() {
           )}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
           {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} offre(s) bonus en réserve</p>}
-          {payant && !q.stripe && <p className="text-xs text-green-700">🎁 Formule offerte par Rénovio</p>}
+          {payant && !q.stripe && <p className="text-xs text-green-700">🎁 Formule offerte par Rénolien</p>}
           {payant && q.stripe && (q.resilie ? (
             <>
               <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">Abonnement résilié : il s'arrête {q.fin ? `le ${dateFr(q.fin)}` : "à la fin du mois payé"}.</p>
@@ -89,7 +89,7 @@ function Abonnement() {
         <span>🎁 Parrainez un artisan : <b>+5 offres</b> pour vous</span><b className="text-brand">→</b>
       </a>
       <Erreur msg={err} />
-      <p className="text-xs text-slate-400">En vous abonnant, vous acceptez les <a href="/legal/cgv" className="underline">conditions générales de vente</a>. Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénovio : les travaux se règlent directement entre vous et le client.</p>
+      <p className="text-xs text-slate-400">En vous abonnant, vous acceptez les <a href="/legal/cgv" className="underline">conditions générales de vente</a>. Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénolien : les travaux se règlent directement entre vous et le client.</p>
     </div>
   );
 }

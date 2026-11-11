@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 
-const APP = process.env.NEXT_PUBLIC_APP_NAME || "Rénovio";
+const APP = "Rénolien";
 
 export const metadata: Metadata = {
   title: `${APP} — Vos travaux de rénovation, les devis des artisans de votre secteur`,

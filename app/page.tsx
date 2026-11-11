@@ -18,7 +18,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
       <div className="mx-auto max-w-3xl px-5 pb-16">
         <nav className="flex items-center justify-between py-5">
-          <span className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">vio</span></span>
+          <span className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></span>
           <Link href="/connexion" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
 
@@ -75,7 +75,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
             <Link href="/legal/cgv">CGV artisans</Link>
             <Link href="/legal/confidentialite">Confidentialité</Link>
           </p>
-          <p>© {new Date().getFullYear()} Rénovio</p>
+          <p>© {new Date().getFullYear()} Rénolien</p>
         </footer>
       </div>
     </main>

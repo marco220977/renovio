@@ -19,7 +19,7 @@ export default function MonCompte({ role }: { role: "client" | "artisan" }) {
     const { data, error } = await sb().rpc("mes_donnees");
     if (error) return setErr(error.message);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mes-donnees-renovio.json"; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "mes-donnees-renolien.json"; a.click();
   }
 
   async function changerMdp() {
@@ -57,7 +57,7 @@ export default function MonCompte({ role }: { role: "client" | "artisan" }) {
         {role === "artisan" && <a className="block text-brand" href="/legal/cgv" target="_blank">Conditions générales de vente (abonnements)</a>}
         <a className="block text-brand" href="/legal/confidentialite" target="_blank">Politique de confidentialité</a>
         <a className="block text-brand" href="/legal/mentions-legales" target="_blank">Mentions légales</a>
-        {contact && <a className="block text-brand" href={`mailto:${contact}`}>✉️ Contacter Rénovio</a>}
+        {contact && <a className="block text-brand" href={`mailto:${contact}`}>✉️ Contacter Rénolien</a>}
         <button className="block text-brand" onClick={exporter}>⬇️ Télécharger mes données</button>
       </div>
       {ok && <p className="text-sm text-green-700">{ok}</p>}

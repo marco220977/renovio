@@ -24,7 +24,7 @@ export function versDevis(o: Offre, a: Artisan, d: Pick<Demande, "titre" | "cp" 
   ].filter(Boolean).join(" ");
   const doc: Doc = {
     id: o.id, kind: "quote", number: o.numero, status: o.statut === "acceptee" ? "signed" : "sent",
-    client_snapshot: { name: contact?.nom || "Client Rénovio", address: contact?.adresse, zip: d.cp, city: d.ville,
+    client_snapshot: { name: contact?.nom || "Client Rénolien", address: contact?.adresse, zip: d.cp, city: d.ville,
       phone: contact?.telephone, email: contact?.email },
     title: d.cahier?.titre || d.titre, site_address: contact?.adresse ? `${contact.adresse}, ${d.cp} ${d.ville || ""}` : `${d.cp} ${d.ville || ""}`,
     issue_date: emis, valid_until: fin.toISOString().slice(0, 10), lines: o.lignes || [], notes,

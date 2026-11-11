@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Rénovio — Vos travaux de rénovation, les devis des artisans de votre secteur",
+  title: "Rénolien — Vos travaux de rénovation, les devis des artisans de votre secteur",
   description: "Décrivez vos travaux en 2 minutes. L'IA prépare votre cahier des charges et une estimation, des artisans vérifiés vous envoient leur devis. Gratuit et sans engagement.",
 };
 
@@ -23,7 +23,7 @@ const garanties = [
 ];
 
 const faq = [
-  ["Combien ça coûte ?", "Rien. Rénovio est gratuit pour les particuliers, sans engagement. Vous payez uniquement les travaux, directement à l'artisan choisi."],
+  ["Combien ça coûte ?", "Rien. Rénolien est gratuit pour les particuliers, sans engagement. Vous payez uniquement les travaux, directement à l'artisan choisi."],
   ["Suis-je obligé d'accepter un devis ?", "Non. Vous pouvez comparer, poser des questions, choisir un artisan puis changer d'avis après sa visite. Vous n'êtes engagé qu'après avoir signé le devis définitif, et vous avez encore 14 jours pour vous rétracter."],
   ["Quels travaux ?", "Plomberie, chauffage, électricité, salle de bain, cuisine, carrelage, peinture, menuiseries, isolation, toiture, façade, maçonnerie, extérieurs et petits travaux."],
   ["Et si l'artisan découvre un problème pendant le chantier ?", "Il doit vous proposer un avenant dans l'appli, avec l'explication et le prix. Vous l'acceptez ou le refusez avant que les travaux supplémentaires soient faits."],
@@ -35,7 +35,7 @@ export default function Particuliers() {
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
       <div className="mx-auto max-w-3xl px-5 pb-28">
         <nav className="flex items-center justify-between py-5">
-          <Link href="/particuliers" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">vio</span></Link>
+          <Link href="/particuliers" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></Link>
           <Link href="/connexion?role=client" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
 
@@ -118,7 +118,7 @@ export default function Particuliers() {
             <Link href="/legal/confidentialite">Confidentialité</Link>
             <Link href="/">Vous êtes artisan ?</Link>
           </p>
-          <p>© {new Date().getFullYear()} Rénovio</p>
+          <p>© {new Date().getFullYear()} Rénolien</p>
         </footer>
       </div>
 

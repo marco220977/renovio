@@ -1,4 +1,4 @@
-// Abonnement artisan → Rénovio (Stripe Checkout). Ne concerne jamais les règlements client → artisan.
+// Abonnement artisan → Rénolien (Stripe Checkout). Ne concerne jamais les règlements client → artisan.
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { sbServer, sbAdmin } from "@/lib/supabase-server";
@@ -7,7 +7,7 @@ import { FORMULES } from "@/lib/formules";
 
 export async function POST(req: Request) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY)
-    return NextResponse.json({ error: "Le paiement en ligne n'est pas encore activé. Contactez Rénovio." }, { status: 503 });
+    return NextResponse.json({ error: "Le paiement en ligne n'est pas encore activé. Contactez Rénolien." }, { status: 503 });
   try {
     const { plan } = await req.json();
     const f = FORMULES.find((x) => x.id === plan && x.prix > 0);
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         quantity: 1,
         price_data: {
           currency: "eur", unit_amount: f.prix * 100, recurring: { interval: "month" },
-          product_data: { name: `Rénovio ${f.nom} — ${f.quota ? `${f.quota} offres / mois` : "offres illimitées"}` },
+          product_data: { name: `Rénolien ${f.nom} — ${f.quota ? `${f.quota} offres / mois` : "offres illimitées"}` },
         },
       }],
       subscription_data: { metadata: { artisan_id: a.id, plan: f.id } },

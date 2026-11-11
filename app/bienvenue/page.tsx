@@ -29,7 +29,7 @@ function Choix() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-orange-50 p-5">
       <div className="card w-full max-w-md space-y-4 p-6">
-        <h1 className="text-2xl font-extrabold">Bienvenue sur Rénovio</h1>
+        <h1 className="text-2xl font-extrabold">Bienvenue sur Rénolien</h1>
         <p className="text-sm text-slate-600">Dites-nous comment vous utilisez l'appli.</p>
         <div><label className="label">Votre nom</label><input className="input" value={nom} onChange={(e) => setNom(e.target.value)} /></div>
         {msg && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{msg}</p>}

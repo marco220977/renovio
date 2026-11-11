@@ -20,7 +20,7 @@ export default function Parrainage() {
   }, [profil.id]);
 
   const lien = code ? `${typeof window !== "undefined" ? location.origin : ""}/connexion?mode=signup&role=artisan&parrain=${code}` : "";
-  const texte = `Je reçois des demandes de travaux près de chez moi avec Rénovio, et le devis est prêt en 1 clic grâce à l'IA. Inscris-toi avec mon lien, tu as 3 offres offertes : ${lien}`;
+  const texte = `Je reçois des demandes de travaux près de chez moi avec Rénolien, et le devis est prêt en 1 clic grâce à l'IA. Inscris-toi avec mon lien, tu as 3 offres offertes : ${lien}`;
   const gagnes = filleuls.filter((f) => f.recompense).length * 5;
 
   async function copier() {
@@ -28,7 +28,7 @@ export default function Parrainage() {
   }
   async function partager() {
     const nav = navigator as any;
-    if (nav.share) { try { await nav.share({ title: "Rénovio", text: texte }); return; } catch {} }
+    if (nav.share) { try { await nav.share({ title: "Rénolien", text: texte }); return; } catch {} }
     copier();
   }
 
