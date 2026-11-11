@@ -10,7 +10,7 @@ export const LEGAL = {
   rcs: "[RCS ou RNE]",
   vat: "[N° TVA intracommunautaire, ou « TVA non applicable, art. 293 B du CGI »]",
   address: "[Adresse du siège]",
-  email: "[adresse e-mail de contact]",
+  email: "renolien.contact@gmail.com",
   director: "Marco [NOM]",
   city: "[Ville du siège]",
   mediateur: "[Nom et site du médiateur de la consommation choisi]",
