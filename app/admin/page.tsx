@@ -7,6 +7,7 @@ import { sb } from "@/lib/supabase";
 import { dateFr, eur } from "@/lib/calc";
 import { TRADE } from "@/lib/trades";
 import Modal from "@/components/Modal";
+import OffrirEssai from "@/components/OffrirEssai";
 import { Etoiles, Metiers } from "@/components/Vues";
 import { FORMULES, STATUT_DEMANDE, STATUT_OFFRE, errMsg, statutDemande, type Artisan, type Demande, type Offre, type Profil } from "@/lib/mer";
 
@@ -27,6 +28,7 @@ export default function Admin() {
   const [filtre, setFiltre] = useState("tous");
   const [fiche, setFiche] = useState<{ type: Onglet; id: string } | null>(null);
   const [err, setErr] = useState("");
+  const [essai, setEssai] = useState(false);
 
   async function charger() {
     const s = sb();
@@ -116,6 +118,8 @@ export default function Admin() {
           ))}
         </div>
 
+        <button className="btn-brand w-full py-3" onClick={() => setEssai(true)}>🎁 Offrir un essai aux artisans</button>
+
         <div className="flex rounded-xl bg-slate-100 p-1">
           {(["artisans", "clients", "demandes"] as Onglet[]).map((o) => (
             <button key={o} onClick={() => { setOnglet(o); setFiltre("tous"); setQ(""); }}
@@ -183,6 +187,8 @@ export default function Admin() {
         {((onglet === "artisans" && !listeArtisans.length) || (onglet === "clients" && !listeClients.length) || (onglet === "demandes" && !listeDemandes.length)) &&
           <p className="card text-center text-sm text-slate-500">Aucun résultat.</p>}
       </main>
+
+      {essai && <OffrirEssai artisans={artisans} onClose={() => setEssai(false)} onFait={charger} />}
 
       {fiche?.type === "artisans" && (() => {
         const a = artisans.find((x) => x.id === fiche.id)!; const p = profil[a.id];

@@ -616,3 +616,45 @@ begin
   end if;
   return new;
 end $$;
+
+-- ---------- Essais offerts par l'admin (ajout du 11/11/2026) ----------
+create table if not exists reglages (
+  cle text primary key,
+  valeur jsonb not null,
+  maj_le timestamptz default now()
+);
+alter table reglages enable row level security;
+drop policy if exists reglages_admin on reglages;
+create policy reglages_admin on reglages for all using (est_admin()) with check (est_admin());
+insert into reglages (cle, valeur) values ('essai_auto', '{"actif": false, "formule": "pro", "jours": 30}') on conflict (cle) do nothing;
+
+create or replace function offrir_essai(p_ids uuid[], p_formule text, p_jours int) returns int
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not est_admin() then raise exception 'Réservé à l''administrateur'; end if;
+  if p_formule not in ('essentiel', 'pro', 'illimite') then raise exception 'Formule inconnue'; end if;
+  if p_jours is null or p_jours < 1 or p_jours > 730 then raise exception 'Durée entre 1 et 730 jours'; end if;
+  update artisans a set abonnement = p_formule, abonnement_fin = now() + make_interval(days => p_jours), abonnement_resilie = false
+    where a.id = any(p_ids) and not (a.stripe_subscription_id is not null and formule_active(a) <> 'gratuit');
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke execute on function offrir_essai(uuid[], text, int) from public, anon;
+grant execute on function offrir_essai(uuid[], text, int) to authenticated;
+
+create or replace function essai_auto_nouvel_artisan() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare r jsonb;
+begin
+  select valeur into r from reglages where cle = 'essai_auto';
+  if r is not null and (r->>'actif')::boolean and r->>'formule' in ('essentiel', 'pro', 'illimite') and coalesce((r->>'jours')::int, 0) > 0 then
+    perform set_config('renovio.systeme', '1', true);
+    update artisans set abonnement = r->>'formule', abonnement_fin = now() + make_interval(days => (r->>'jours')::int) where id = new.id;
+    perform set_config('renovio.systeme', '', true);
+  end if;
+  return new;
+end $$;
+drop trigger if exists trg_essai_auto on artisans;
+create trigger trg_essai_auto after insert on artisans for each row execute function essai_auto_nouvel_artisan();
+revoke execute on function essai_auto_nouvel_artisan() from public, anon, authenticated;
