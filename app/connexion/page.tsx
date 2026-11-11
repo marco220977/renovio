@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
+import OffreLancement from "@/components/OffreLancement";
 
 const frError = (m: string) => /rate limit/i.test(m) ? "Trop d'inscriptions en peu de temps. Réessayez dans une heure."
   : /registered|already/i.test(m) ? "Un compte existe déjà avec cet e-mail. Connectez-vous."
@@ -75,6 +76,7 @@ function Form() {
         {signup && nomParrain && role === "artisan" && (
           <p className="rounded-xl bg-flame-light p-3 text-sm">🎁 Invité par <b>{nomParrain}</b> : <b>3 offres bonus</b> offertes à l'inscription.</p>
         )}
+        {signup && role === "artisan" && <OffreLancement bouton={false} compact />}
         {signup && (
           <>
             <div className="grid grid-cols-2 gap-2">

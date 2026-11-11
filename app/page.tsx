@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OffreLancement from "@/components/OffreLancement";
 
 const etapesClient = [
   ["✍️", "Décrivez vos travaux", "En quelques phrases, avec des photos si vous voulez. L'IA vous pose 3 à 6 questions pour bien comprendre."],
@@ -35,7 +36,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
             <Link href="/particuliers" className="btn bg-gradient-to-r from-ink to-brand py-4 text-lg text-white">
               🏠 J'ai des travaux
             </Link>
-            <Link href="/connexion?mode=signup&role=artisan" className="btn-brand py-4 text-lg">
+            <Link href="/entreprises" className="btn-brand py-4 text-lg">
               🧰 Je suis artisan
             </Link>
           </div>
@@ -65,12 +66,14 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
               </div>
             ))}
           </div>
-          <Link href="/connexion?mode=signup&role=artisan" className="btn-brand mt-6 w-full py-3.5">Créer mon compte artisan</Link>
+          <div className="mt-6"><OffreLancement compact /></div>
+          <Link href="/entreprises" className="btn-brand mt-4 w-full py-3.5">Découvrir l'offre artisans</Link>
         </section>
 
         <footer className="mt-16 space-y-2 text-center text-xs text-slate-400">
           <p className="flex flex-wrap justify-center gap-4">
             <Link href="/travaux">Trouver un artisan</Link>
+            <Link href="/entreprises">Espace artisans</Link>
             <Link href="/legal/mentions-legales">Mentions légales</Link>
             <Link href="/legal/cgu">CGU</Link>
             <Link href="/legal/cgv">CGV artisans</Link>
