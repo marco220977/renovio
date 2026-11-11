@@ -10,7 +10,7 @@ export type Artisan = {
   id: string; created_at?: string; raison_sociale?: string; forme?: string; siret?: string; adresse?: string; cp?: string; ville?: string;
   telephone?: string; email?: string; metiers: string[]; departements: string[]; decennale?: string; decennale_fin?: string | null;
   rge?: boolean; tva_franchise?: boolean; presentation?: string; verifie?: boolean; statut?: string;
-  abonnement?: Abonnement; abonnement_fin?: string | null; bonus_offres?: number; stripe_subscription_id?: string | null; decennale_doc?: string | null; decennale_analyse?: any;
+  abonnement?: Abonnement; abonnement_fin?: string | null; bonus_offres?: number; stripe_subscription_id?: string | null; decennale_doc?: string | null; decennale_analyse?: any; rge_details?: any;
 };
 
 export type { Abonnement } from "./formules";

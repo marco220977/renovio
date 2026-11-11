@@ -17,12 +17,16 @@ function Fiche() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   const [analyse, setAnalyse] = useState(false);
+  const [rgeEnCours, setRgeEnCours] = useState(false);
+  const [rgeErr, setRgeErr] = useState("");
   const [siretInfo, setSiretInfo] = useState<{ etat: "cours" | "ok" | "erreur"; texte: string } | null>(null);
 
   useEffect(() => {
     sb().from("artisans").select("*").eq("id", profil.id).maybeSingle().then(({ data }) => {
       const x = (data as Artisan) || ({ id: profil.id, metiers: [], departements: [] } as Artisan);
       setA(x); setDeps((x.departements || []).join(", "));
+      const vieux = !x.rge_details?.verifie_le || Date.now() - new Date(x.rge_details.verifie_le).getTime() > 7 * 86400000;
+      if (vieux && (x.siret || "").length === 14) verifierRge(true);
     });
   }, [profil.id]);
 
@@ -40,11 +44,12 @@ function Fiche() {
     const row = {
       id: profil.id, raison_sociale: a!.raison_sociale, forme: a!.forme, siret, adresse: a!.adresse, cp: a!.cp, ville: a!.ville,
       telephone: a!.telephone, email: a!.email, metiers: a!.metiers, departements, decennale: a!.decennale,
-      decennale_fin: a!.decennale_fin || null, rge: !!a!.rge, tva_franchise: !!a!.tva_franchise, presentation: a!.presentation,
+      decennale_fin: a!.decennale_fin || null, tva_franchise: !!a!.tva_franchise, presentation: a!.presentation,
     };
     const { error } = await sb().from("artisans").upsert(row);
     if (error) return setErr(errMsg(error));
     setDeps(departements.join(", ")); setOk("Profil enregistré.");
+    if (siret.length === 14 && siret !== (a!.rge_details?.siret || "")) verifierRge(true);
   }
 
   async function envoyerAttestation(f?: File) {
@@ -65,6 +70,16 @@ function Fiche() {
     if (e2) return setErr(errMsg(e2));
     set({ decennale_doc: path });
     analyser();
+  }
+
+  async function verifierRge(silencieux = false) {
+    setRgeEnCours(true); setRgeErr("");
+    const { data, error } = await sb().functions.invoke("verif-rge", { body: {} });
+    setRgeEnCours(false);
+    let msg = data?.error;
+    if (error) { msg = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch {} }
+    if (msg) { if (!silencieux) setRgeErr(msg); return; }
+    setA((x) => x && ({ ...x, rge: data.rge, rge_details: data.rge_details }));
   }
 
   async function analyser() {
@@ -96,7 +111,6 @@ function Fiche() {
         ...x, siret,
         raison_sociale: d.nom_complet || d.nom || x.raison_sociale,
         forme: d.forme || x.forme, adresse: d.adresse || x.adresse, cp: d.cp || x.cp, ville: d.ville || x.ville,
-        rge: d.rge || x.rge,
       }));
       if (d.cp && !deps.trim()) setDeps(d.cp.startsWith("97") ? d.cp.slice(0, 3) : d.cp.slice(0, 2));
       setSiretInfo({ etat: "ok", texte: `✔ ${d.nom_complet} — entreprise active. Les informations ont été remplies, vérifiez-les puis enregistrez.` });
@@ -170,7 +184,23 @@ function Fiche() {
             {a.decennale_analyse ? "🔄 Relancer la lecture (après avoir modifié vos métiers ou votre SIRET, enregistrez d'abord)" : "🔎 Faire lire mon attestation par l'IA"}
           </button>
         )}
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.rge} onChange={(e) => set({ rge: e.target.checked })} /> Certifié RGE</label>
+        <div className={`rounded-xl p-3 text-sm ${a.rge ? "bg-green-50 text-green-900" : "bg-slate-50 text-slate-700"}`}>
+          <p className="font-bold">{a.rge ? "🌿 Certifié RGE (vérifié au registre ADEME)" : "Certification RGE"}</p>
+          {rgeEnCours ? <p className="mt-1">🔎 Vérification au registre officiel…</p> : a.rge_details ? (
+            a.rge ? (
+              <>
+                <p className="mt-1">Domaines : {a.rge_details.domaines?.join(", ") || "—"}</p>
+                {a.rge_details.fin && <p>Valable jusqu'au {dateFr(a.rge_details.fin)}{(joursDecennale({ decennale_fin: a.rge_details.fin }) ?? 99) <= 30 && " ⏰ bientôt expirée : pensez à la renouveler"}</p>}
+                {a.rge_details.autre_etablissement && <p className="text-xs">Qualification trouvée sur un autre établissement de votre entreprise.</p>}
+              </>
+            ) : (
+              <p className="mt-1">{a.rge_details.trouve ? "Vos qualifications RGE ont expiré. Une fois renouvelées, relancez la vérification." : "Votre SIRET n'apparaît pas dans le registre RGE de l'ADEME. Si vous êtes certifié, vérifiez auprès de votre organisme (Qualibat, Qualit'EnR, Qualifelec…) que votre SIRET est le bon."}</p>
+            )
+          ) : <p className="mt-1">Le badge RGE est attribué uniquement après vérification de votre SIRET dans le registre officiel (annuaire France Rénov').</p>}
+          {rgeErr && <p className="mt-1 text-red-700">{rgeErr}</p>}
+          {!rgeEnCours && <button type="button" className="mt-2 font-semibold text-brand" onClick={() => verifierRge()}>{a.rge_details ? "🔄 Vérifier à nouveau" : "🔎 Vérifier ma certification RGE"}</button>}
+          {a.rge_details?.verifie_le && <p className="mt-1 text-xs opacity-70">Dernière vérification : {dateFr(a.rge_details.verifie_le)}</p>}
+        </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!a.tva_franchise} onChange={(e) => set({ tva_franchise: e.target.checked })} /> Franchise de TVA (micro-entreprise, art. 293 B)</label>
         <div><label className="label">Présentation (visible par les clients)</label>
           <textarea className="input" value={a.presentation || ""} onChange={(e) => set({ presentation: e.target.value })} placeholder="Ex : plombier chauffagiste depuis 15 ans, spécialiste salle de bain et PAC." /></div>

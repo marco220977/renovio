@@ -46,7 +46,6 @@ export async function GET(req: Request) {
     cp: e.code_postal || "",
     ville: titre(e.libelle_commune),
     actif: e.etat_administratif === "A" && u.etat_administratif !== "C",
-    rge: !!u.complements?.est_rge,
     activite: u.activite_principale || "",
     creation: e.date_creation || u.date_creation || null,
   });

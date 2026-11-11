@@ -1,0 +1,2 @@
+-- Voir migration « rge_verifie » appliquée le 11/11/2026 : colonne rge_details, rge protégé (seule la fonction verif-rge le modifie),
+-- remise à zéro si le SIRET change, retrait nocturne quand toutes les qualifications ont expiré (retirer_badges_expires).
