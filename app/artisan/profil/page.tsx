@@ -14,6 +14,7 @@ function Fiche() {
   const [deps, setDeps] = useState("");
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+  const [siretInfo, setSiretInfo] = useState<{ etat: "cours" | "ok" | "erreur"; texte: string } | null>(null);
 
   useEffect(() => {
     sb().from("artisans").select("*").eq("id", profil.id).maybeSingle().then(({ data }) => {
@@ -30,6 +31,7 @@ function Fiche() {
     const departements = Array.from(new Set(deps.split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter((x) => /^(\d{2,3}|2A|2B)$/.test(x))));
     const siret = (a!.siret || "").replace(/\D/g, "");
     if (siret && siret.length !== 14) return setErr("Le SIRET doit faire 14 chiffres.");
+    if (siretInfo?.etat === "erreur") return setErr(siretInfo.texte);
     if (!a!.metiers?.length) return setErr("Choisissez au moins un métier.");
     if (!departements.length) return setErr("Indiquez au moins un département (ex : 94, 77).");
     const row = {
@@ -61,6 +63,28 @@ function Fiche() {
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
+  async function verifierSiret(valeur: string) {
+    const siret = valeur.replace(/\D/g, "");
+    if (siret.length !== 14) return setSiretInfo(null);
+    setSiretInfo({ etat: "cours", texte: "Vérification du SIRET…" });
+    try {
+      const r = await fetch(`/api/siret?siret=${siret}`);
+      const d = await r.json();
+      if (!r.ok) return setSiretInfo({ etat: "erreur", texte: d.erreur || "Vérification impossible." });
+      if (!d.actif) return setSiretInfo({ etat: "erreur", texte: `${d.nom_complet} : cet établissement est fermé au répertoire INSEE.` });
+      setA((x) => x && ({
+        ...x, siret,
+        raison_sociale: d.nom_complet || d.nom || x.raison_sociale,
+        forme: d.forme || x.forme, adresse: d.adresse || x.adresse, cp: d.cp || x.cp, ville: d.ville || x.ville,
+        rge: d.rge || x.rge,
+      }));
+      if (d.cp && !deps.trim()) setDeps(d.cp.startsWith("97") ? d.cp.slice(0, 3) : d.cp.slice(0, 2));
+      setSiretInfo({ etat: "ok", texte: `✔ ${d.nom_complet} — entreprise active. Les informations ont été remplies, vérifiez-les puis enregistrez.` });
+    } catch {
+      setSiretInfo({ etat: "erreur", texte: "Vérification impossible pour le moment. Réessayez." });
+    }
+  }
+
   const champ = (k: keyof Artisan, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
     <div><label className="label">{label}</label>
       <input className="input" value={(a[k] as string) || ""} onChange={(e) => set({ [k]: e.target.value } as Partial<Artisan>)} {...props} /></div>
@@ -76,8 +100,19 @@ function Fiche() {
         {champ("raison_sociale", "Nom de l'entreprise")}
         <div className="grid grid-cols-2 gap-2">
           {champ("forme", "Forme juridique", { placeholder: "EI, SARL, SASU…" })}
-          {champ("siret", "SIRET", { inputMode: "numeric", placeholder: "14 chiffres" })}
+          <div><label className="label">SIRET</label>
+            <input className="input" inputMode="numeric" placeholder="14 chiffres" maxLength={17} value={a.siret || ""}
+              onChange={(e) => { set({ siret: e.target.value }); verifierSiret(e.target.value); }} /></div>
         </div>
+        {siretInfo && (
+          <p className={`rounded-xl p-3 text-sm ${siretInfo.etat === "ok" ? "bg-green-50 text-green-900" : siretInfo.etat === "erreur" ? "bg-red-50 text-red-800" : "bg-slate-50 text-slate-600"}`}>{siretInfo.texte}</p>
+        )}
+        {!siretInfo && (a.siret || "").replace(/\D/g, "").length === 14 && (
+          <button type="button" className="text-sm font-semibold text-brand" onClick={() => verifierSiret(a.siret || "")}>🔎 Vérifier mon SIRET et remplir automatiquement</button>
+        )}
+        {(a.siret || "").replace(/\D/g, "").length > 0 && (a.siret || "").replace(/\D/g, "").length < 14 && (
+          <p className="text-xs text-slate-500">{(a.siret || "").replace(/\D/g, "").length}/14 chiffres — la vérification se lance automatiquement.</p>
+        )}
         {champ("adresse", "Adresse")}
         <div className="grid grid-cols-2 gap-2">{champ("cp", "Code postal", { inputMode: "numeric" })}{champ("ville", "Ville")}</div>
         <div className="grid grid-cols-2 gap-2">{champ("telephone", "Téléphone", { type: "tel" })}{champ("email", "E-mail", { type: "email" })}</div>
