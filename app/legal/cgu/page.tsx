@@ -52,7 +52,7 @@ export default function Page() {
 
       <h2>6. Obligations des Artisans</h2>
       <ul>
-        <li>Être un professionnel régulièrement immatriculé et renseigner un SIRET valide.</li>
+        <li>Être un professionnel régulièrement immatriculé et renseigner un SIRET valide. Un SIRET ne peut être associé qu'à un seul compte.</li>
         <li>Être titulaire des assurances obligatoires, notamment l'assurance de responsabilité civile décennale pour les travaux qui y sont soumis, et en tenir l'attestation à jour.</li>
         <li>Établir des devis sincères et conformes à la réglementation, honorer le devis signé, et ne réaliser aucun travail supplémentaire sans avenant signé.</li>
         <li>N'envoyer qu'une offre par demande, modifiable une seule fois avant le choix du Client.</li>
