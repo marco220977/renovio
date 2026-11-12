@@ -47,7 +47,7 @@ export type Demande = {
 export type Offre = {
   id: string; demande_id: string; artisan_id: string; created_at: string; updated_at: string; numero?: string;
   lignes: Line[]; total_ht: number; total_tva: number; total_ttc: number; delai_jours?: number; duree_jours?: number;
-  message?: string; validite_jours?: number; modifiee?: boolean;
+  message?: string; validite_jours?: number; modifiee?: boolean; en_pause?: boolean;
   statut: "envoyee" | "choisie" | "confirmee" | "acceptee" | "refusee" | "retiree" | "retractee";
   signe_le?: string; signataire?: string; signature?: string;
   lignes_initiales?: Line[] | null; total_ttc_initial?: number | null; choisie_le?: string; confirmee_le?: string; retractee_le?: string;

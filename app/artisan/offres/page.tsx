@@ -44,7 +44,8 @@ export default function MesOffres() {
         <Link key={o.id} href={`/artisan/demande/${o.demande_id}`} className="card block space-y-1">
           <div className="flex items-start justify-between gap-2">
             <p className="font-bold">{o.demandes?.titre || "Demande"}</p>
-            <span className={`chip shrink-0 ${STATUT_OFFRE[o.statut][1]}`}>{STATUT_OFFRE[o.statut][0]}</span>
+            {o.en_pause && o.statut === "envoyee" ? <span className="chip shrink-0 bg-slate-200 text-slate-700">⏸ En pause</span>
+              : <span className={`chip shrink-0 ${STATUT_OFFRE[o.statut][1]}`}>{STATUT_OFFRE[o.statut][0]}</span>}
           </div>
           <p className="text-sm text-slate-500">{o.numero} · {o.demandes?.ville} {o.demandes?.cp} · {dateFr(o.updated_at)}</p>
           <p className="font-semibold">{eur(o.total_ttc)} TTC</p>

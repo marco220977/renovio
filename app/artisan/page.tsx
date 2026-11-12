@@ -12,7 +12,7 @@ export default function DemandesDispo() {
   const { profil } = useProfil();
   const [a, setA] = useState<Artisan | null>(null);
   const [liste, setListe] = useState<Demande[] | null>(null);
-  const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null } | null>(null);
+  const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; abonnement?: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -46,6 +46,12 @@ export default function DemandesDispo() {
       {manque.length > 0 && (
         <Link href="/artisan/profil" className="card block border-amber-300 bg-amber-50 text-sm text-amber-900">
           ⚠️ Pour voir les demandes et y répondre, complétez {manque.join(", ")}. <b>Compléter mon profil →</b>
+        </Link>
+      )}
+      {!!quota?.en_pause && (
+        <Link href="/artisan/abonnement" className="card block border-red-300 bg-red-50 text-sm text-red-900">
+          🔒 <b>{quota.en_pause} offre{quota.en_pause > 1 ? "s" : ""} en pause</b> : vous avez atteint vos {quota.quota} client{(quota.quota || 0) > 1 ? "s" : ""} du mois, les clients ne les voient plus.
+          Elles reviennent automatiquement le 1ᵉʳ du mois, ou tout de suite en passant à une formule supérieure. <b>Réactiver maintenant →</b>
         </Link>
       )}
       {quota && quota.quota !== null && (() => {
