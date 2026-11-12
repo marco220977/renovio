@@ -1,0 +1,3 @@
+-- Voir migration « prospection_email » (12/11/2026) : colonnes d'envoi sur prospects, prospects_emails, réglage « prospection »,
+-- jeton_prospect(), prospect_action() (clic / désinscription), trigger prospect_inscrit, stats_prospection(), regler_prospection(),
+-- lancer_prospection() + tâches planifiées prospection-mail-1..4 (lun-ven 7 h 30 → 9 h UTC). Fonction Edge : prospection-mail (BREVO_API_KEY).

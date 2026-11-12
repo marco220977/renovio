@@ -44,7 +44,9 @@ export default function Page() {
         <li>Vercel Inc. : hébergement de l'application (États-Unis / réseau mondial).</li>
         <li>Anthropic PBC (États-Unis) : intelligence artificielle. Les descriptions de travaux, réponses, photos et tarifs nécessaires y sont transmis pour générer les questions, cahiers des charges et devis ; les coordonnées des Clients ne sont pas transmises.</li>
         <li>Stripe Payments Europe Ltd (Irlande) : paiement des abonnements des Artisans.</li>
+        <li>Sendinblue SAS / Brevo (France) : envoi des e-mails de prospection aux professionnels.</li>
       </ul>
+      <p><b>Prospection des professionnels.</b> Rénolien peut contacter par e-mail ou par courrier des entreprises du bâtiment pour leur présenter la Plateforme. Les données utilisées (nom de l'entreprise, adresse, métier, e-mail ou téléphone professionnels) proviennent de registres publics : le répertoire Sirene de l'INSEE et la liste des entreprises RGE publiée par l'ADEME. Base légale : intérêt légitime de l'Éditeur à faire connaître son service à des professionnels, pour un message en rapport avec leur activité. Chaque e-mail contient un lien de désinscription ; l'opposition est aussi possible à tout moment par e-mail. Les entreprises ayant demandé à l'INSEE la non-diffusion de leurs données ne sont jamais contactées. Ces données sont supprimées 3 ans après le dernier contact sans réponse.</p>
       <p>Les transferts hors de l'Union européenne sont encadrés par les clauses contractuelles types de la Commission européenne ou un mécanisme équivalent.</p>
 
       <h2>6. Durées de conservation</h2>
