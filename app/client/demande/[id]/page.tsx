@@ -295,7 +295,7 @@ export default function DemandeClient() {
                 {busy && <p className="text-sm text-slate-500">Enregistrement…</p>}
               </>
             ) : onglet === "messages" ? (
-              <Conversation demandeId={d.id} artisanId={voir.artisan_id} moi="client" visite={voir.statut !== "envoyee"} />
+              <Conversation demandeId={d.id} artisanId={voir.artisan_id} moi="client" visite={voir.statut !== "envoyee"} avantChoix={voir.statut === "envoyee"} />
             ) : (
               <>
                 {voir.statut === "envoyee" && <p className="rounded-xl bg-blue-50 p-2 text-xs text-blue-900">Devis provisoire, établi sur photos et description. Il sera confirmé ou ajusté après la visite de l'artisan.</p>}

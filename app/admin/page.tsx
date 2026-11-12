@@ -146,7 +146,8 @@ export default function Admin() {
           const jd = joursDecennale(a);
           const manque = [(a.siret || "").length !== 14 && "SIRET", !a.decennale && "décennale", !a.departements?.length && "départements",
             jd !== null && jd < 0 && "décennale expirée", jd !== null && jd >= 0 && jd <= 30 && `décennale expire dans ${jd} j`,
-            a.decennale_analyse?.alertes?.length && `${a.decennale_analyse.alertes.length} alerte(s) attestation`].filter(Boolean);
+            a.decennale_analyse?.alertes?.length && `${a.decennale_analyse.alertes.length} alerte(s) attestation`,
+            (a as any).tentatives_contournement >= 3 && `⚠️ ${(a as any).tentatives_contournement} tentatives de contournement`].filter(Boolean);
           return (
             <button key={a.id} onClick={() => setFiche({ type: "artisans", id: a.id })} className="card block w-full space-y-1 text-left">
               <div className="flex items-start justify-between gap-2">

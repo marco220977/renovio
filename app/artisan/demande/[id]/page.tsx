@@ -175,7 +175,7 @@ export default function DemandeArtisan() {
         <div className="card space-y-2">
           <p className="font-bold">💬 Messages avec le client</p>
           {offre.statut === "envoyee" && <p className="text-xs text-slate-500">Le client peut vous poser des questions avant de choisir. Ses coordonnées vous seront transmises s'il vous choisit.</p>}
-          <Conversation demandeId={d.id} artisanId={profil.id} moi="artisan" visite={choisi} ferme={offre.statut === "retractee"} />
+          <Conversation demandeId={d.id} artisanId={profil.id} moi="artisan" visite={choisi} ferme={offre.statut === "retractee"} avantChoix={offre.statut === "envoyee"} />
         </div>
       )}
 

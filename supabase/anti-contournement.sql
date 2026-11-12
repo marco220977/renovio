@@ -1,0 +1,3 @@
+-- Voir migration « messages_anti_contournement » (12/11/2026) : masquer_coordonnees(), envoyer_message() masque
+-- téléphones, e-mails, liens, réseaux et demandes de coordonnées tant que l'offre est « envoyee » (avant le choix du client),
+-- compteur artisans.tentatives_contournement (protégé). Masque affiché : « 📵 [contact masqué] ».

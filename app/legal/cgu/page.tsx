@@ -79,10 +79,11 @@ export default function Page() {
 
       <h2>9. Comportements interdits</h2>
       <ul>
-        <li>Publier de fausses demandes ou de fausses offres, ou usurper l'identité d'un tiers.</li>
+        <li>Publier de fausses demandes ou de fausses offres, ou des demandes sans rapport avec des travaux, ou usurper l'identité d'un tiers.</li>
         <li>Utiliser les coordonnées obtenues à d'autres fins que le projet concerné (démarchage, revente…).</li>
         <li>Publier des contenus illicites, injurieux ou discriminatoires, dans les demandes, offres, messages ou avis.</li>
         <li>Tenter de contourner les mesures de sécurité de la Plateforme.</li>
+        <li>Demander, communiquer ou suggérer des coordonnées (téléphone, e-mail, adresse, site, réseau social, messagerie) dans la messagerie avant que le Client ait choisi l'Artisan. Ces informations sont masquées automatiquement ; les tentatives répétées d'un Artisan peuvent entraîner la suspension de son compte.</li>
       </ul>
       <p>En cas de manquement, l'Éditeur peut suspendre ou supprimer le compte concerné, après avoir informé l'utilisateur sauf urgence.</p>
 
