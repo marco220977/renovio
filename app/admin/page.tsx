@@ -285,7 +285,7 @@ export default function Admin() {
   );
 }
 
-/** Offrir une formule pour une durée, ou des offres en bonus */
+/** Offrir une formule pour une durée, ou des clients en bonus */
 function Offrir({ a, maj }: { a: Artisan; maj: (p: Partial<Artisan>) => Promise<void> }) {
   const [formule, setFormule] = useState<string>(a.abonnement && a.abonnement !== "gratuit" ? a.abonnement : "pro");
   const [mois, setMois] = useState("1");
@@ -306,7 +306,7 @@ function Offrir({ a, maj }: { a: Artisan; maj: (p: Partial<Artisan>) => Promise<
         Actuellement : <b>{actif ? nom(a.abonnement) : "Découverte"}</b>
         {actif && (a.abonnement_fin ? ` jusqu'au ${dateFr(a.abonnement_fin)}` : " sans limite")}
         {a.stripe_subscription_id && actif && " (payé via Stripe)"}
-        {` · ${a.bonus_offres || 0} offre(s) bonus`}
+        {` · ${a.bonus_offres || 0} client(s) offert(s)`}
       </p>
       <div className="flex gap-2">
         <select className="input !py-1.5" value={formule} onChange={(e) => setFormule(e.target.value)}>
@@ -318,14 +318,14 @@ function Offrir({ a, maj }: { a: Artisan; maj: (p: Partial<Artisan>) => Promise<
         <button className="btn-brand !px-3" onClick={offrir}>Offrir</button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {[3, 5, 10].map((n) => (
-          <button key={n} className="btn-ghost !px-3 !py-1.5 text-xs" onClick={() => maj({ bonus_offres: (a.bonus_offres || 0) + n })}>+{n} offres bonus</button>
+        {[1, 2, 5].map((n) => (
+          <button key={n} className="btn-ghost !px-3 !py-1.5 text-xs" onClick={() => maj({ bonus_offres: (a.bonus_offres || 0) + n })}>+{n} client{n > 1 ? "s" : ""} offert{n > 1 ? "s" : ""}</button>
         ))}
         {actif && !a.stripe_subscription_id && (
           <button className="btn-ghost !px-3 !py-1.5 text-xs text-red-600" onClick={() => confirm("Retirer la formule offerte ?") && maj({ abonnement: "gratuit", abonnement_fin: null })}>Retirer la formule</button>
         )}
       </div>
-      <p className="text-[11px] text-slate-400">Les offres bonus servent une fois la limite du mois atteinte, et ne s'effacent pas d'un mois à l'autre.</p>
+      <p className="text-[11px] text-slate-400">Les clients offerts servent une fois la limite du mois atteinte, et ne s'effacent pas d'un mois à l'autre.</p>
     </div>
   );
 }

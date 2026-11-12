@@ -12,7 +12,7 @@ export default function DemandesDispo() {
   const { profil } = useProfil();
   const [a, setA] = useState<Artisan | null>(null);
   const [liste, setListe] = useState<Demande[] | null>(null);
-  const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number } | null>(null);
+  const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -48,14 +48,20 @@ export default function DemandesDispo() {
           ⚠️ Pour voir les demandes et y répondre, complétez {manque.join(", ")}. <b>Compléter mon profil →</b>
         </Link>
       )}
-      {quota && quota.quota !== null && (
-        <Link href="/artisan/abonnement" className={`card flex items-center justify-between !p-3 text-sm ${quota.utilise >= quota.quota && !quota.bonus ? "border-red-300 bg-red-50" : ""}`}>
-          <span>{quota.utilise >= quota.quota ? (quota.bonus ? `🎁 ${quota.bonus} offre(s) bonus disponible(s)` : "🔒 Limite d'offres atteinte ce mois-ci") : `📨 ${quota.quota - quota.utilise} offre(s) restante(s) ce mois-ci${quota.bonus ? ` + ${quota.bonus} bonus` : ""}`}</span>
-          <b className="text-brand">Abonnement →</b>
-        </Link>
-      )}
+      {quota && quota.quota !== null && (() => {
+        const bloque = (quota.utilise >= quota.quota! && !quota.bonus) || (quota.plafond != null && (quota.attente || 0) >= quota.plafond);
+        return (
+          <Link href="/artisan/abonnement" className={`card block !p-3 text-sm ${bloque ? "border-red-300 bg-red-50" : ""}`}>
+            <span className="flex items-center justify-between">
+              <span>{quota.utilise >= quota.quota! ? (quota.bonus ? `🎁 ${quota.bonus} client(s) offert(s) en réserve` : "🔒 Clients du mois atteints") : `🤝 ${quota.quota! - quota.utilise} client(s) restant(s) ce mois-ci${quota.bonus ? ` + ${quota.bonus} offert(s)` : ""}`}</span>
+              <b className="text-brand">Abonnement →</b>
+            </span>
+            {quota.plafond != null && <span className="mt-1 block text-xs text-slate-500">📨 {quota.attente || 0} / {quota.plafond} offres en attente de réponse · vous ne payez que quand un client vous choisit</span>}
+          </Link>
+        );
+      })()}
       {quota && quota.quota !== null && quota.utilise >= quota.quota && !quota.bonus && (
-        <Link href="/artisan/parrainage" className="block text-center text-sm font-semibold text-brand">🎁 Gagnez des offres en parrainant un artisan →</Link>
+        <Link href="/artisan/parrainage" className="block text-center text-sm font-semibold text-brand">🎁 Gagnez des clients offerts en parrainant un artisan →</Link>
       )}
       {liste === null && <p className="text-slate-400">Chargement…</p>}
       {liste?.length === 0 && !manque.length && (

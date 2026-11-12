@@ -5,8 +5,9 @@ import { sb } from "@/lib/supabase";
 import { dateFr } from "@/lib/calc";
 import { Erreur, Info } from "@/components/Espace";
 import { FORMULES } from "@/lib/mer";
+import { texteClients, texteAttente } from "@/lib/formules";
 
-type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; resilie?: boolean; stripe?: boolean };
+type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; resilie?: boolean; stripe?: boolean };
 
 function Abonnement() {
   const params = useSearchParams();
@@ -18,7 +19,7 @@ function Abonnement() {
   useEffect(() => { charger(); }, []);
 
   async function resilier(annuler = false) {
-    if (!annuler && !confirm("Résilier votre abonnement ? Il reste actif jusqu'à la fin du mois payé, puis vous repassez en Découverte (3 offres par mois).")) return;
+    if (!annuler && !confirm("Résilier votre abonnement ? Il reste actif jusqu'à la fin du mois payé, puis vous repassez en Découverte (1 client par mois).")) return;
     setErr(""); setBusy("resilier");
     const r = await fetch("/api/abonnement/resilier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ annuler }) });
     const j = await r.json().catch(() => ({}));
@@ -46,13 +47,14 @@ function Abonnement() {
           <p className="text-sm text-slate-500">Formule actuelle</p>
           <p className="text-xl font-extrabold">{actuelle.nom}</p>
           <p className="text-sm">
-            {q.quota === null ? `${q.utilise} offre(s) envoyée(s) ce mois-ci · illimité` : `${q.utilise} / ${q.quota} offres utilisées ce mois-ci`}
+            {q.quota === null ? `${q.utilise} client(s) ce mois-ci · illimité` : `${q.utilise} / ${q.quota} client(s) ce mois-ci`}
           </p>
           {q.quota !== null && (
             <div className="h-2 rounded-full bg-slate-200"><div className={`h-full rounded-full ${q.utilise >= q.quota ? "bg-red-500" : "bg-flame"}`} style={{ width: `${Math.min(100, (q.utilise / q.quota) * 100)}%` }} /></div>
           )}
+          {q.plafond != null && <p className="text-xs text-slate-500">📨 {q.attente || 0} / {q.plafond} offres en attente de réponse</p>}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
-          {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} offre(s) bonus en réserve</p>}
+          {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} client(s) offert(s) en réserve</p>}
           {payant && !q.stripe && <p className="text-xs text-green-700">🎁 Formule offerte par Rénolien</p>}
           {payant && q.stripe && (q.resilie ? (
             <>
@@ -67,14 +69,14 @@ function Abonnement() {
           ))}
         </div>
       )}
-      <p className="text-sm text-slate-600">Le compteur repart à zéro le 1ᵉʳ de chaque mois. Une modification d'offre ne compte pas. Sans engagement, résiliable à tout moment.</p>
+      <p className="text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite. Le compteur repart à zéro le 1ᵉʳ de chaque mois. Sans engagement, résiliable à tout moment.</p>
       <div className="space-y-3">
         {FORMULES.map((f) => (
           <div key={f.id} className={`card space-y-2 ${f.id === "pro" ? "border-2 border-flame" : ""} ${f.id === actuelle.id ? "bg-slate-50" : ""}`}>
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-bold">{f.nom} {f.id === "pro" && <span className="chip ml-1 bg-flame text-white">{f.plus}</span>}</p>
-                <p className="text-sm text-slate-600">{f.quota === null ? "Offres illimitées" : `${f.quota} offres par mois`}</p>
+                <p className="text-sm text-slate-600">{texteClients(f.quota)} · {texteAttente(f.attente)}</p>
               </div>
               <p className="text-right"><span className="text-2xl font-extrabold">{f.prix} €</span><span className="text-xs text-slate-500"> /mois</span></p>
             </div>

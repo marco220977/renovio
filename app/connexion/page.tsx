@@ -74,7 +74,7 @@ function Form() {
         <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></Link>
         <h1 className="text-2xl font-extrabold">{signup ? "Créer mon compte" : "Connexion"}</h1>
         {signup && nomParrain && role === "artisan" && (
-          <p className="rounded-xl bg-flame-light p-3 text-sm">🎁 Invité par <b>{nomParrain}</b> : <b>3 offres bonus</b> offertes à l'inscription.</p>
+          <p className="rounded-xl bg-flame-light p-3 text-sm">🎁 Invité par <b>{nomParrain}</b> : <b>1 client offert</b> à l'inscription.</p>
         )}
         {signup && role === "artisan" && <OffreLancement bouton={false} compact />}
         {signup && (

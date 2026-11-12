@@ -1,5 +1,5 @@
 "use client";
-// Parrainage : l'artisan partage son lien ; filleul +3 offres bonus, parrain +5 offres bonus à la 1re offre du filleul.
+// Parrainage : l'artisan partage son lien ; filleul +1 client offert, parrain +2 clients offerts à la 1re offre du filleul.
 import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { dateFr } from "@/lib/calc";
@@ -38,8 +38,8 @@ export default function Parrainage() {
       <div className="card space-y-2 bg-flame-light">
         <p className="font-bold">🎁 Gagnez 5 offres par artisan parrainé</p>
         <ul className="list-disc space-y-1 pl-5 text-sm">
-          <li>Votre filleul reçoit <b>3 offres bonus</b> dès son inscription.</li>
-          <li>Vous recevez <b>5 offres bonus</b> quand il envoie sa première offre.</li>
+          <li>Votre filleul reçoit <b>1 client offert</b> dès son inscription.</li>
+          <li>Vous recevez <b>2 clients offerts</b> quand il envoie sa première offre.</li>
           <li>Pas de limite : plus vous parrainez, plus vous gagnez.</li>
         </ul>
       </div>

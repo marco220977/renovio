@@ -82,7 +82,7 @@ export default function OffrirEssai({ artisans, onClose, onFait }: { artisans: A
             {PAYANTES.map((f) => (
               <button key={f.id} type="button" onClick={() => setFormule(f.id)}
                 className={`rounded-xl border-2 p-2 text-center ${formule === f.id ? "border-flame bg-flame-light" : "border-slate-200"}`}>
-                <b>{f.nom}</b><span className="block text-xs text-slate-500">{f.quota ?? "∞"} offres/mois</span>
+                <b>{f.nom}</b><span className="block text-xs text-slate-500">{f.quota ?? "∞"} clients/mois</span>
               </button>
             ))}
           </div>

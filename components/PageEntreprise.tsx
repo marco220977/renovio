@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { METIERS_SEO, type MetierSeo } from "@/lib/seo";
 import { DEPS_SEO, villesDuDep, dansDep, type DepSeo } from "@/lib/seo-pro";
-import { FORMULES } from "@/lib/formules";
+import { FORMULES, texteClients, texteAttente } from "@/lib/formules";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
 
 const Maj = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -34,7 +34,7 @@ export const ATOUTS: [string, string, string][] = [
   ["🤖", "Votre devis prêt en 1 clic", "L'IA pré-remplit le devis avec vos propres tarifs. Vous ajustez, vous envoyez. Fini les soirées sur les devis."],
   ["🔒", "Pas d'enchère au moins cher", "Une seule offre par artisan, invisible des concurrents. Le client compare aussi vos avis, votre délai et votre sérieux."],
   ["🏠", "Vous voyez le chantier avant de vous engager", "Le client vous choisit, vous passez faire la visite, puis vous envoyez votre devis définitif. Les écarts sont expliqués au client."],
-  ["💶", "0 % de commission", "Vous êtes payé directement par le client, comme d'habitude. Rénolien ne prend rien sur vos chantiers."],
+  ["💶", "Vous payez seulement quand un client vous choisit", "Envoyer une offre est gratuit. Pas de crédit perdu pour un devis sans réponse, et 0 % de commission sur vos chantiers."],
   ["✍️", "Devis signé en ligne", "Signature électronique, avenants pour les travaux en plus, messagerie et rendez-vous : tout est écrit."],
 ];
 
@@ -42,12 +42,12 @@ export function Tarifs() {
   return (
     <section className="mt-12">
       <h2 className="text-2xl font-extrabold">Tarifs simples, sans engagement</h2>
-      <p className="mt-1 text-sm text-slate-600">Vous payez un abonnement mensuel pour répondre aux demandes, résiliable à tout moment. Aucune commission.</p>
+      <p className="mt-1 text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu s'il renonce avant la visite. Abonnement mensuel sans engagement, aucune commission.</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {FORMULES.map((f) => (
           <div key={f.id} className={`card !py-3 ${f.id === "illimite" ? "border-2 border-flame" : ""}`}>
             <p className="flex items-baseline justify-between"><b>{f.nom}</b><span className="font-extrabold">{f.prix === 0 ? "Gratuit" : `${f.prix} €/mois`}</span></p>
-            <p className="text-sm text-slate-600">{f.quota === null ? "Offres illimitées" : `${f.quota} offres par mois`} · {f.id === "illimite" ? "offert 2 mois aux 50 premiers" : f.plus}</p>
+            <p className="text-sm text-slate-600">{texteClients(f.quota)} · {f.id === "illimite" ? "offert 2 mois aux 50 premiers" : texteAttente(f.attente)}</p>
           </div>
         ))}
       </div>
@@ -72,8 +72,9 @@ export function FaqPro({ faq }: { faq: [string, string][] }) {
 }
 
 export const FAQ_PRO: [string, string][] = [
-  ["Comment fonctionne l'offre de lancement ?", "Les 50 premiers artisans inscrits reçoivent automatiquement 2 mois de formule Illimitée, sans carte bancaire. À la fin des 2 mois, vous repassez en formule Découverte (gratuite, 3 offres par mois) sauf si vous choisissez une formule payante."],
+  ["Comment fonctionne l'offre de lancement ?", "Les 50 premiers artisans inscrits reçoivent automatiquement 2 mois de formule Illimitée, sans carte bancaire. À la fin des 2 mois, vous repassez en formule Découverte (gratuite, 1 client par mois) sauf si vous choisissez une formule payante."],
   ["Que faut-il pour s'inscrire ?", "Un SIRET et une assurance décennale en cours de validité. Vous pouvez déposer votre attestation depuis votre profil pour obtenir le badge « Vérifié »."],
+  ["Est-ce que je paie pour des devis sans réponse ?", "Non. Envoyer une offre est gratuit. Un crédit est décompté uniquement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite."],
   ["Est-ce que je paie une commission sur mes chantiers ?", "Non. Le client vous paie directement. Rénolien se rémunère uniquement par l'abonnement."],
   ["Combien d'artisans répondent à chaque demande ?", "5 au maximum. Chacun fait une seule offre, sans voir celles des autres : pas de course au prix le plus bas."],
   ["Puis-je modifier mon prix après la visite ?", "Oui. Votre première offre sert au client à choisir. Après la visite, vous envoyez votre devis définitif, et le client voit les écarts expliqués avant de signer."],

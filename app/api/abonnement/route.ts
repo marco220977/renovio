@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         quantity: 1,
         price_data: {
           currency: "eur", unit_amount: f.prix * 100, recurring: { interval: "month" },
-          product_data: { name: `Rénolien ${f.nom} — ${f.quota ? `${f.quota} offres / mois` : "offres illimitées"}` },
+          product_data: { name: `Rénolien ${f.nom} — ${f.quota ? `${f.quota} clients / mois` : "clients illimités"}` },
         },
       }],
       subscription_data: { metadata: { artisan_id: a.id, plan: f.id } },
