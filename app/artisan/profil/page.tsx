@@ -7,6 +7,7 @@ import { Erreur, Info, useProfil } from "@/components/Espace";
 import MonCompte from "@/components/MonCompte";
 import { errMsg, compresser, type Artisan } from "@/lib/mer";
 import AnalyseDecennale from "@/components/AnalyseDecennale";
+import { AdresseAuto, CpVille } from "@/components/Adresse";
 import { dateFr, joursDecennale } from "@/lib/decennale";
 
 function Fiche() {
@@ -149,8 +150,9 @@ function Fiche() {
         {(a.siret || "").replace(/\D/g, "").length > 0 && (a.siret || "").replace(/\D/g, "").length < 14 && (
           <p className="text-xs text-slate-500">{(a.siret || "").replace(/\D/g, "").length}/14 chiffres — la vérification se lance automatiquement.</p>
         )}
-        {champ("adresse", "Adresse")}
-        <div className="grid grid-cols-2 gap-2">{champ("cp", "Code postal", { inputMode: "numeric" })}{champ("ville", "Ville")}</div>
+        <AdresseAuto value={a.adresse || ""} onChange={(v) => set({ adresse: v })} placeholder="Commencez à taper : 12 rue…"
+          onPick={(x) => { setA((y) => y && ({ ...y, adresse: x.adresse, cp: x.cp || y.cp, ville: x.ville || y.ville })); if (x.cp && !deps.trim()) setDeps(x.cp.slice(0, 2)); }} />
+        <CpVille cp={a.cp || ""} ville={a.ville || ""} onChange={(cp, ville) => { setA((y) => y && ({ ...y, cp, ville })); if (cp.length === 5 && !deps.trim()) setDeps(cp.startsWith("97") ? cp.slice(0, 3) : cp.slice(0, 2)); }} />
         <div className="grid grid-cols-2 gap-2">{champ("telephone", "Téléphone", { type: "tel" })}{champ("email", "E-mail", { type: "email" })}</div>
       </div>
 

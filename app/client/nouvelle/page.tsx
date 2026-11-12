@@ -1,6 +1,7 @@
 "use client";
 // Nouvelle demande en 4 étapes : description → questions de l'IA → cahier des charges → coordonnées et publication.
 import { useEffect, useRef, useState } from "react";
+import { AdresseAuto, CpVille } from "@/components/Adresse";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
@@ -161,10 +162,7 @@ export default function Nouvelle() {
               placeholder="Ex : je veux refaire ma salle de bain de 6 m² : remplacer la baignoire par une douche à l'italienne, changer le meuble vasque et refaire la faïence." />
             <p className="mt-1 text-xs text-slate-500">🎤 Astuce : utilisez le micro du clavier de votre téléphone pour dicter.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Code postal</label><input className="input" inputMode="numeric" maxLength={5} value={cp} onChange={(e) => setCp(e.target.value.replace(/\D/g, ""))} /></div>
-            <div><label className="label">Ville</label><input className="input" value={ville} onChange={(e) => setVille(e.target.value)} /></div>
-          </div>
+          <CpVille cp={cp} ville={ville} onChange={(c, v) => { setCp(c); setVille(v); }} />
           <div>
             <label className="label">Quand ?</label>
             <div className="flex flex-wrap gap-1.5">
@@ -252,7 +250,7 @@ export default function Nouvelle() {
           <div><label className="label">Nom</label><input className="input" value={nom} onChange={(e) => setNom(e.target.value)} /></div>
           <div><label className="label">Téléphone</label><input className="input" type="tel" value={tel} onChange={(e) => setTel(e.target.value)} /></div>
           <div><label className="label">E-mail</label><input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div><label className="label">Adresse du chantier</label><input className="input" value={adresse} onChange={(e) => setAdresse(e.target.value)} placeholder={`… ${cp} ${ville}`} /></div>
+          <AdresseAuto label="Adresse du chantier" value={adresse} onChange={setAdresse} cp={cp} placeholder={`Numéro et rue, ${cp} ${ville}`} />
           <p className="text-xs text-slate-500">Votre demande reste ouverte {delai === "urgent" ? "48" : "72"} h ou jusqu'à 5 offres.</p>
           <Erreur msg={err} />
           <div className="flex gap-2">
