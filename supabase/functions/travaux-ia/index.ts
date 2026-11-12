@@ -29,12 +29,12 @@ const str = { type: "string" };
 const num = { type: "number" };
 const arr = (items: unknown) => ({ type: "array", items });
 const SCHEMAS: Record<string, unknown> = {
-  questions: { type: "object", required: ["titre", "metiers", "questions"], properties: {
-    titre: str, metiers: arr(str), resume: str,
+  questions: { type: "object", required: ["est_travaux", "titre", "metiers", "questions"], properties: {
+    est_travaux: { type: "boolean" }, message: str, titre: str, metiers: arr(str), resume: str,
     questions: arr({ type: "object", required: ["id", "question", "type"], properties: {
       id: str, question: str, type: { type: "string", enum: ["choix", "texte", "nombre"] }, options: arr(str), unite: str } }) } },
-  cahier: { type: "object", required: ["titre", "metiers", "resume", "lots", "budget_min", "budget_max"], properties: {
-    titre: str, metiers: arr(str), resume: str, budget_min: num, budget_max: num,
+  cahier: { type: "object", required: ["hors_sujet", "titre", "metiers", "resume", "lots", "budget_min", "budget_max"], properties: {
+    hors_sujet: { type: "boolean" }, titre: str, metiers: arr(str), resume: str, budget_min: num, budget_max: num,
     points_attention: arr(str), hypotheses: arr(str),
     lots: arr({ type: "object", required: ["titre", "postes"], properties: {
       titre: str, metier: str,
@@ -50,9 +50,13 @@ function prompt(action: string, b: any): string {
 Demande du client (code postal ${b.cp || "?"}) :
 """${b.description}"""
 ${b.photos?.length ? "Des photos du lieu sont jointes." : ""}
+D'abord, vérifie que c'est bien une demande de travaux, de réparation, d'installation ou d'entretien dans un logement, un local ou un extérieur
+(même mal écrite ou vague : \"j'ai un souci chez moi\" compte comme des travaux). Si ce n'est pas le cas (recette, devoir, question générale,
+conseil sans rapport avec un chantier, test, blague, texte sans sens) : mets est_travaux à false, explique en une phrase courte et polie dans message
+ce que la demande semble être, laisse questions et metiers vides, et arrête-toi là. Sinon mets est_travaux à true.
 Comprends le projet et pose entre 3 et 6 questions courtes, utiles pour chiffrer (surfaces, dimensions, état existant, équipements souhaités,
 gamme de finition, accès, étage…). Ne repose pas une question dont la réponse est déjà dans la description. Propose des choix quand c'est possible.
-Format : {"titre":"titre court du projet (6 mots max)","metiers":["id",...],"resume":"une phrase","questions":[{"id":"q1","question":"…","type":"choix|texte|nombre","options":["…"],"unite":"m² (si nombre)"}]}`;
+Format : {"est_travaux":true,"message":"","titre":"titre court du projet (6 mots max)","metiers":["id",...],"resume":"une phrase","questions":[{"id":"q1","question":"…","type":"choix|texte|nombre","options":["…"],"unite":"m² (si nombre)"}]}`;
 
   if (action === "cahier") return `${BASE}
 Demande du client (code postal ${b.cp || "?"}, délai souhaité : ${b.delai || "?"}) :
@@ -60,10 +64,12 @@ Demande du client (code postal ${b.cp || "?"}, délai souhaité : ${b.delai || "
 Réponses du client aux questions :
 ${(b.reponses || []).map((r: any) => `- ${r.question} → ${r.reponse || "(sans réponse)"}`).join("\n")}
 ${b.photos?.length ? "Des photos du lieu sont jointes." : ""}
+Si la demande et les réponses ne décrivent pas réellement des travaux (recette, question sans rapport, réponses absurdes) :
+mets hors_sujet à true, lots vide, budgets à 0, et explique pourquoi dans resume. Sinon mets hors_sujet à false.
 Rédige le cahier des charges : le projet découpé en lots (un lot par corps de métier ou grande étape), chaque lot avec ses postes et des quantités
 estimées (indique "à confirmer" dans precisions si tu estimes). Donne une fourchette de budget TTC réaliste au prix du marché français actuel
 (fourniture et pose, gamme moyenne), en restant prudent : budget_min et budget_max en euros, nombres entiers.
-Format : {"titre":"…","metiers":["id",...],"resume":"2 phrases","lots":[{"titre":"Lot 1 — …","metier":"id","postes":[{"designation":"…","quantite":12,"unite":"m²|ml|u|forfait|h","precisions":"…"}]}],
+Format : {"hors_sujet":false,"titre":"…","metiers":["id",...],"resume":"2 phrases","lots":[{"titre":"Lot 1 — …","metier":"id","postes":[{"designation":"…","quantite":12,"unite":"m²|ml|u|forfait|h","precisions":"…"}]}],
 "budget_min":0,"budget_max":0,"points_attention":["à vérifier lors de la visite…"],"hypotheses":["…"]}`;
 
   if (action === "devis") return `${BASE}
@@ -192,6 +198,16 @@ async function analyserAttestation(req: Request, body: any, key: string) {
   return json({ analyse, decennale: maj.decennale ?? a.decennale, decennale_fin: maj.decennale_fin ?? a.decennale_fin });
 }
 
+// Signature de la description validée comme demande de travaux (vérifiée par la base à la publication)
+async function signer(texte: string) {
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+  const { data } = await admin.from("secrets_internes").select("valeur").eq("cle", "ia_signature").single();
+  const enc = new TextEncoder();
+  const cle = await crypto.subtle.importKey("raw", enc.encode(data!.valeur), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", cle, enc.encode(texte)));
+  return [...sig].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   const key = Deno.env.get("ANTHROPIC_API_KEY");
@@ -239,6 +255,11 @@ Deno.serve(async (req) => {
     return json({ error: j.stop_reason === "max_tokens" ? "Projet trop long pour l'IA, simplifiez la description et réessayez." : "Réponse de l'IA illisible, réessayez." }, 502);
   }
   if (Array.isArray(out.metiers)) out.metiers = out.metiers.filter((m: string) => IDS.includes(m));
+  if (action === "questions" && out.est_travaux === false) out.questions = [];
+  if (action === "cahier") {
+    if (out.hors_sujet || !Array.isArray(out.lots) || !out.lots.length) { out.hors_sujet = true; out.lots = []; }
+    else out.signature = await signer(String(body.description || ""));
+  }
   if (Array.isArray(out.lignes)) {
     out.lignes = out.lignes.map((l: any) => l.kind === "section"
       ? { kind: "section", label: String(l.label || "Lot"), qty: 0, unit: "", unit_price: 0, vat_rate: 0 }

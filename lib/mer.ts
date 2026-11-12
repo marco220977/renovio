@@ -34,7 +34,7 @@ export type Question = { id: string; question: string; type: "choix" | "texte" |
 export type Cahier = {
   titre: string; metiers: string[]; resume: string;
   lots: { titre: string; metier?: string; postes: { designation: string; quantite?: number; unite?: string; precisions?: string }[] }[];
-  budget_min: number; budget_max: number; points_attention?: string[]; hypotheses?: string[];
+  budget_min: number; budget_max: number; points_attention?: string[]; hypotheses?: string[]; signature?: string;
 };
 
 export type Demande = {

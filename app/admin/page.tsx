@@ -184,7 +184,7 @@ export default function Admin() {
                 <p className="font-bold">{d.titre || d.description.slice(0, 60)}</p>
                 <span className={`chip shrink-0 ${STATUT_DEMANDE[st][1]}`}>{STATUT_DEMANDE[st][0]}</span>
               </div>
-              <p className="text-xs text-slate-500">{d.ville} {d.cp} · {profil[d.client_id]?.nom} · {dateFr(d.created_at)} · {nb} offre(s)</p>
+              <p className="text-xs text-slate-500">{(d as any).masquee && <span className="font-semibold text-red-600">🚩 masquée · </span>}{d.ville} {d.cp} · {profil[d.client_id]?.nom} · {dateFr(d.created_at)} · {nb} offre(s)</p>
               {d.budget_max ? <p className="text-xs text-slate-500">Estimation : {eur(d.budget_min)} – {eur(d.budget_max)}</p> : null}
             </button>
           );
@@ -270,6 +270,13 @@ export default function Admin() {
               <p>Client : <b>{c?.nom}</b> · <a className="text-brand" href={`mailto:${c?.email}`}>{c?.email}</a></p>
               <Metiers ids={d.metiers} />
               <p className="whitespace-pre-line rounded-xl bg-slate-50 p-3">{d.description}</p>
+              {(d as any).masquee && <p className="rounded-lg bg-red-50 p-2 text-red-800">🚩 Demande masquée aux artisans (signalée ou masquée par vous).</p>}
+              <button className="btn-ghost w-full !py-2 text-sm" onClick={async () => {
+                const m = !(d as any).masquee;
+                if (!confirm(m ? "Masquer cette demande aux artisans ?" : "Rendre cette demande de nouveau visible ?")) return;
+                const { error } = await sb().rpc("admin_masquer_demande", { p_demande: d.id, p_masquee: m });
+                if (error) alert(error.message); else charger();
+              }}>{(d as any).masquee ? "👁️ Rendre visible" : "🚫 Masquer (hors sujet)"}</button>
               {d.budget_max ? <p>Estimation IA : <b>{eur(d.budget_min)} – {eur(d.budget_max)}</b> TTC</p> : null}
               <p className="font-bold">Offres ({os.length})</p>
               {os.map((o) => (

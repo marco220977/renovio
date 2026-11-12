@@ -81,24 +81,27 @@ export default function Nouvelle() {
     setPhotos([...photos, ...out]);
   }
 
+  const [horsSujet, setHorsSujet] = useState("");
+
   async function versQuestions() {
-    setErr("");
+    setErr(""); setHorsSujet("");
     if (description.trim().length < 15) return setErr("Décrivez un peu plus vos travaux (quelques phrases).");
     if (!departementDe(cp)) return setErr("Code postal invalide (5 chiffres).");
     setBusy("L'IA lit votre demande…");
     try {
-      const r = await ia<{ titre: string; metiers: string[]; questions: Question[] }>("questions", { description, cp, photos: petites() });
+      const r = await ia<{ est_travaux?: boolean; message?: string; titre: string; metiers: string[]; questions: Question[] }>("questions", { description, cp, photos: petites() });
+      if (r.est_travaux === false) { setHorsSujet(r.message || ""); setBusy(""); return; }
       setTitre(r.titre || ""); setMetiers(r.metiers || []); setQuestions(r.questions || []); setEtape(2);
     } catch (e) { setErr(errMsg(e)); }
     setBusy("");
   }
 
   async function versCahier() {
-    setErr(""); setBusy("L'IA rédige votre cahier des charges…");
+    setErr(""); setHorsSujet(""); setBusy("L'IA rédige votre cahier des charges…");
     try {
       const rep = questions.map((q) => ({ question: q.question, reponse: reponses[q.id] || "" }));
-      const c = await ia<Cahier>("cahier", { description, cp, delai, reponses: rep, photos: petites() });
-      if (!c.lots?.length) throw new Error("Le cahier des charges est vide, réessayez.");
+      const c = await ia<Cahier & { hors_sujet?: boolean }>("cahier", { description, cp, delai, reponses: rep, photos: petites() });
+      if (c.hors_sujet || !c.lots?.length) { setHorsSujet(c.resume || ""); setEtape(1); setBusy(""); return; }
       setCahier(c); setTitre(c.titre || titre);
       if (c.metiers?.length) setMetiers(c.metiers);
       setEtape(3);
@@ -125,12 +128,13 @@ export default function Nouvelle() {
         const { data, error } = await s.from("demandes").insert({
           titre, description, cp, ville, departement: departementDe(cp), delai, metiers, photos: chemins,
           reponses: questions.map((q) => ({ question: q.question, reponse: reponses[q.id] || "" })),
-          cahier, budget_min: cahier?.budget_min || null, budget_max: cahier?.budget_max || null,
+          cahier: { ...cahier, signature: undefined }, ia_signature: cahier?.signature || null,
+          budget_min: cahier?.budget_min || null, budget_max: cahier?.budget_max || null,
         }).select("id").single();
         if (error) throw error;
         id = data.id as string; setDemandeId(id);
       } else {
-        await s.from("demandes").update({ metiers, titre }).eq("id", id);
+        await s.from("demandes").update({ metiers, titre, description, ia_signature: cahier?.signature || null }).eq("id", id);
       }
       const { error: e2 } = await s.from("demande_contacts").upsert({ demande_id: id, nom, telephone: tel, email, adresse });
       if (e2) throw e2;
@@ -189,6 +193,13 @@ export default function Nouvelle() {
               )}
             </div>
           </div>
+          {horsSujet && (
+            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-bold">🛠️ Rénolien sert à trouver un artisan pour vos travaux</p>
+              <p className="mt-1">{horsSujet}</p>
+              <p className="mt-2">Décrivez ce que vous voulez faire chez vous (plomberie, électricité, peinture, salle de bain…). Par exemple : <i>« Remplacer mon chauffe-eau de 200 L dans le garage »</i>.</p>
+            </div>
+          )}
           <Erreur msg={err} />
           <button className="btn-primary w-full py-3.5" disabled={!!busy} onClick={versQuestions}>{busy || "Continuer →"}</button>
         </div>

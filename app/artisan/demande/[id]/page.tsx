@@ -10,6 +10,7 @@ import LignesEditeur, { nettoyerLignes } from "@/components/LignesEditeur";
 import Conversation from "@/components/Conversation";
 import Avenants from "@/components/Avenants";
 import Ecarts from "@/components/Ecarts";
+import Signaler from "@/components/Signaler";
 import { CahierVue, LignesVue, Metiers, Photos } from "@/components/Vues";
 import { Erreur, Info, useProfil } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
@@ -189,6 +190,7 @@ export default function DemandeArtisan() {
         <Photos paths={d.photos} />
       </div>
       {d.cahier && <div className="card"><p className="mb-2 font-bold">📋 Cahier des charges (IA)</p><CahierVue cahier={d.cahier} /></div>}
+      {!offre && <Signaler demandeId={d.id} />}
 
       {/* Mon offre */}
       {offre && !mode && (
