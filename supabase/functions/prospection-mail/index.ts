@@ -8,47 +8,48 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const SITE = "https://www.renolien.fr";
 
 // Métier lisible et exemples de chantiers, à partir du métier Sirene ou des domaines RGE
-function metierDe(p: any): { pro: string; ex: string } {
+function metierDe(p: any): { pro: string; pros: string; ex: string } {
   const t = `${p.metier || ""} ${p.domaines_rge || ""}`.toLowerCase();
-  if (/pompe|chauff|chaudi|clim|thermodyn|po[eê]le|bois|biomasse/.test(t)) return { pro: "chauffagiste", ex: "remplacement de chaudière, pompe à chaleur, climatisation" };
-  if (/plomb|sanitaire|eau chaude|ballon/.test(t)) return { pro: "plombier", ex: "chauffe-eau, salle de bain, recherche de fuite" };
-  if (/[ée]lectri|photovolta|solaire|borne/.test(t)) return { pro: "électricien", ex: "tableau électrique, mise aux normes, borne de recharge" };
-  if (/isol|comble|ite|iti|mur/.test(t)) return { pro: "artisan en isolation", ex: "isolation des combles, des murs et des planchers" };
-  if (/fen[eê]tre|menuis|porte|volet|vitrage/.test(t)) return { pro: "menuisier", ex: "fenêtres, portes d'entrée, volets roulants" };
-  if (/couvert|toit|charpente|zinguerie/.test(t)) return { pro: "couvreur", ex: "réfection de toiture, fuite, gouttières" };
-  if (/peint|vitrerie/.test(t)) return { pro: "peintre", ex: "peinture de pièces, rénovation avant location" };
-  if (/pl[aâ]tr|plaqu/.test(t)) return { pro: "plaquiste", ex: "cloisons, faux plafonds, doublages" };
-  if (/carrel|sol/.test(t)) return { pro: "carreleur", ex: "carrelage, faïence, douche à l'italienne" };
-  if (/ma[cç]on|gros|construction|terrass/.test(t)) return { pro: "maçon", ex: "ouverture de mur, dalle, extension" };
-  if (/architect|audit|bureau|[ée]tude/.test(t)) return { pro: "professionnel de la rénovation", ex: "rénovation énergétique, audits, travaux complets" };
-  return { pro: "artisan", ex: "rénovation, réparations, petits travaux" };
+  if (/pompe|chauff|chaudi|clim|thermodyn|po[eê]le|bois|biomasse/.test(t)) return { pro: "chauffagiste", pros: "chauffagistes", ex: "remplacement de chaudière, pompe à chaleur, climatisation" };
+  if (/plomb|sanitaire|eau chaude|ballon/.test(t)) return { pro: "plombier", pros: "plombiers", ex: "chauffe-eau, salle de bain, recherche de fuite" };
+  if (/[ée]lectri|photovolta|solaire|borne/.test(t)) return { pro: "électricien", pros: "électriciens", ex: "tableau électrique, mise aux normes, borne de recharge" };
+  if (/isol|comble|ite|iti|mur/.test(t)) return { pro: "artisan en isolation", pros: "artisans en isolation", ex: "isolation des combles, des murs et des planchers" };
+  if (/fen[eê]tre|menuis|porte|volet|vitrage/.test(t)) return { pro: "menuisier", pros: "menuisiers", ex: "fenêtres, portes d'entrée, volets roulants" };
+  if (/couvert|toit|charpente|zinguerie/.test(t)) return { pro: "couvreur", pros: "couvreurs", ex: "réfection de toiture, fuite, gouttières" };
+  if (/peint|vitrerie/.test(t)) return { pro: "peintre", pros: "peintres", ex: "peinture de pièces, rénovation avant location" };
+  if (/pl[aâ]tr|plaqu/.test(t)) return { pro: "plaquiste", pros: "plaquistes", ex: "cloisons, faux plafonds, doublages" };
+  if (/carrel|sol/.test(t)) return { pro: "carreleur", pros: "carreleurs", ex: "carrelage, faïence, douche à l'italienne" };
+  if (/ma[cç]on|gros|construction|terrass/.test(t)) return { pro: "maçon", pros: "maçons", ex: "ouverture de mur, dalle, extension" };
+  if (/architect|audit|bureau|[ée]tude/.test(t)) return { pro: "professionnel de la rénovation", pros: "professionnels de la rénovation", ex: "rénovation énergétique, audits, travaux complets" };
+  return { pro: "artisan", pros: "artisans", ex: "rénovation, réparations, petits travaux" };
 }
 const titre = (s: string) => (s || "").toLowerCase().replace(/(^|[\s'-])\S/g, (m) => m.toUpperCase());
 
 function contenu(p: any, etape: number, lien: string, stop: string) {
   const m = metierDe(p);
-  const ville = titre(p.ville || "");
-  const sujet = etape === 1 ? `${titre(m.pro)} à ${ville} : des chantiers sans payer de pub` : `Re : des chantiers près de ${ville}`;
+  const ville = titre(p.ville || "") || "votre secteur";
+  const sujet = etape === 1 ? `${titre(m.pro)} à ${ville} : rejoignez Rénolien parmi les premiers` : `Re : rejoignez Rénolien parmi les premiers`;
   const corps = etape === 1 ? [
     `Bonjour,`,
-    `Je suis Marco, plombier-chauffagiste et fondateur de Rénolien, une plateforme qui met en relation les particuliers d'Île-de-France avec des artisans de leur secteur.`,
-    `Des particuliers de votre secteur y décrivent leurs travaux (${m.ex}…), avec photos et cahier des charges. Vous recevez les demandes de votre métier près de ${ville}, et vous répondez avec un devis prérempli en 1 clic.`,
-    `Ce qui change des autres plateformes :\n• vous ne payez que si un client vous choisit, pas pour un devis sans réponse ;\n• 5 artisans maximum par demande, pas d'enchère au moins cher ;\n• 0 % de commission : le client vous paie directement.`,
-    `Pour le lancement, les 50 premiers inscrits ont 2 mois de formule Illimitée offerts, sans carte bancaire.`,
-    `Découvrir et s'inscrire (2 minutes) : ${lien}`,
-    `Une question ? Répondez simplement à ce message.\n\nMarco\nFondateur de Rénolien`,
+    `Je suis Marco, plombier-chauffagiste. Je lance **Rénolien**, une nouvelle plateforme qui met en relation les particuliers d'Île-de-France avec les artisans de leur secteur.`,
+    `Je vous écris parce que nous sommes **en plein démarrage** : avant d'ouvrir largement aux particuliers, nous constituons le réseau des premières entreprises, métier par métier et ville par ville. Je cherche aujourd'hui des ${m.pros} sérieux autour de ${ville}.`,
+    `**Pourquoi en être dès maintenant :**\n• **2 mois de formule Illimitée offerts** aux 50 premières entreprises inscrites, sans carte bancaire ;\n• **être parmi les premiers de votre secteur**, quand les demandes arriveront et qu'il y aura encore peu de concurrence ;\n• **votre avis compte** : je suis du métier, et l'outil évolue avec les retours des premiers artisans.`,
+    `**Comment ça marchera :**\n• les particuliers décrivent leurs travaux, avec photos et cahier des charges préparé par l'IA ;\n• vous répondez avec un devis prérempli en 1 clic, avec vos propres tarifs ;\n• 5 artisans maximum par demande, pas d'enchère au moins cher ;\n• **vous ne payez que si un client vous choisit**, et 0 % de commission.`,
+    `L'inscription prend 2 minutes : ${lien}`,
+    `Une question, une remarque ? Répondez simplement à ce message, je lis tout personnellement.\n\nMarco\nFondateur de Rénolien`,
   ] : [
     `Bonjour,`,
-    `Je me permets de revenir vers vous : sur Rénolien, des particuliers de votre secteur cherchent un ${m.pro} pour leurs travaux.`,
-    `L'inscription est gratuite, envoyer une offre aussi : vous ne payez que lorsqu'un client vous choisit. Les 2 mois illimités offerts aux premiers inscrits sont encore disponibles.`,
-    `Voir les détails : ${lien}`,
+    `Je reviens vers vous une seule fois : Rénolien est en phase de lancement et je constitue en ce moment le réseau des premiers artisans à ${ville} et alentours.`,
+    `Les places offertes (2 mois illimités, sans carte bancaire) partent au fur et à mesure. Si vous voulez faire partie des premiers ${m.pros} de votre secteur, l'inscription prend 2 minutes : ${lien}`,
+    `Et si ce n'est pas pour vous, aucun souci, je ne vous relancerai plus.`,
     `Marco\nFondateur de Rénolien`,
   ];
   const mention = `Vos coordonnées professionnelles proviennent du registre public des entreprises RGE (ADEME) ou du répertoire Sirene. Pour ne plus recevoir de message de Rénolien : ${stop}`;
-  const texte = corps.join("\n\n") + "\n\n—\n" + mention;
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const texte = corps.join("\n\n").replace(/\*\*/g, "") + "\n\n—\n" + mention;
+  const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f172a;max-width:560px">` +
-    corps.map((c) => `<p>${esc(c).replace(/\n/g, "<br>").replace(esc(lien), `<a href="${lien}" style="color:#ea580c;font-weight:bold">${etape === 1 ? "www.renolien.fr/entreprises" : "Voir les détails"}</a>`)}</p>`).join("") +
+    corps.map((c) => `<p>${esc(c).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>")
+      .replace(esc(lien), `<a href="${lien}" style="color:#ea580c;font-weight:bold">www.renolien.fr/entreprises</a>`)}</p>`).join("") +
     `<p style="font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:10px">${esc(mention).replace(esc(stop), `<a href="${stop}" style="color:#64748b">se désinscrire</a>`)}</p></div>`;
   return { sujet, texte, html };
 }
