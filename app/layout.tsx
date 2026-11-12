@@ -1,4 +1,5 @@
 import "./globals.css";
+import ApercuPdf from "@/components/ApercuPdf";
 import type { Metadata, Viewport } from "next";
 import { SITE } from "@/lib/site";
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organisation) }} />
         {children}
+        <ApercuPdf />
       </body>
     </html>
   );

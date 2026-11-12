@@ -33,14 +33,10 @@ export function versDevis(o: Offre, a: Artisan, d: Pick<Demande, "titre" | "cp" 
   return { doc, company };
 }
 
+/** Ouvre l'aperçu du devis dans l'appli (avec Télécharger / Partager) */
 export async function telechargerDevis(...args: Parameters<typeof versDevis>) {
   const { doc, company } = versDevis(...args);
   const pdf = await buildPdf(doc, company);
-  const blob = pdf.output("blob");
-  const file = new File([blob], `${doc.number || "devis"}.pdf`, { type: "application/pdf" });
-  const nav = navigator as any;
-  if (nav.canShare && nav.canShare({ files: [file] })) {
-    try { await nav.share({ files: [file], title: doc.number }); return; } catch {}
-  }
-  pdf.save(file.name);
+  const { ouvrirApercu } = await import("@/components/ApercuPdf");
+  ouvrirApercu({ blob: pdf.output("blob"), nom: `${doc.number || "devis"}.pdf`, titre: `Devis ${doc.number || ""} — ${company.name}` });
 }

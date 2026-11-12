@@ -308,7 +308,7 @@ export default function DemandeClient() {
           </div>
           {!signer && onglet === "devis" && (
             <div className="flex shrink-0 gap-2 pt-3">
-              <button className="btn-ghost" onClick={() => telechargerDevis(voir, art(voir)!, d, contact)}>📄 PDF</button>
+              <button className="btn-ghost" onClick={() => telechargerDevis(voir, art(voir)!, d, contact)}>📄 Aperçu PDF</button>
               {peutChoisir && voir.statut === "envoyee" && <button className="btn-brand flex-1" disabled={busy} onClick={() => choisir(voir)}>Choisir cet artisan (sans engagement)</button>}
               {voir.statut === "confirmee" && <button className="btn-brand flex-1" onClick={() => setSigner(true)}>✍️ Signer</button>}
             </div>

@@ -201,7 +201,7 @@ export default function DemandeArtisan() {
           </div>
           <LignesVue lignes={offre.lignes} franchise={a?.tva_franchise} />
           <div className="flex flex-wrap gap-2">
-            {a && <button className="btn-ghost" onClick={() => telechargerDevis(offre, a, d, contact)}>📄 PDF</button>}
+            {a && <button className="btn-ghost" onClick={() => telechargerDevis(offre, a, d, contact)}>📄 Aperçu PDF</button>}
             {peutModifier && <button className="btn-ghost flex-1" onClick={() => editer("offre")}>✏️ Modifier (1 fois)</button>}
             {(offre.statut === "envoyee" && ouverte || choisi) && <button className="btn-danger" onClick={retirer}>{choisi ? "Je ne peux pas faire ce chantier" : "Retirer"}</button>}
           </div>
@@ -242,6 +242,18 @@ export default function DemandeArtisan() {
           </div>
           <Erreur msg={err} />
           {mode === "offre" && <p className="text-xs text-slate-500">🔒 Votre offre est invisible des autres artisans. {offre ? "C'est votre unique modification." : "Vous pourrez la modifier une seule fois."}</p>}
+          {a && (
+            <button className="btn-ghost w-full" disabled={!!busy} onClick={() => {
+              const maintenant = new Date().toISOString();
+              const brouillon = {
+                ...(offre || {}), id: offre?.id || "apercu", demande_id: d.id, artisan_id: profil.id, numero: offre?.numero || "Aperçu",
+                created_at: offre?.created_at || maintenant, updated_at: maintenant, lignes: nettoyerLignes(lignes),
+                delai_jours: Number(delai) || undefined, duree_jours: Number(duree) || undefined, message,
+                validite_jours: Number(validite) || 30, statut: mode === "definitif" ? "confirmee" : "envoyee",
+              } as Offre;
+              telechargerDevis(brouillon, a, d, mode === "definitif" ? contact : null);
+            }}>👁️ Aperçu du devis tel que le client le verra</button>
+          )}
           <div className="flex gap-2">
             <button className="btn-ghost" disabled={!!busy} onClick={() => setMode(null)}>Annuler</button>
             <button className="btn-brand flex-1 py-3.5" disabled={!!busy} onClick={envoyer}>{busy || (mode === "definitif" ? "Envoyer le devis définitif" : "Envoyer mon offre")}</button>
