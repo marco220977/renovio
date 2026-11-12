@@ -103,6 +103,7 @@ export default function Admin() {
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <span className="text-xl font-extrabold">Réno<span className="text-flame">lien</span> <span className="text-sm font-semibold text-slate-400">admin</span></span>
           <div className="flex gap-2 text-xs">
+            <Link href="/admin/prospects" className="chip bg-flame-light text-flame">🎯 Prospects</Link>
             <Link href="/client" className="chip bg-slate-100 text-slate-600">Client</Link>
             <Link href="/artisan" className="chip bg-slate-100 text-slate-600">Artisan</Link>
             <button onClick={charger} className="chip bg-slate-100 text-slate-600">↻</button>
