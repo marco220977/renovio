@@ -257,6 +257,7 @@ export default function Admin() {
                 ? <button className="btn-ghost flex-1" onClick={() => majArtisan(a.id, { verifie: false })}>Retirer « Vérifié »</button>
                 : <button className="btn-brand flex-1" onClick={() => majArtisan(a.id, { verifie: true })}>✔ Marquer vérifié</button>}
             </div>
+            <Link href={`/admin/artisan/${a.id}`} className="btn-brand w-full text-sm">👁️ Voir comme cet artisan</Link>
             <button className="btn-ghost w-full text-sm" onClick={() => basculerTest(a.id)}>
               {tests.has(a.id) ? "🧪 Compte de test : le remettre en compte réel" : "🧪 Marquer comme compte de test"}
             </button>
