@@ -33,14 +33,14 @@ function contenu(p: any, etape: number, lien: string, stop: string) {
     `Bonjour,`,
     `Je suis Marco, plombier-chauffagiste. Je lance **Rénolien**, une nouvelle plateforme qui met en relation les particuliers d'Île-de-France avec les artisans de leur secteur.`,
     `Je vous écris parce que nous sommes **en plein démarrage** : avant d'ouvrir largement aux particuliers, nous constituons le réseau des premières entreprises, métier par métier et ville par ville. Je cherche aujourd'hui des ${m.pros} sérieux autour de ${ville}.`,
-    `**Pourquoi en être dès maintenant :**\n• **100 % gratuit et illimité pendant toute la phase de lancement** (jusqu'au 31 mars 2027), sans carte bancaire ;\n• **membre fondateur : -30 % à vie** ensuite sur toutes les formules ;\n• **être parmi les premiers de votre secteur**, quand les demandes arriveront et qu'il y aura encore peu de concurrence ;\n• **votre avis compte** : je suis du métier, et l'outil évolue avec les retours des premiers artisans.`,
+    `**Pourquoi en être dès maintenant :**\n• **100 % gratuit et illimité pendant toute la phase de lancement** (jusqu'au 1er janvier 2027), sans carte bancaire ;\n• **membre fondateur : -30 % à vie** ensuite sur toutes les formules ;\n• **être parmi les premiers de votre secteur**, quand les demandes arriveront et qu'il y aura encore peu de concurrence ;\n• **votre avis compte** : je suis du métier, et l'outil évolue avec les retours des premiers artisans.`,
     `**Comment ça marchera :**\n• les particuliers décrivent leurs travaux, avec photos et cahier des charges préparé par l'IA ;\n• vous répondez avec un devis prérempli en 1 clic, avec vos propres tarifs ;\n• 5 artisans maximum par demande, pas d'enchère au moins cher ;\n• **vous ne payez que si un client vous choisit**, et 0 % de commission.`,
     `L'inscription prend 2 minutes : ${lien}`,
     `Une question, une remarque ? Répondez simplement à ce message, je lis tout personnellement.\n\nMarco\nFondateur de Rénolien`,
   ] : [
     `Bonjour,`,
     `Je reviens vers vous une seule fois : Rénolien est en phase de lancement et je constitue en ce moment le réseau des premiers artisans à ${ville} et alentours.`,
-    `Pendant toute la phase de lancement (jusqu'au 31 mars 2027), Rénolien est 100 % gratuit et illimité pour les artisans, sans carte bancaire, puis -30 % à vie pour les membres fondateurs. Si vous voulez faire partie des premiers ${m.pros} de votre secteur, l'inscription prend 2 minutes : ${lien}`,
+    `Pendant toute la phase de lancement (jusqu'au 1er janvier 2027), Rénolien est 100 % gratuit et illimité pour les artisans, sans carte bancaire, puis -30 % à vie pour les membres fondateurs. Si vous voulez faire partie des premiers ${m.pros} de votre secteur, l'inscription prend 2 minutes : ${lien}`,
     `Et si ce n'est pas pour vous, aucun souci, je ne vous relancerai plus.`,
     `Marco\nFondateur de Rénolien`,
   ];

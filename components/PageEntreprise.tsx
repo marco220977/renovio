@@ -72,7 +72,7 @@ export function FaqPro({ faq }: { faq: [string, string][] }) {
 }
 
 export const FAQ_PRO: [string, string][] = [
-  ["Pourquoi est-ce gratuit en ce moment ?", "Rénolien est en phase de lancement : nous constituons d'abord le réseau des premières entreprises avant d'ouvrir largement aux particuliers. Les artisans inscrits pendant cette période sont « membres fondateurs » : tout est gratuit et illimité jusqu'à la fin du lancement (31 mars 2027), sans carte bancaire. Ensuite, ils gardent -30 % à vie sur toutes les formules, et la formule Découverte reste gratuite. Vous serez prévenu un mois avant."],
+  ["Pourquoi est-ce gratuit en ce moment ?", "Rénolien est en phase de lancement : nous constituons d'abord le réseau des premières entreprises avant d'ouvrir largement aux particuliers. Les artisans inscrits pendant cette période sont « membres fondateurs » : tout est gratuit et illimité jusqu'à la fin du lancement (1er janvier 2027), sans carte bancaire. Ensuite, ils gardent -30 % à vie sur toutes les formules, et la formule Découverte reste gratuite. Vous serez prévenu un mois avant."],
   ["Que faut-il pour s'inscrire ?", "Un SIRET et une assurance décennale en cours de validité. Vous pouvez déposer votre attestation depuis votre profil pour obtenir le badge « Vérifié »."],
   ["Est-ce que je paie pour des devis sans réponse ?", "Non. Envoyer une offre est gratuit. Un crédit est décompté uniquement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite."],
   ["Est-ce que je paie une commission sur mes chantiers ?", "Non. Le client vous paie directement. Rénolien se rémunère uniquement par l'abonnement."],
