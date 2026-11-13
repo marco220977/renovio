@@ -17,6 +17,13 @@ export async function POST(req: Request) {
     const admin = sbAdmin();
     const { data: a } = await admin.from("artisans").select("*").eq("id", user.id).single();
     if (!a) return NextResponse.json({ error: "Profil artisan introuvable" }, { status: 404 });
+    // Membres fondateurs : rien à payer pendant le lancement, puis remise à vie
+    const { data: lanc } = await admin.from("reglages").select("valeur").eq("cle", "lancement").maybeSingle();
+    const L = (lanc?.valeur || {}) as { actif?: boolean; fin?: string; remise?: number };
+    const enLancement = !!L.actif && !!L.fin && new Date().toISOString().slice(0, 10) <= L.fin;
+    if (a.fondateur && enLancement) return NextResponse.json({ error: "Vous êtes membre fondateur : tout est gratuit et illimité pendant le lancement, rien à payer." }, { status: 400 });
+    const remise = a.fondateur ? Number(L.remise || 0) : 0;
+    const montant = Math.round(f.prix * 100 * (100 - remise) / 100);
     const st = stripe();
     let customer = a.stripe_customer_id as string | null;
     if (!customer) {
@@ -31,8 +38,8 @@ export async function POST(req: Request) {
       line_items: [{
         quantity: 1,
         price_data: {
-          currency: "eur", unit_amount: f.prix * 100, recurring: { interval: "month" },
-          product_data: { name: `Rénolien ${f.nom} — ${f.quota ? `${f.quota} clients / mois` : "clients illimités"}` },
+          currency: "eur", unit_amount: montant, recurring: { interval: "month" },
+          product_data: { name: `Rénolien ${f.nom} — ${f.quota ? `${f.quota} clients / mois` : "clients illimités"}${remise ? ` (membre fondateur -${remise} %)` : ""}` },
         },
       }],
       subscription_data: { metadata: { artisan_id: a.id, plan: f.id } },

@@ -4,22 +4,28 @@ import Link from "next/link";
 import { sb } from "@/lib/supabase";
 
 export const INSCRIPTION_PRO = "/connexion?mode=signup&role=artisan";
+export type Lancement = { actif: boolean; fin: string; remise: number; fondateurs: number };
+const dateLongue = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
-/** Bandeau de l'offre de lancement : 2 mois d'Illimité offerts aux 50 premiers inscrits, avec le compteur de places. */
+export function useLancement() {
+  const [l, setL] = useState<Lancement | null>(null);
+  useEffect(() => { sb().rpc("infos_lancement").then(({ data }: { data: Lancement | null }) => setL(data)); }, []);
+  return l;
+}
+
+/** Bandeau « Phase de lancement : gratuit pour les membres fondateurs » */
 export default function OffreLancement({ bouton = true, compact = false }: { bouton?: boolean; compact?: boolean }) {
-  const [places, setPlaces] = useState<number | null>(null);
-  useEffect(() => {
-    sb().rpc("places_lancement").then(({ data }: { data: number | null }) => { if (typeof data === "number") setPlaces(data); });
-  }, []);
-  if (places === 0) return null;
+  const l = useLancement();
+  if (l && !l.actif) return null;
+  const fin = l ? dateLongue(l.fin) : "la fin du lancement";
   return (
     <div className={`rounded-2xl bg-gradient-to-r from-flame to-orange-400 text-white shadow-sm ${compact ? "p-3" : "p-5"}`}>
-      <p className="text-xs font-bold uppercase tracking-wide text-white/90">🎁 Offre de lancement</p>
-      <p className={`${compact ? "text-base" : "mt-1 text-xl"} font-extrabold`}>2 mois de contacts illimités offerts aux 50 premiers inscrits</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-white/90">🚀 Phase de lancement · Membres fondateurs</p>
+      <p className={`${compact ? "text-base" : "mt-1 text-xl"} font-extrabold`}>100 % gratuit et illimité jusqu'au {fin}</p>
       <p className="mt-1 text-sm text-white/90">
-        {places === null ? "Places limitées." : <>Plus que <b className="text-white">{places} place{places > 1 ? "s" : ""}</b>.</>} Activé automatiquement à l'inscription, sans carte bancaire. Ensuite, vous passez à la formule gratuite si vous ne choisissez rien.
+        Inscrivez-vous pendant le lancement : aucun abonnement, aucune carte bancaire, clients illimités. Ensuite, vous gardez <b className="text-white">-{l?.remise ?? 30} % à vie</b> sur toutes les formules, et la formule Découverte reste gratuite.
       </p>
-      {bouton && <Link href={INSCRIPTION_PRO} className="btn mt-3 w-full bg-white py-3 font-bold text-flame sm:w-auto sm:px-8">J'en profite →</Link>}
+      {bouton && <Link href={INSCRIPTION_PRO} className="btn mt-3 w-full bg-white py-3 font-bold text-flame sm:w-auto sm:px-8">Devenir membre fondateur →</Link>}
     </div>
   );
 }

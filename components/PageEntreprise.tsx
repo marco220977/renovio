@@ -42,12 +42,12 @@ export function Tarifs() {
   return (
     <section className="mt-12">
       <h2 className="text-2xl font-extrabold">Tarifs simples, sans engagement</h2>
-      <p className="mt-1 text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu s'il renonce avant la visite. Abonnement mensuel sans engagement, aucune commission.</p>
+      <p className="mt-1 text-sm text-slate-600"><b className="text-flame">Pendant la phase de lancement, tout est gratuit et illimité pour les membres fondateurs, puis -30 % à vie.</b> Ensuite, <b>vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu s'il renonce avant la visite. Abonnement mensuel sans engagement, aucune commission.</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {FORMULES.map((f) => (
           <div key={f.id} className={`card !py-3 ${f.id === "illimite" ? "border-2 border-flame" : ""}`}>
             <p className="flex items-baseline justify-between"><b>{f.nom}</b><span className="font-extrabold">{f.prix === 0 ? "Gratuit" : `${f.prix} €/mois`}</span></p>
-            <p className="text-sm text-slate-600">{texteClients(f.quota)} · {f.id === "illimite" ? "offert 2 mois aux 50 premiers" : texteAttente(f.attente)}</p>
+            <p className="text-sm text-slate-600">{texteClients(f.quota)} · {texteAttente(f.attente)}</p>
           </div>
         ))}
       </div>
@@ -72,7 +72,7 @@ export function FaqPro({ faq }: { faq: [string, string][] }) {
 }
 
 export const FAQ_PRO: [string, string][] = [
-  ["Comment fonctionne l'offre de lancement ?", "Les 50 premiers artisans inscrits reçoivent automatiquement 2 mois de formule Illimitée, sans carte bancaire. À la fin des 2 mois, vous repassez en formule Découverte (gratuite, 1 client par mois) sauf si vous choisissez une formule payante."],
+  ["Pourquoi est-ce gratuit en ce moment ?", "Rénolien est en phase de lancement : nous constituons d'abord le réseau des premières entreprises avant d'ouvrir largement aux particuliers. Les artisans inscrits pendant cette période sont « membres fondateurs » : tout est gratuit et illimité jusqu'à la fin du lancement (31 mars 2027), sans carte bancaire. Ensuite, ils gardent -30 % à vie sur toutes les formules, et la formule Découverte reste gratuite. Vous serez prévenu un mois avant."],
   ["Que faut-il pour s'inscrire ?", "Un SIRET et une assurance décennale en cours de validité. Vous pouvez déposer votre attestation depuis votre profil pour obtenir le badge « Vérifié »."],
   ["Est-ce que je paie pour des devis sans réponse ?", "Non. Envoyer une offre est gratuit. Un crédit est décompté uniquement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite."],
   ["Est-ce que je paie une commission sur mes chantiers ?", "Non. Le client vous paie directement. Rénolien se rémunère uniquement par l'abonnement."],

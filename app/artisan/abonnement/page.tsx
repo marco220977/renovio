@@ -7,7 +7,7 @@ import { Erreur, Info } from "@/components/Espace";
 import { FORMULES } from "@/lib/mer";
 import { texteClients, texteAttente } from "@/lib/formules";
 
-type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; resilie?: boolean; stripe?: boolean };
+type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; resilie?: boolean; stripe?: boolean; fondateur?: boolean; lancement?: boolean; lancement_fin?: string; remise?: number };
 
 function Abonnement() {
   const params = useSearchParams();
@@ -37,11 +37,24 @@ function Abonnement() {
 
   const actuelle = FORMULES.find((f) => f.id === q?.abonnement) || FORMULES[0];
   const payant = actuelle.prix > 0;
+  const gratuitLancement = !!(q?.fondateur && q?.lancement);
+  const remise = q?.fondateur ? q?.remise || 0 : 0;
+  const prixFinal = (p: number) => Math.round(p * (100 - remise)) / 100;
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold">Mon abonnement</h1>
       {params.get("ok") && <Info>✅ Merci ! Votre abonnement est en cours d'activation (quelques secondes).</Info>}
+      {q?.fondateur && (
+        <div className="rounded-2xl bg-gradient-to-r from-flame to-orange-400 p-4 text-white">
+          <p className="text-xs font-bold uppercase tracking-wide text-white/90">🚀 Membre fondateur</p>
+          {gratuitLancement ? (
+            <p className="mt-1 text-sm">Rénolien est <b>100 % gratuit et illimité</b> pour vous jusqu'au <b>{q.lancement_fin ? dateFr(q.lancement_fin) : "la fin du lancement"}</b>. Vous n'avez rien à payer. Ensuite, vous gardez <b>-{q.remise} % à vie</b> sur toutes les formules. Nous vous préviendrons un mois avant.</p>
+          ) : (
+            <p className="mt-1 text-sm">Merci d'avoir été là dès le début : vous bénéficiez de <b>-{q.remise} % à vie</b> sur toutes les formules.</p>
+          )}
+        </div>
+      )}
       {q && (
         <div className="card space-y-2">
           <p className="text-sm text-slate-500">Formule actuelle</p>
@@ -56,7 +69,7 @@ function Abonnement() {
           {q.plafond != null && <p className="text-xs text-slate-500">📨 {q.attente || 0} / {q.plafond} offres en attente de réponse</p>}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
           {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} client(s) offert(s) en réserve</p>}
-          {payant && !q.stripe && <p className="text-xs text-green-700">🎁 Formule offerte par Rénolien</p>}
+          {payant && !q.stripe && <p className="text-xs text-green-700">🎁 {gratuitLancement ? "Offerte pendant la phase de lancement" : "Formule offerte par Rénolien"}</p>}
           {payant && q.stripe && (q.resilie ? (
             <>
               <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">Abonnement résilié : il s'arrête {q.fin ? `le ${dateFr(q.fin)}` : "à la fin du mois payé"}.</p>
@@ -79,9 +92,13 @@ function Abonnement() {
                 <p className="font-bold">{f.nom} {f.id === "pro" && <span className="chip ml-1 bg-flame text-white">{f.plus}</span>}</p>
                 <p className="text-sm text-slate-600">{texteClients(f.quota)} · {texteAttente(f.attente)}</p>
               </div>
-              <p className="text-right"><span className="text-2xl font-extrabold">{f.prix} €</span><span className="text-xs text-slate-500"> /mois</span></p>
+              <p className="text-right">
+                {remise > 0 && f.prix > 0 && <span className="block text-xs text-slate-400 line-through">{f.prix} €</span>}
+                <span className="text-2xl font-extrabold">{remise > 0 && f.prix > 0 ? prixFinal(f.prix).toLocaleString("fr-FR") : f.prix} €</span><span className="text-xs text-slate-500"> /mois</span>
+              </p>
             </div>
-            {f.id === actuelle.id ? <p className="text-center text-sm font-semibold text-green-700">✔ Votre formule</p>
+            {f.id === actuelle.id ? <p className="text-center text-sm font-semibold text-green-700">✔ Votre formule{gratuitLancement ? " (offerte pendant le lancement)" : ""}</p>
+              : gratuitLancement ? null
               : f.prix === 0 ? null
               : q?.stripe ? <button className="btn-ghost w-full" disabled={!!busy} onClick={() => aller("/api/abonnement/portail")}>Changer de formule</button>
               : <button className="btn-brand w-full" disabled={!!busy} onClick={() => aller("/api/abonnement", { plan: f.id }, f.id)}>{busy === f.id ? "…" : `Choisir ${f.nom}`}</button>}
@@ -89,7 +106,7 @@ function Abonnement() {
         ))}
       </div>
       <a href="/artisan/parrainage" className="card flex items-center justify-between !p-3 text-sm">
-        <span>🎁 Parrainez un artisan : <b>+5 offres</b> pour vous</span><b className="text-brand">→</b>
+        <span>🎁 Parrainez un artisan : <b>+2 clients offerts</b> pour vous</span><b className="text-brand">→</b>
       </a>
       <Erreur msg={err} />
       <p className="text-xs text-slate-400">En vous abonnant, vous acceptez les <a href="/legal/cgv" className="underline">conditions générales de vente</a>. Paiement par carte via Stripe. Cet abonnement est le seul paiement fait à Rénolien : les travaux se règlent directement entre vous et le client.</p>

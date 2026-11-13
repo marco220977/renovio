@@ -13,7 +13,7 @@ export function generateMetadata({ params }: { params: { metier: string; dep: st
   const P = m.pro[0].toUpperCase() + m.pro.slice(1);
   return {
     title: `${P} ${dansDep(d)} (${d.code}) : trouvez des chantiers`,
-    description: `${P} ${dansDep(d)} ? Recevez des demandes de travaux de particuliers de votre secteur, sans commission. 2 mois illimités offerts aux 50 premiers inscrits.`.slice(0, 160),
+    description: `${P} ${dansDep(d)} ? Recevez des demandes de travaux de particuliers de votre secteur, sans commission. Gratuit pendant le lancement.`.slice(0, 160),
     alternates: { canonical: `/entreprises/${m.slug}/${d.slug}` },
   };
 }

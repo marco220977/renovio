@@ -1,0 +1,3 @@
+-- Voir migration « membres_fondateurs » (13/11/2026) : artisans.fondateur (protégé), réglage « lancement »
+-- (actif, fin 2027-03-31, remise 30), lancement_en_cours(), formule_active() → 'illimite' pour les fondateurs pendant le lancement,
+-- trigger trg_fondateur, infos_lancement() (public), notif_fin_lancement() (J-30, J-7), mon_quota() enrichi.

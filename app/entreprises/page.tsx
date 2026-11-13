@@ -5,7 +5,7 @@ import { EnteteContenu, ATOUTS, Tarifs, FaqPro, FAQ_PRO } from "@/components/Pag
 
 export const metadata = {
   title: "Artisans du bâtiment : trouvez des chantiers en Île-de-France, sans commission",
-  description: "Recevez des demandes de travaux de particuliers près de chez vous, faites votre devis en 1 clic. Offre de lancement : 2 mois de contacts illimités offerts aux 50 premiers inscrits.",
+  description: "Recevez des demandes de travaux de particuliers près de chez vous, faites votre devis en 1 clic. Phase de lancement : 100 % gratuit et illimité pour les membres fondateurs.",
   alternates: { canonical: "/entreprises" },
 };
 

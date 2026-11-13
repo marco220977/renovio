@@ -12,7 +12,7 @@ export function generateMetadata({ params }: { params: { metier: string } }): Me
   const P = m.pro[0].toUpperCase() + m.pro.slice(1);
   return {
     title: `${P} : trouvez des chantiers en Île-de-France sans commission`,
-    description: `${P}, recevez des demandes de particuliers près de chez vous et répondez en 1 clic avec vos tarifs. 2 mois de contacts illimités offerts aux 50 premiers inscrits.`.slice(0, 160),
+    description: `${P}, recevez des demandes de particuliers près de chez vous et répondez en 1 clic avec vos tarifs. Gratuit pendant le lancement pour les membres fondateurs.`.slice(0, 160),
     alternates: { canonical: `/entreprises/${m.slug}` },
   };
 }

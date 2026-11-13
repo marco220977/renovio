@@ -114,7 +114,7 @@ export default function DemandeClient() {
           <div>
             {premier && <span className="chip mb-1 bg-flame text-white">Meilleur score</span>}
             <p className="font-bold">{a?.raison_sociale || "Artisan"}</p>
-            <p className="text-xs text-slate-500">{a?.ville} {a?.verifie && "· ✔ Vérifié"} {a?.rge && "· RGE"}</p>
+            <p className="text-xs text-slate-500">{a?.ville} {a?.verifie && "· ✔ Vérifié"} {a?.rge && "· RGE"} {(a as any)?.fondateur && "· 🚀 Fondateur"}</p>
             <Etoiles note={notes[o.artisan_id]?.note} nb={notes[o.artisan_id]?.nb_avis} />
           </div>
           <div className="text-right">
