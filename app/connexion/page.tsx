@@ -64,8 +64,11 @@ function Form() {
 
   async function reset() {
     if (!email) return setMsg("Saisissez votre e-mail d'abord.");
-    await sb().auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/mot-de-passe` });
-    setMsg("E-mail de réinitialisation envoyé.");
+    const { error } = await sb().auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/mot-de-passe` });
+    if (error) return setMsg(error.status === 429
+      ? "Trop de demandes d'e-mail en peu de temps. Réessayez dans une heure, ou écrivez à renolien.contact@gmail.com."
+      : "L'e-mail n'a pas pu être envoyé. Réessayez dans quelques minutes.");
+    setMsg("E-mail de réinitialisation envoyé. Pensez à regarder dans les spams.");
   }
 
   return (
