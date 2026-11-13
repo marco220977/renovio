@@ -49,7 +49,7 @@ function Abonnement() {
         <div className="rounded-2xl bg-gradient-to-r from-flame to-orange-400 p-4 text-white">
           <p className="text-xs font-bold uppercase tracking-wide text-white/90">🚀 Membre fondateur</p>
           {gratuitLancement ? (
-            <p className="mt-1 text-sm">Rénolien est <b>100 % gratuit et illimité</b> pour vous jusqu'au <b>{q.lancement_fin ? dateFr(q.lancement_fin) : "la fin du lancement"}</b>. Vous n'avez rien à payer. Ensuite, vous gardez <b>-{q.remise} % à vie</b> sur toutes les formules. Nous vous préviendrons un mois avant.</p>
+            <p className="mt-1 text-sm">Rénolien est <b>100 % gratuit et illimité</b> pour vous {q.lancement_fin ? <>jusqu'au <b>{dateFr(q.lancement_fin)}</b></> : <>jusqu'à <b>la fin du lancement</b></>}. Vous n'avez rien à payer. Ensuite, vous gardez <b>-{q.remise} % à vie</b> sur toutes les formules. Nous vous préviendrons un mois avant.</p>
           ) : (
             <p className="mt-1 text-sm">Merci d'avoir été là dès le début : vous bénéficiez de <b>-{q.remise} % à vie</b> sur toutes les formules.</p>
           )}
