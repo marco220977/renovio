@@ -31,6 +31,7 @@ export default function Admin() {
   const [fiche, setFiche] = useState<{ type: Onglet; id: string } | null>(null);
   const [err, setErr] = useState("");
   const [essai, setEssai] = useState(false);
+  const [tests, setTests] = useState<Set<string>>(new Set());
 
   async function charger() {
     const s = sb();
@@ -46,6 +47,8 @@ export default function Admin() {
       s.from("offres").select("*").order("created_at", { ascending: false }),
       s.from("artisans_notes").select("*"),
     ]);
+    const { data: ct } = await s.from("comptes_test").select("user_id");
+    setTests(new Set(((ct as { user_id: string }[]) || []).map((x) => x.user_id)));
     setProfils((p.data as P[]) || []); setArtisans((a.data as Artisan[]) || []); setDemandes((d.data as Demande[]) || []);
     setOffres((o.data as Offre[]) || []); setNotes(Object.fromEntries(((n.data as Note[]) || []).map((x) => [x.artisan_id, x])));
   }
@@ -53,17 +56,33 @@ export default function Admin() {
 
   const profil = useMemo(() => Object.fromEntries(profils.map((x) => [x.id, x])), [profils]);
   const clients = profils.filter((x) => x.role === "client");
-  const signees = offres.filter((o) => o.statut === "acceptee");
+  // Les chiffres clés ne comptent pas les comptes de test
+  const vrai = (id: string) => !tests.has(id);
+  const vraisClients = clients.filter((c) => vrai(c.id));
+  const vraisArtisans = artisans.filter((a) => vrai(a.id));
+  const vraiesDemandes = demandes.filter((d) => vrai(d.client_id) && d.statut !== "brouillon");
+  const vraiesOffres = offres.filter((o) => vrai(o.artisan_id));
+  const signees = vraiesOffres.filter((o) => o.statut === "acceptee");
   const ilYa7j = Date.now() - 7 * 864e5;
 
   const stats: [string, string | number, string?][] = [
-    ["Clients", clients.length, `+${clients.filter((c) => new Date(c.created_at).getTime() > ilYa7j).length} en 7 j`],
-    ["Artisans", artisans.length, `${artisans.filter((a) => a.verifie).length} vérifiés`],
-    ["Demandes", demandes.filter((d) => d.statut !== "brouillon").length, `${demandes.filter((d) => statutDemande(d) === "ouverte").length} ouvertes`],
-    ["Offres", offres.length, `${(offres.length / Math.max(1, demandes.filter((d) => d.statut !== "brouillon").length)).toFixed(1)} par demande`],
-    ["Devis signés", signees.length, `${Math.round((signees.length / Math.max(1, demandes.filter((d) => d.statut !== "brouillon").length)) * 100)} % des demandes`],
+    ["Clients", vraisClients.length, `+${vraisClients.filter((c) => new Date(c.created_at).getTime() > ilYa7j).length} en 7 j`],
+    ["Artisans", vraisArtisans.length, `${vraisArtisans.filter((a) => a.verifie).length} vérifiés${tests.size ? ` · ${tests.size} test` : ""}`],
+    ["Demandes", vraiesDemandes.length, `${vraiesDemandes.filter((d) => statutDemande(d) === "ouverte").length} ouvertes`],
+    ["Offres", vraiesOffres.length, `${(vraiesOffres.length / Math.max(1, vraiesDemandes.length)).toFixed(1)} par demande`],
+    ["Devis signés", signees.length, `${Math.round((signees.length / Math.max(1, vraiesDemandes.length)) * 100)} % des demandes`],
     ["Montant signé", eur(signees.reduce((s, o) => s + Number(o.total_ttc), 0)).replace(/,\d\d/, ""), "TTC"],
   ];
+
+  async function basculerTest(id: string) {
+    setErr("");
+    const s = sb();
+    const { error } = tests.has(id)
+      ? await s.from("comptes_test").delete().eq("user_id", id)
+      : await s.from("comptes_test").insert({ user_id: id });
+    if (error) return setErr(errMsg(error));
+    const n = new Set(tests); if (n.has(id)) n.delete(id); else n.add(id); setTests(n);
+  }
 
   async function majArtisan(id: string, p: Partial<Artisan>) {
     setErr("");
@@ -76,7 +95,7 @@ export default function Admin() {
   const cherche = (...v: (string | undefined | null)[]) => !q || v.some((x) => txt(x).includes(q.toLowerCase()));
 
   const listeArtisans = artisans.filter((a) =>
-    (filtre === "tous" || (filtre === "a_verifier" && !a.verifie && a.statut === "actif") || (filtre === "verifies" && a.verifie) || (filtre === "suspendus" && a.statut === "suspendu"))
+    (filtre === "tous" || (filtre === "a_verifier" && !a.verifie && a.statut === "actif" && vrai(a.id)) || (filtre === "verifies" && a.verifie) || (filtre === "suspendus" && a.statut === "suspendu") || (filtre === "test" && !vrai(a.id)))
     && cherche(a.raison_sociale, a.siret, a.ville, a.email, profil[a.id]?.nom, a.departements?.join(" ")));
   const listeClients = clients.filter((c) => cherche(c.nom, c.email, c.telephone));
   const listeDemandes = demandes.filter((d) => (filtre === "tous" || statutDemande(d) === filtre) && cherche(d.titre, d.ville, d.cp, profil[d.client_id]?.nom));
@@ -92,7 +111,7 @@ export default function Admin() {
   );
 
   const filtres: Record<Onglet, [string, string][]> = {
-    artisans: [["tous", "Tous"], ["a_verifier", "À vérifier"], ["verifies", "Vérifiés"], ["suspendus", "Suspendus"]],
+    artisans: [["tous", "Tous"], ["a_verifier", "À vérifier"], ["verifies", "Vérifiés"], ["suspendus", "Suspendus"], ["test", "🧪 Test"]],
     clients: [],
     demandes: [["tous", "Toutes"], ["ouverte", "Ouvertes"], ["fermee", "À comparer"], ["attribuee", "Attribuées"], ["brouillon", "Brouillons"], ["annulee", "Annulées"]],
   };
@@ -151,7 +170,7 @@ export default function Admin() {
           return (
             <button key={a.id} onClick={() => setFiche({ type: "artisans", id: a.id })} className="card block w-full space-y-1 text-left">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-bold">{a.raison_sociale || "(sans nom)"} <span className="font-normal text-slate-500">· {profil[a.id]?.nom}</span></p>
+                <p className="font-bold">{a.raison_sociale || "(sans nom)"} <span className="font-normal text-slate-500">· {profil[a.id]?.nom}</span>{!vrai(a.id) && <span className="chip ml-1 bg-slate-200 text-slate-700">🧪 Test</span>}</p>
                 {a.statut === "suspendu" ? <span className="chip shrink-0 bg-red-100 text-red-700">Suspendu</span>
                   : a.verifie ? <span className="chip shrink-0 bg-green-100 text-green-800">✔ Vérifié</span>
                   : <span className="chip shrink-0 bg-amber-100 text-amber-800">À vérifier</span>}
@@ -238,6 +257,10 @@ export default function Admin() {
                 ? <button className="btn-ghost flex-1" onClick={() => majArtisan(a.id, { verifie: false })}>Retirer « Vérifié »</button>
                 : <button className="btn-brand flex-1" onClick={() => majArtisan(a.id, { verifie: true })}>✔ Marquer vérifié</button>}
             </div>
+            <button className="btn-ghost w-full text-sm" onClick={() => basculerTest(a.id)}>
+              {tests.has(a.id) ? "🧪 Compte de test : le remettre en compte réel" : "🧪 Marquer comme compte de test"}
+            </button>
+            {tests.has(a.id) && <p className="text-xs text-slate-500">Compte de test : il ne voit que les demandes des clients de test, et n'est pas compté dans les chiffres.</p>}
           </Modal>
         );
       })()}

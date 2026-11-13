@@ -1,0 +1,5 @@
+-- Comptes de test (13/11/2026) : table comptes_test (admin seulement), est_test(uuid).
+-- Les artisans de test ne voient / ne reçoivent que les demandes des clients de test (et inversement),
+-- ne sont pas comptés dans les chiffres (admin, infos_lancement) et ne déclenchent ni bienvenue ni alerte admin.
+-- Modifié : demande_visible_artisan, notif_demande, infos_lancement, trg_bienvenue_artisan, envoyer_offre (contrôle est_test).
+-- Comptes marqués : Pariest chauffage (zoe304946), SARL EDM (solutions.mpc), client teste220977.

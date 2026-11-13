@@ -20,13 +20,14 @@ export default function DemandesDispo() {
       const { data: art } = await s.from("artisans").select("*").eq("id", profil.id).maybeSingle();
       setA(art as Artisan);
       const [{ data: d }, { data: mes }] = await Promise.all([
-        s.from("demandes").select("*").eq("statut", "ouverte").gt("ferme_le", new Date().toISOString()).order("publiee_le", { ascending: false }),
+        s.from("demandes").select("*, visible:demande_visible_artisan").eq("statut", "ouverte").gt("ferme_le", new Date().toISOString()).order("publiee_le", { ascending: false }),
         s.from("offres").select("demande_id").eq("artisan_id", profil.id),
       ]);
       s.rpc("mon_quota").then(({ data }) => setQuota(data));
       const deja = new Set(((mes as { demande_id: string }[]) || []).map((x) => x.demande_id));
       // Les règles de la base ne renvoient que les demandes de vos métiers et départements ; on retire celles déjà traitées
-      setListe(((d as Demande[]) || []).filter((x) => !deja.has(x.id) && x.client_id !== profil.id));
+      // (le filtre « visible » écarte aussi les demandes qu'un compte admin voit grâce à ses droits)
+      setListe(((d as (Demande & { visible?: boolean })[]) || []).filter((x) => x.visible !== false && !deja.has(x.id) && x.client_id !== profil.id));
     })();
   }, [profil.id]);
 
