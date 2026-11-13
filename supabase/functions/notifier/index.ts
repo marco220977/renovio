@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       for (const a of abos || []) {
         try {
           await webpush.sendNotification({ endpoint: a.endpoint, keys: { p256dh: a.p256dh, auth: a.auth } },
-            JSON.stringify({ titre: nf.titre, texte: nf.texte, lien: nf.lien || "/", tag: nf.cle || undefined }), { TTL: 86400 });
+            JSON.stringify({ titre: nf.titre, texte: nf.type === "bienvenue" ? "Merci de nous rejoindre ! Ouvrez votre espace pour bien démarrer." : nf.texte, lien: nf.lien || "/", tag: nf.cle || undefined }), { TTL: 86400 });
           pushOk++;
         } catch (e: any) {
           if (e?.statusCode === 404 || e?.statusCode === 410) await db.from("push_abonnements").delete().eq("id", a.id);
@@ -46,14 +46,14 @@ Deno.serve(async (req) => {
       const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0f172a">
         <p style="font-size:22px;font-weight:800;margin:0 0 16px">Réno<span style="color:#ea580c">lien</span></p>
         <p style="font-size:18px;font-weight:bold;margin:0 0 8px">${esc(nf.titre)}</p>
-        <p style="font-size:15px;line-height:1.5;margin:0 0 20px">${esc(nf.texte || "")}</p>
-        <p><a href="${lien}" style="display:inline-block;background:#ea580c;color:#fff;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:12px">Ouvrir dans Rénolien</a></p>
+        <p style="font-size:15px;line-height:1.5;margin:0 0 20px">${esc(nf.texte || "").replace(/\n/g, "<br>")}</p>
+        <p><a href="${lien}" style="display:inline-block;background:#ea580c;color:#fff;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:12px">${nf.type === "bienvenue" ? "Ouvrir mon espace" : "Ouvrir dans Rénolien"}</a></p>
         <p style="font-size:12px;color:#64748b;margin-top:28px">Vous recevez cet e-mail car vous avez un compte Rénolien. Vous pouvez désactiver les e-mails de notification dans « Mon compte ».</p></div>`;
       try {
         const r = await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST", headers: { "api-key": cle, "content-type": "application/json", accept: "application/json" },
           body: JSON.stringify({
-            sender: { email: "contact@renolien.fr", name: "Rénolien" }, replyTo: { email: "renolien.contact@gmail.com" },
+            sender: { email: "contact@renolien.fr", name: nf.type === "bienvenue" ? "Marco - Rénolien" : "Rénolien" }, replyTo: { email: "renolien.contact@gmail.com" },
             to: [{ email: p.email, name: p.nom || undefined }], subject: nf.titre,
             textContent: `${nf.titre}\n\n${nf.texte || ""}\n\nOuvrir : ${lien}`, htmlContent: html, tags: [`notif-${nf.type}`],
           }),
