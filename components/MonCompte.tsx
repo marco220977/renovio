@@ -1,6 +1,7 @@
 "use client";
 // Bloc commun « Mon compte » : mes données, documents légaux, contact, suppression du compte.
 import { useState } from "react";
+import MotDePasse from "@/components/MotDePasse";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { LEGAL } from "@/lib/legal";
@@ -49,7 +50,7 @@ export default function MonCompte({ role }: { role: "client" | "artisan" }) {
       <div className="card space-y-2">
         <p className="font-bold">🔑 Mot de passe</p>
         <div className="flex gap-2">
-          <input className="input" type="password" placeholder="Nouveau mot de passe" value={mdp} onChange={(e) => setMdp(e.target.value)} />
+          <MotDePasse placeholder="Nouveau mot de passe" autoComplete="new-password" value={mdp} onChange={(e) => setMdp(e.target.value)} />
           <button className="btn-ghost shrink-0" onClick={changerMdp}>Changer</button>
         </div>
       </div>

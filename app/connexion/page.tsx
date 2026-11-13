@@ -1,5 +1,6 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
+import MotDePasse from "@/components/MotDePasse";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -101,7 +102,7 @@ function Form() {
           </>
         )}
         <div><label className="label">E-mail</label><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-        <div><label className="label">Mot de passe</label><input className="input" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+        <div><label className="label">Mot de passe</label><MotDePasse minLength={6} required autoComplete={signup ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
         {signup && (
           <label className="flex items-start gap-2 text-xs text-slate-600">
             <input type="checkbox" className="mt-0.5" checked={accept} onChange={(e) => setAccept(e.target.checked)} />

@@ -1,6 +1,7 @@
 "use client";
 // Lien « mot de passe oublié » reçu par e-mail : l'utilisateur choisit un nouveau mot de passe.
 import { Suspense, useEffect, useState } from "react";
+import MotDePasse from "@/components/MotDePasse";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -42,8 +43,8 @@ function Form() {
         <h1 className="text-2xl font-extrabold">Nouveau mot de passe</h1>
         {pret && (
           <>
-            <div><label className="label">Nouveau mot de passe</label><input className="input" type="password" value={mdp} onChange={(e) => setMdp(e.target.value)} /></div>
-            <div><label className="label">Confirmer</label><input className="input" type="password" value={mdp2} onChange={(e) => setMdp2(e.target.value)} /></div>
+            <div><label className="label">Nouveau mot de passe</label><MotDePasse autoComplete="new-password" value={mdp} onChange={(e) => setMdp(e.target.value)} /></div>
+            <div><label className="label">Confirmer</label><MotDePasse autoComplete="new-password" value={mdp2} onChange={(e) => setMdp2(e.target.value)} /></div>
             <button className="btn-primary w-full">Enregistrer</button>
           </>
         )}
