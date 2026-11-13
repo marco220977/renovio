@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import type { Profil, Role } from "@/lib/mer";
+import { BandeauNotif, useRafraichirPush } from "./Notifications";
 
 const Ctx = createContext<{ profil: Profil; recharger: () => Promise<void> } | null>(null);
 export const useProfil = () => useContext(Ctx)!;
@@ -19,6 +20,7 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
   const path = usePathname();
   const [profil, setProfil] = useState<Profil | null>(null);
   const [nonLus, setNonLus] = useState(0);
+  useRafraichirPush();
 
   async function charger() {
     const s = sb();
@@ -51,7 +53,7 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-2xl px-4 py-5">{children}</main>
+        <main className="mx-auto max-w-2xl px-4 py-5"><BandeauNotif role={role} />{children}</main>
         <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white">
           <div className="mx-auto flex max-w-2xl">
             {nav.map(([href, ico, label]) => (

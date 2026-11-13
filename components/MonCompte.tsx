@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { LEGAL } from "@/lib/legal";
 import { Deconnexion } from "./Espace";
+import NotifReglages from "./Notifications";
 
 export default function MonCompte({ role }: { role: "client" | "artisan" }) {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function MonCompte({ role }: { role: "client" | "artisan" }) {
 
   return (
     <div className="space-y-3">
+      <NotifReglages />
       <div className="card space-y-2">
         <p className="font-bold">🔑 Mot de passe</p>
         <div className="flex gap-2">
