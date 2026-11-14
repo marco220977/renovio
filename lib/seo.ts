@@ -220,3 +220,38 @@ export function villesProches(v: VilleSeo, n = 6) {
   const i = Math.max(0, VILLES_SEO.filter((x) => x.dep === v.dep).findIndex((x) => x.slug === v.slug) - 3);
   return [...memes.slice(i), ...memes.slice(0, i)].slice(0, n);
 }
+
+/** Titres courts pour Google (le mot que les gens tapent), et texte d'accroche des descriptions */
+const TITRES_SEO: Record<string, string> = {
+  plombier: "Plombier",
+  chauffagiste: "Chauffagiste",
+  electricien: "Électricien",
+  macon: "Maçon",
+  plaquiste: "Plaquiste",
+  isolation: "Isolation",
+  peintre: "Peintre",
+  carreleur: "Carreleur",
+  "parquet-sols": "Pose de parquet et sols",
+  menuisier: "Menuisier, fenêtres et portes",
+  couvreur: "Couvreur",
+  "ravalement-facade": "Ravalement de façade",
+  "renovation-salle-de-bain-cuisine": "Rénovation salle de bain, cuisine",
+  "terrassement-exterieurs": "Aménagement extérieur",
+  "petits-travaux": "Petits travaux et dépannage",
+};
+export const titreSeo = (m: MetierSeo) => TITRES_SEO[m.slug] || m.pro[0].toUpperCase() + m.pro.slice(1);
+
+/** Titre + description d'une page métier ou métier × ville, pensés pour donner envie de cliquer dans Google */
+export function metaSeo(m: MetierSeo, v?: VilleSeo) {
+  const t = titreSeo(m);
+  const ou = v ? aVille(v.nom) : "en Île-de-France";
+  const title = v ? `${t} ${ou} (${v.dep}) : 5 devis gratuits` : `${t} en Île-de-France : 5 devis gratuits`;
+  const de = /^[aeiouyéèêàâîôûh]/i.test(m.pros) ? "d'" : "de ";
+  const longues = [
+    `✓ Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez ${m.sujet} en 2 min, comparez et choisissez. Sans engagement, 0 € pour vous.`,
+    `✓ Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez votre projet en 2 min, comparez. Sans engagement.`,
+    `✓ 5 devis gratuits ${ou}, artisans vérifiés. Décrivez votre projet en 2 min. Sans engagement.`,
+  ];
+  const description = longues.find((d) => d.length <= 158) || longues[longues.length - 1];
+  return { title, description };
+}
