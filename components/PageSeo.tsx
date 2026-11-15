@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ARTICLES } from "@/lib/articles";
 import { METIERS_SEO, DEPARTEMENTS, VILLES_SEO, aVille, villesProches, type MetierSeo, type VilleSeo } from "@/lib/seo";
 
 const INSCRIPTION = "/connexion?mode=signup&role=client";
@@ -17,6 +18,7 @@ export function Pied() {
     <footer className="mt-16 space-y-2 text-center text-xs text-slate-400">
       <p className="flex flex-wrap justify-center gap-4">
         <Link href="/travaux">Tous les métiers</Link>
+        <Link href="/conseils">Conseils travaux</Link>
         <Link href="/particuliers">Comment ça marche</Link>
         <Link href="/legal/mentions-legales">Mentions légales</Link>
         <Link href="/legal/cgu">CGU</Link>
@@ -147,6 +149,12 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
             </>
           )}
         </section>
+        {ARTICLES.filter((x) => x.metier === m.slug).map((x) => (
+          <Link key={x.slug} href={`/conseils/${x.slug}`} className="card mt-8 block">
+            <span className="text-xs font-semibold uppercase text-slate-400">Guide</span>
+            <span className="mt-1 block font-bold">{x.emoji} {x.h1} →</span>
+          </Link>
+        ))}
         <Pied />
       </div>
     </main>
