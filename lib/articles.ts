@@ -18,6 +18,7 @@ export type Article = {
   emoji: string;
   metier: string;       // slug METIERS_SEO pour le bouton « trouver un artisan »
   chapo: string;
+  chiffres: [string, string][]; // [valeur, légende] : encadré « En chiffres »
   blocs: Bloc[];
   faq: [string, string][];
   sources: [string, string][];
@@ -33,6 +34,7 @@ export const ARTICLES: Article[] = [
     lecture: 5,
     emoji: "🛁",
     metier: "renovation-salle-de-bain-cuisine",
+    chiffres: [["400 à 900 €/m²", "pour un simple rafraîchissement"], ["1 000 à 3 000 €/m²", "pour une rénovation complète"], ["+15 à 30 %", "de main-d'œuvre en Île-de-France"]],
     chapo: "Rafraîchir une salle d'eau ou tout casser pour créer une douche à l'italienne, ce n'est pas le même budget. Voici les fourchettes de prix observées en 2026, ce qui les fait varier en région parisienne, et comment comparer les devis sans se tromper.",
     blocs: [
       { t: "h2", x: "Les prix au m² selon le type de rénovation" },
@@ -84,6 +86,7 @@ export const ARTICLES: Article[] = [
     lecture: 5,
     emoji: "🔥",
     metier: "chauffagiste",
+    chiffres: [["2 500 à 8 500 €", "chaudière gaz à condensation posée"], ["10 000 à 16 000 €", "pompe à chaleur air-eau posée"], ["÷ 2", "le coût de la chaleur avec une PAC"]],
     chapo: "Votre chaudière a 15 ou 20 ans, elle tombe en panne ou consomme trop ? En 2026, deux options dominent : une chaudière gaz à condensation neuve ou une pompe à chaleur air-eau. Voici les prix, les aides et les questions à se poser, expliqués par un chauffagiste.",
     blocs: [
       { t: "h2", x: "Les prix pose comprise en 2026" },
@@ -132,6 +135,7 @@ export const ARTICLES: Article[] = [
     lecture: 4,
     emoji: "🔍",
     metier: "petits-travaux",
+    chiffres: [["10 min", "pour tout vérifier"], ["10 ans", "de garantie avec la décennale"], ["3 à 5", "devis à comparer"]],
     chapo: "Un chantier raté, c'est de l'argent perdu et des mois de tracas. La bonne nouvelle : quelques vérifications simples, qui prennent dix minutes, éliminent la grande majorité des mauvaises surprises.",
     blocs: [
       { t: "h2", x: "1. L'entreprise existe vraiment (numéro SIRET)" },
