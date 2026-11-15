@@ -1,6 +1,6 @@
 "use client";
 // Prospection : entreprises du bâtiment de moins de 2 ans en Île-de-France (registre Sirene + contacts RGE), réservé à l'admin.
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
 
@@ -9,7 +9,7 @@ type P = {
   creation: string | null; effectif: string | null; forme: string | null; rge: boolean; telephone: string | null; email: string | null; statut: string; note: string | null;
   source: string; domaines_rge: string | null; desinscrit: boolean; email_etape: number; email_dernier: string | null; email_clic: string | null; email_erreur: string | null;
 };
-type Stats = { reglages: { actif: boolean; par_jour: number; relance_jours: number; expediteur: string }; avec_email: number; a_envoyer: number;
+type Stats = { reglages: { actif: boolean; par_jour: number; relance_jours: number; expediteur: string; mode?: string }; avec_email: number; a_envoyer: number;
   envoyes: number; aujourdhui: number; erreurs: number; clics: number; desinscrits: number; inscrits: number };
 const STATUTS: [string, string, string][] = [
   ["a_contacter", "À contacter", "bg-slate-100 text-slate-700"], ["contacte", "Contacté", "bg-blue-100 text-blue-800"],
@@ -25,7 +25,11 @@ function PanneauEmail() {
   const [st, setSt] = useState<Stats | null>(null);
   const [ouvert, setOuvert] = useState(false);
   const [msg, setMsg] = useState("");
-  const charger = () => sb().rpc("stats_prospection").then(({ data }) => setSt(data as Stats));
+  const [ab, setAb] = useState<Record<string, { envoyes: number; clics: number; inscrits: number; desinscrits: number }>>({});
+  const charger = () => {
+    sb().rpc("stats_prospection").then(({ data }) => setSt(data as Stats));
+    sb().rpc("stats_ab").then(({ data }) => setAb((data as any) || {}));
+  };
   useEffect(() => { charger(); }, []);
   if (!st) return null;
   const R = st.reglages;
@@ -33,9 +37,9 @@ function PanneauEmail() {
     const { error } = await sb().rpc("regler_prospection", { p });
     if (error) setMsg(error.message); else charger();
   }
-  async function test(etape: number) {
+  async function test(etape: number, version = "A") {
     setMsg("Envoi du test…");
-    const { data, error } = await sb().functions.invoke("prospection-mail", { body: { test: true, etape } });
+    const { data, error } = await sb().functions.invoke("prospection-mail", { body: { test: true, etape, version } });
     let m = data?.error;
     if (error) { m = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) m = j.error; } catch {} }
     setMsg(m ? `❌ ${m}` : `✔ E-mail de test envoyé à ${data.a}. Regardez votre boîte (et les spams).`);
@@ -59,10 +63,30 @@ function PanneauEmail() {
               {[20, 50, 100, 150, 250, 290].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <div className="flex gap-2">
-            <button className="btn-ghost flex-1 !py-2" onClick={() => test(1)}>Test e-mail 1</button>
-            <button className="btn-ghost flex-1 !py-2" onClick={() => test(2)}>Test relance</button>
+          <div className="space-y-2 rounded-xl border border-slate-200 p-3">
+            <p className="font-bold">🧪 Test A/B : quel e-mail fait le plus d'inscrits ?</p>
+            <div className="grid grid-cols-3 gap-1 text-center text-xs">
+              <span></span><span className="font-bold">A · classique</span><span className="font-bold text-flame">B · pré-inscription</span>
+              {([["Envoyés", "envoyes"], ["Clics", "clics"], ["Inscrits", "inscrits"], ["Désinscrits", "desinscrits"]] as const).map(([l, k]) => (
+                <Fragment key={k}><span className="text-left text-slate-500">{l}</span><b>{ab.A?.[k] ?? 0}</b><b>{ab.B?.[k] ?? 0}</b></Fragment>
+              ))}
+              <span className="text-left text-slate-500">Taux d'inscription</span>
+              {(["A", "B"] as const).map((v) => <b key={v} className="text-sm">{ab[v]?.envoyes ? `${Math.round((ab[v].inscrits / ab[v].envoyes) * 1000) / 10} %` : "—"}</b>)}
+            </div>
+            <label className="flex items-center justify-between gap-2 text-xs">Nouveaux e-mails
+              <select className="input !w-44 !py-1.5 text-xs" value={R.mode || "ab"} onChange={(e) => regler({ mode: e.target.value })}>
+                <option value="ab">Moitié A, moitié B</option><option value="A">Tous en A (classique)</option><option value="B">Tous en B (pré-inscription)</option>
+              </select>
+            </label>
+            <p className="text-[11px] text-slate-500">Les relances gardent la version du 1er e-mail. Attendez environ 2 semaines (500 envois) avant de choisir la gagnante.</p>
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(1)}>Test A · e-mail 1</button>
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(2)}>Test A · relance</button>
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(1, "B")}>Test B · e-mail 1</button>
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(2, "B")}>Test B · relance</button>
+          </div>
+          <a href="/p/demo/demo" target="_blank" className="block text-center text-xs font-semibold text-brand">👁️ Voir la page de pré-inscription (aperçu)</a>
           <button className={`w-full !py-2.5 ${R.actif ? "btn-danger" : "btn-brand"}`}
             onClick={() => confirm(R.actif ? "Mettre la prospection en pause ?" : "Lancer l'envoi automatique des e-mails de prospection ?") && regler({ actif: !R.actif })}>
             {R.actif ? "⏸ Mettre en pause" : "▶️ Lancer la prospection"}
@@ -199,7 +223,7 @@ export default function Prospects() {
                 {p.email && (
                   <p className="text-[11px] text-slate-500">
                     {p.desinscrit ? "🚫 Désinscrit des e-mails" : p.email_erreur ? `⚠️ E-mail en erreur : ${p.email_erreur}` : p.email_etape === 0 ? "✉️ E-mail pas encore envoyé"
-                      : `✉️ ${p.email_etape === 1 ? "1er e-mail" : "Relance"} envoyé le ${dateFr(p.email_dernier)}`}{p.email_clic && ` · 👆 a cliqué le ${dateFr(p.email_clic)}`}
+                      : `✉️ ${p.email_etape === 1 ? "1er e-mail" : "Relance"} envoyé le ${dateFr(p.email_dernier)}`}{(p as any).version && p.email_etape > 0 && ` · version ${(p as any).version}`}{p.email_clic && ` · 👆 a cliqué le ${dateFr(p.email_clic)}`}
                   </p>
                 )}
               </button>

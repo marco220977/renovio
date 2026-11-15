@@ -1,0 +1,7 @@
+-- Pré-inscription + test A/B (15/11/2026)
+-- prospects : version ('A' classique / 'B' pré-inscription), pre_vu, pre_valide ; reglages.prospection.mode ('ab' | 'A' | 'B')
+-- metiers_devines(text), preinscription_infos(siret, jeton) [anon], stats_ab() [admin]
+-- bienvenue_artisan : rappelle l'identifiant de connexion ; alerte admin « via la pré-inscription »
+-- trg_bienvenue_artisan : ignore les comptes de test et les prospects source = 'test'
+-- Edge function « preinscription » (public, jeton HMAC) : crée le compte (e-mail confirmé) + fiche artisan préremplie.
+-- Page : /p/[siret]/[jeton] (aperçu : /p/demo/demo). E-mails version B : prospection-mail v6.
