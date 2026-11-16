@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { TRADES } from "@/lib/trades";
-import MotDePasse from "@/components/MotDePasse";
 import { useLancement } from "@/components/OffreLancement";
 
 type Infos = { erreur?: string; deja?: boolean; nom?: string; dirigeant?: string; forme?: string; adresse?: string; cp?: string; ville?: string;
@@ -23,6 +22,7 @@ export default function PreInscription() {
   const [metiers, setMetiers] = useState<string[]>([]);
   const [deps, setDeps] = useState<string[]>([]);
   const [cgu, setCgu] = useState(false);
+  const [voirTout, setVoirTout] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -51,20 +51,21 @@ export default function PreInscription() {
 
   async function valider(e: React.FormEvent) {
     e.preventDefault(); setErr("");
-    if (!metiers.length) return setErr("Choisissez au moins un métier.");
-    if (!deps.length) return setErr("Choisissez au moins un département.");
-    if (f.mot_de_passe.length < 6) return setErr("Le mot de passe doit faire au moins 6 caractères.");
-    if (!cgu) return setErr("Acceptez les conditions d'utilisation pour continuer.");
+    if (!metiers.length) { setVoirTout(true); return setErr("Choisissez au moins un métier."); }
+    if (!deps.length) { setVoirTout(true); return setErr("Choisissez au moins un département."); }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) { setVoirTout(true); return setErr("Indiquez votre adresse e-mail."); }
+    if (!cgu) return setErr("Cochez la case des conditions pour continuer.");
     if (demo) return setErr("Ceci est un aperçu de test : aucun compte n'est créé. Les vrais artisans arrivent ici depuis leur e-mail.");
     setBusy(true);
     const s = sb();
-    const { data, error } = await s.functions.invoke("preinscription", { body: { siret, jeton, ...f, metiers, departements: deps } });
+    const { data, error } = await s.functions.invoke("preinscription", { body: { siret, jeton, ...f, mot_de_passe: "", metiers, departements: deps } });
     const msg = (data as any)?.error || (error ? await (error as any).context?.json?.().then((x: any) => x?.error).catch(() => null) : null);
     if (msg || error) { setErr(msg || "Une erreur est survenue, réessayez."); setBusy(false); return; }
-    const { error: e2 } = await s.auth.signInWithPassword({ email: f.email.trim().toLowerCase(), password: f.mot_de_passe });
+    const th = (data as any)?.token_hash;
+    const { error: e2 } = th ? await s.auth.verifyOtp({ token_hash: th, type: "magiclink" }) : { error: true };
     if (e2) { router.replace("/connexion?role=artisan"); return; }
     if (i?.rge) s.functions.invoke("verif-rge", { body: {} }).catch(() => {});
-    router.replace("/artisan/profil?bienvenue=1");
+    router.replace("/mot-de-passe?bienvenue=1");
   }
 
   if (!i) return <div className="flex min-h-screen items-center justify-center text-slate-400">Chargement de votre profil…</div>;
@@ -92,59 +93,59 @@ export default function PreInscription() {
           </div>
         )}
         <h1 className="mt-5 text-2xl font-extrabold leading-tight">Bonjour{f.contact ? ` ${f.contact.split(" ")[0]}` : ""}, votre profil est prêt 👋</h1>
-        <p className="mt-1 text-sm text-slate-600">Nous l'avons préparé à partir des informations publiques de votre entreprise. Vérifiez, corrigez si besoin, choisissez votre mot de passe : c'est fait en 30 secondes.</p>
+        <p className="mt-1 text-sm text-slate-600">Un seul clic pour l'activer. Vous pourrez tout modifier ensuite dans votre espace.</p>
 
         <form onSubmit={valider} className="card mt-4 space-y-4 p-5">
-          <div className="rounded-xl bg-green-50 p-3 text-sm text-green-900">
-            ✅ <b>SIRET {demo ? "123 456 789 00012" : siretLisible(siret)}</b> vérifié au registre officiel{i.rge && <> · 🌿 <b>RGE</b></>}
-          </div>
-          <div><label className="label">Entreprise</label><input className="input" value={f.raison_sociale} onChange={set("raison_sociale")} required /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Votre nom</label><input className="input" value={f.contact} onChange={set("contact")} /></div>
-            <div><label className="label">Téléphone</label><input className="input" type="tel" value={f.telephone} onChange={set("telephone")} /></div>
-          </div>
-          <div><label className="label">Adresse</label><input className="input" value={f.adresse} onChange={set("adresse")} /></div>
-          <div className="grid grid-cols-[110px_1fr] gap-3">
-            <div><label className="label">Code postal</label><input className="input" inputMode="numeric" value={f.cp} onChange={set("cp")} /></div>
-            <div><label className="label">Ville</label><input className="input" value={f.ville} onChange={set("ville")} /></div>
+          <div className="space-y-1">
+            <p className="text-lg font-extrabold">🏢 {f.raison_sociale}</p>
+            <p className="text-sm text-slate-600">📍 {[f.cp, f.ville].filter(Boolean).join(" ")}</p>
+            <p className="text-sm text-green-700">✅ SIRET {demo ? "123 456 789 00012" : siretLisible(siret)} vérifié{i.rge && " · 🌿 RGE"}</p>
+            {metiers.length > 0 && <p className="text-sm text-slate-600">🔧 {metiers.map((m) => TRADES.find((t) => t.id === m)?.label || m).join(", ")} · dép. {deps.join(", ")}</p>}
+            {f.email && <p className="text-sm text-slate-600">✉️ {f.email}</p>}
           </div>
 
-          <div>
-            <label className="label">Vos métiers</label>
-            <div className="flex flex-wrap gap-2">
-              {TRADES.map((t) => (
-                <button type="button" key={t.id} onClick={() => bascule(metiers, t.id, setMetiers)}
-                  className={`rounded-full border px-3 py-1.5 text-sm ${metiers.includes(t.id) ? "border-flame bg-flame-light font-semibold text-ink" : "border-slate-200 text-slate-500"}`}>
-                  {t.emoji} {t.label}{metiers.includes(t.id) && " ✓"}
-                </button>
-              ))}
+          {!voirTout ? (
+            <button type="button" className="text-sm font-semibold text-brand underline" onClick={() => setVoirTout(true)}>Modifier mes informations</button>
+          ) : (
+            <div className="space-y-3 border-t border-slate-100 pt-3">
+              <div><label className="label">Entreprise</label><input className="input" value={f.raison_sociale} onChange={set("raison_sociale")} required /></div>
+              <div><label className="label">E-mail de connexion</label><input className="input" type="email" autoComplete="email" value={f.email} onChange={set("email")} required /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="label">Votre nom</label><input className="input" value={f.contact} onChange={set("contact")} /></div>
+                <div><label className="label">Téléphone</label><input className="input" type="tel" value={f.telephone} onChange={set("telephone")} /></div>
+              </div>
+              <div>
+                <label className="label">Vos métiers</label>
+                <div className="flex flex-wrap gap-2">
+                  {TRADES.map((t) => (
+                    <button type="button" key={t.id} onClick={() => bascule(metiers, t.id, setMetiers)}
+                      className={`rounded-full border px-3 py-1.5 text-sm ${metiers.includes(t.id) ? "border-flame bg-flame-light font-semibold text-ink" : "border-slate-200 text-slate-500"}`}>
+                      {t.emoji} {t.label}{metiers.includes(t.id) && " ✓"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="label">Où intervenez-vous ?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {DEPS.map(([c, n]) => (
+                    <button type="button" key={c} onClick={() => bascule(deps, c, setDeps)}
+                      className={`rounded-xl border p-2 text-left text-sm ${deps.includes(c) ? "border-flame bg-flame-light font-semibold" : "border-slate-200 text-slate-500"}`}>
+                      {deps.includes(c) ? "✓ " : ""}{c} · {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="label">Où intervenez-vous ?</label>
-            <div className="grid grid-cols-2 gap-2">
-              {DEPS.map(([c, n]) => (
-                <button type="button" key={c} onClick={() => bascule(deps, c, setDeps)}
-                  className={`rounded-xl border p-2 text-left text-sm ${deps.includes(c) ? "border-flame bg-flame-light font-semibold" : "border-slate-200 text-slate-500"}`}>
-                  {deps.includes(c) ? "✓ " : ""}{c} · {n}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-t border-slate-100 pt-4">
-            <p className="mb-3 font-bold">🔑 Vos identifiants de connexion</p>
-            <div><label className="label">E-mail</label><input className="input" type="email" autoComplete="email" value={f.email} onChange={set("email")} required /></div>
-            <div className="mt-3"><label className="label">Choisissez un mot de passe</label><MotDePasse autoComplete="new-password" minLength={6} required value={f.mot_de_passe} onChange={set("mot_de_passe")} placeholder="6 caractères minimum" /></div>
-          </div>
+          )}
 
           <label className="flex items-start gap-2 text-sm text-slate-600">
-            <input type="checkbox" className="mt-1" checked={cgu} onChange={(e) => setCgu(e.target.checked)} />
+            <input type="checkbox" className="mt-1 h-5 w-5" checked={cgu} onChange={(e) => setCgu(e.target.checked)} />
             <span>J'accepte les <Link href="/legal/cgu" target="_blank" className="underline">conditions d'utilisation</Link> et les <Link href="/legal/cgv" target="_blank" className="underline">conditions de vente</Link>.</span>
           </label>
           {err && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{err}</p>}
-          <button className="btn-brand w-full py-3.5 text-base" disabled={busy}>{busy ? "Création de votre compte…" : "Valider et activer mon compte"}</button>
-          <p className="text-center text-xs text-slate-500">Ensuite, il vous restera à ajouter votre attestation d'assurance décennale pour répondre aux demandes.</p>
+          <button className="btn-brand w-full py-4 text-lg" disabled={busy}>{busy ? "Activation…" : "✅ Oui, j'active mon profil"}</button>
+          <p className="text-center text-xs text-slate-500">Gratuit, sans engagement, sans carte bancaire.</p>
         </form>
         <p className="mt-4 text-center text-xs text-slate-400">Ce n'est pas pour vous ? Ignorez simplement cette page : rien n'est publié sans votre validation.</p>
       </div>

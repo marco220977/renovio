@@ -21,7 +21,8 @@ Deno.serve(async (req) => {
   if (count) return json({ error: "Cette entreprise a déjà un compte Rénolien. Connectez-vous depuis www.renolien.fr/connexion." }, 409);
 
   const email = String(b.email || "").trim().toLowerCase();
-  const mdp = String(b.mot_de_passe || "");
+  // Mot de passe facultatif : sans mot de passe, on en génère un au hasard et l'artisan choisira le sien ensuite
+  const mdp = String(b.mot_de_passe || "") || crypto.randomUUID() + "Aa1!";
   const metiers = (Array.isArray(b.metiers) ? b.metiers : []).filter((m: string) => METIERS.includes(m));
   const deps = (Array.isArray(b.departements) ? b.departements : []).filter((d: string) => DEPS.includes(d));
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Adresse e-mail invalide." }, 400);
@@ -52,5 +53,7 @@ Deno.serve(async (req) => {
     await db.from("prospects").update({ pre_valide: null }).eq("siret", siret);
     return json({ error: "Enregistrement impossible : " + e2.message }, 400);
   }
-  return json({ ok: true });
+  // Connexion immédiate : jeton à usage unique que la page échange contre une session
+  const { data: lien } = await db.auth.admin.generateLink({ type: "magiclink", email });
+  return json({ ok: true, token_hash: lien?.properties?.hashed_token || null });
 });

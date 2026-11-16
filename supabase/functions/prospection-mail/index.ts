@@ -25,73 +25,41 @@ function metierDe(p: any): { pro: string; pros: string; ex: string } {
 }
 const titre = (s: string) => (s || "").toLowerCase().replace(/(^|[\s'-])\S/g, (m) => m.toUpperCase());
 
-// Version B : pré-inscription (profil préparé + paragraphe « Ce que Rénolien vous apporte »)
-function contenuB(p: any, etape: number, lien: string, stop: string) {
+// E-mails courts, au ton personnel (moins « publicité », meilleure délivrabilité), terminés par une question.
+// Version A : lien vers la page d'inscription. Version B : lien d'activation du profil préparé (pré-inscription).
+function contenuCommun(p: any, etape: number, lien: string, stop: string, version: string) {
   const m = metierDe(p);
   const ville = titre(p.ville || "") || "votre secteur";
-  const siret = String(p.siret || "").replace(/^(\d{3})(\d{3})(\d{3})(\d{5})$/, "$1 $2 $3 $4");
-  const sujet = etape === 1 ? `Votre profil Rénolien est prêt, il ne reste qu'à le valider` : `Re : votre profil Rénolien vous attend`;
-  const profil = `PROFIL:${p.nom || ""}|${[p.cp, titre(p.ville || "")].filter(Boolean).join(" ")}|SIRET ${siret} vérifié${p.rge ? " · RGE" : ""}`;
+  const nom = titre(p.nom || "") || "votre entreprise";
+  const de = /^[aeiouyhéèêàâîô]/i.test(nom) ? "d'" : "de ";
+  const sujet = etape === 1 ? `${titre(m.pro)} à ${ville}, une question rapide` : `Re : ${titre(m.pro)} à ${ville}, une question rapide`;
+  const offre = `Pour les premiers inscrits : gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie.`;
   const corps = etape === 1 ? [
     `Bonjour,`,
-    `Je suis Marco, plombier-chauffagiste. Je lance **Rénolien** et je constitue le réseau des premiers ${m.pros} autour de ${ville}. Pour vous faire gagner du temps, j'ai préparé votre profil :`,
-    profil,
-    `**Ce que Rénolien vous apporte :**\n• **Des clients près de chez vous, sans démarcher** : les particuliers de votre secteur publient leurs travaux, vous êtes prévenu sur votre téléphone dès qu'une demande correspond à votre métier ;\n• **Des demandes claires** : photos et cahier des charges préparé par l'IA, vous savez à quoi vous attendre avant de vous déplacer ;\n• **Un devis en 1 clic**, prérempli avec vos propres tarifs ;\n• **Pas de guerre des prix** : 5 artisans maximum par demande, personne ne voit le prix des autres ;\n• **0 % de commission** : le client vous paie directement, et vous ne payez que si un client vous choisit.`,
-    `**Rien n'est publié tant que vous ne l'avez pas validé.** 30 secondes suffisent : ${lien}`,
-    `• **100 % gratuit et illimité** jusqu'au 1er janvier 2027, sans carte bancaire\n• **Membre fondateur : -30 % à vie** ensuite`,
-    `Une question ? Répondez simplement à ce message, je lis tout personnellement.\n\nMarco\nFondateur de Rénolien`,
+    `Je suis Marco, plombier-chauffagiste dans le Val-de-Marne. Je lance Rénolien : les particuliers d'Île-de-France y décrivent leurs travaux, et jusqu'à 5 artisans du secteur leur répondent. Pas d'enchères, 0 % de commission, vous ne payez que si un client vous choisit.`,
+    version === "B"
+      ? `J'ai préparé le profil ${de}${nom} (${ville}) à partir des registres publics. Rien n'est publié sans votre accord. ${offre}`
+      : `Je cherche des ${m.pros} sérieux autour de ${ville}. ${offre}`,
+    version === "B" ? `Activer votre profil en 1 clic : ${lien}` : `Inscription en 2 minutes : ${lien}`,
+    `Ça vous intéresse ?`,
+    `Marco\nRénolien · www.renolien.fr`,
   ] : [
     `Bonjour,`,
-    `Je reviens vers vous une seule fois : votre profil Rénolien est toujours prêt, il ne reste qu'à le valider. Je constitue en ce moment le réseau des premiers ${m.pros} à ${ville} et alentours.`,
-    profil,
-    `Les particuliers de votre secteur vous trouvent, vous recevez leurs demandes sur votre téléphone et vous répondez avec un devis en 1 clic. 100 % gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie pour les membres fondateurs.`,
-    `**Valider mon profil (30 secondes) :** ${lien}`,
-    `Et si ce n'est pas pour vous, aucun souci : votre profil ne sera jamais publié et je ne vous relancerai plus.`,
-    `Marco\nFondateur de Rénolien`,
+    version === "B"
+      ? `Je me permets de revenir vers vous une seule fois : le profil Rénolien ${de}${nom} est toujours prêt, il ne reste qu'à l'activer. Je constitue en ce moment le réseau des premiers ${m.pros} autour de ${ville}.`
+      : `Je me permets de revenir vers vous une seule fois : je constitue en ce moment le réseau des premiers ${m.pros} autour de ${ville} sur Rénolien.`,
+    `${offre}`,
+    version === "B" ? `Activer votre profil : ${lien}` : `Inscription : ${lien}`,
+    `Si ce n'est pas pour vous, dites-le-moi simplement et je ne vous écrirai plus.`,
+    `Marco\nRénolien · www.renolien.fr`,
   ];
-  const mention = `Informations issues des registres publics (Sirene, RGE de l'ADEME). Si ce n'est pas pour vous, ignorez ce message : votre profil ne sera jamais publié. Pour ne plus recevoir de message de Rénolien : ${stop}`;
-  const texte = corps.map((c) => c.startsWith("PROFIL:") ? c.slice(7).split("|").join("\n") : c).join("\n\n").replace(/\*\*/g, "") + "\n\n—\n" + mention;
+  const mention = `Vos coordonnées professionnelles proviennent des registres publics (Sirene, RGE de l'ADEME). Pour ne plus recevoir de message : ${stop}`;
+  const texte = corps.join("\n\n") + "\n\n--\n" + mention;
   const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const bouton = `<a href="${lien}" style="display:block;background:#ea580c;color:#fff;text-align:center;text-decoration:none;font-weight:bold;padding:13px 18px;border-radius:12px;font-size:16px;margin:4px 0">Valider mon profil</a>`;
-  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f172a;max-width:560px">` +
-    corps.map((c) => {
-      if (c.startsWith("PROFIL:")) {
-        const [n, lieu, s2] = c.slice(7).split("|");
-        return `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin:0 0 14px;background:#f8fafc"><b style="font-size:16px">🏢 ${esc(n)}</b><br><span style="color:#475569">📍 ${esc(lieu)}</span><br><span style="color:#15803d">✅ ${esc(s2)}</span></div>`;
-      }
-      const h = esc(c).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
-      return h.includes(esc(lien)) ? `<p>${h.replace(": " + esc(lien), ":").replace(esc(lien), "")}</p>${bouton}` : `<p>${h}</p>`;
-    }).join("") +
-    `<p style="font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:10px">${esc(mention).replace(esc(stop), `<a href="${stop}" style="color:#64748b">se désinscrire</a>`)}</p></div>`;
-  return { sujet, texte, html };
-}
-
-function contenu(p: any, etape: number, lien: string, stop: string) {
-  const m = metierDe(p);
-  const ville = titre(p.ville || "") || "votre secteur";
-  const sujet = etape === 1 ? `${titre(m.pro)} à ${ville} : rejoignez Rénolien parmi les premiers` : `Re : rejoignez Rénolien parmi les premiers`;
-  const corps = etape === 1 ? [
-    `Bonjour,`,
-    `Je suis Marco, plombier-chauffagiste. Je lance **Rénolien**, une nouvelle plateforme qui met en relation les particuliers d'Île-de-France avec les artisans de leur secteur.`,
-    `Je vous écris parce que nous sommes **en plein démarrage** : avant d'ouvrir largement aux particuliers, nous constituons le réseau des premières entreprises, métier par métier et ville par ville. Je cherche aujourd'hui des ${m.pros} sérieux autour de ${ville}.`,
-    `**Pourquoi en être dès maintenant :**\n• **100 % gratuit et illimité pendant toute la phase de lancement** (jusqu'au 1er janvier 2027), sans carte bancaire ;\n• **membre fondateur : -30 % à vie** ensuite sur toutes les formules ;\n• **être parmi les premiers de votre secteur**, quand les demandes arriveront et qu'il y aura encore peu de concurrence ;\n• **votre avis compte** : je suis du métier, et l'outil évolue avec les retours des premiers artisans.`,
-    `**Comment ça marchera :**\n• les particuliers décrivent leurs travaux, avec photos et cahier des charges préparé par l'IA ;\n• vous répondez avec un devis prérempli en 1 clic, avec vos propres tarifs ;\n• 5 artisans maximum par demande, pas d'enchère au moins cher ;\n• **vous ne payez que si un client vous choisit**, et 0 % de commission.`,
-    `L'inscription prend 2 minutes : ${lien}`,
-    `Une question, une remarque ? Répondez simplement à ce message, je lis tout personnellement.\n\nMarco\nFondateur de Rénolien`,
-  ] : [
-    `Bonjour,`,
-    `Je reviens vers vous une seule fois : Rénolien est en phase de lancement et je constitue en ce moment le réseau des premiers artisans à ${ville} et alentours.`,
-    `Pendant toute la phase de lancement (jusqu'au 1er janvier 2027), Rénolien est 100 % gratuit et illimité pour les artisans, sans carte bancaire, puis -30 % à vie pour les membres fondateurs. Si vous voulez faire partie des premiers ${m.pros} de votre secteur, l'inscription prend 2 minutes : ${lien}`,
-    `Et si ce n'est pas pour vous, aucun souci, je ne vous relancerai plus.`,
-    `Marco\nFondateur de Rénolien`,
-  ];
-  const mention = `Vos coordonnées professionnelles proviennent du registre public des entreprises RGE (ADEME) ou du répertoire Sirene. Pour ne plus recevoir de message de Rénolien : ${stop}`;
-  const texte = corps.join("\n\n").replace(/\*\*/g, "") + "\n\n—\n" + mention;
-  const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f172a;max-width:560px">` +
-    corps.map((c) => `<p>${esc(c).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>")
-      .replace(esc(lien), `<a href="${lien}" style="color:#ea580c;font-weight:bold">www.renolien.fr/entreprises</a>`)}</p>`).join("") +
-    `<p style="font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:10px">${esc(mention).replace(esc(stop), `<a href="${stop}" style="color:#64748b">se désinscrire</a>`)}</p></div>`;
+  const affiche = version === "B" ? `www.renolien.fr/p/${p.siret}` : "www.renolien.fr/entreprises";
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#111">` +
+    corps.map((c) => `<p>${esc(c).replace(/\n/g, "<br>").replace(esc(lien), `<a href="${lien}">${affiche}</a>`)}</p>`).join("") +
+    `<p style="font-size:12px;color:#666">${esc(mention).replace(esc(stop), `<a href="${stop}" style="color:#666">se désinscrire</a>`)}</p></div>`;
   return { sujet, texte, html };
 }
 
@@ -122,7 +90,7 @@ Deno.serve(async (req) => {
     // En test, le lien de pré-inscription ouvre un aperçu (aucun compte créé, aucun clic compté)
     const lien = version === "B" ? (a === p.email ? `${SITE}/p/${p.siret}/${jeton}` : `${SITE}/p/demo/demo`) : `${SITE}/e/${p.siret}/${jeton}`;
     const stop = `${SITE}/desinscription?s=${p.siret}&t=${jeton}`;
-    const c = version === "B" ? contenuB(p, etape, lien, stop) : contenu(p, etape, lien, stop);
+    const c = contenuCommun(p, etape, lien, stop, version);
     const r = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: { "api-key": cle!, "content-type": "application/json", accept: "application/json" },
@@ -155,13 +123,13 @@ Deno.serve(async (req) => {
   // 1) Relances (étape 1 envoyée il y a plus de N jours, sans clic)
   const limite = new Date(Date.now() - (R.relance_jours || 5) * 86400000).toISOString();
   const { data: rel } = await db.from("prospects").select("*").eq("email_etape", 1).lt("email_dernier", limite).is("email_clic", null)
-    .eq("desinscrit", false).in("statut", ["a_contacter", "contacte"]).not("email", "is", null).limit(reste);
+    .eq("desinscrit", false).eq("hors_cible", false).in("statut", ["a_contacter", "contacte"]).not("email", "is", null).limit(reste);
   for (const p of rel || []) cibles.push({ p, etape: 2 });
   reste -= cibles.length;
   // 2) Premiers e-mails, par ordre de départements
   for (const d of (R.ordre_deps || ["94", "77", "75", "93", "92", "91", "95"]) as string[]) {
     if (reste <= 0) break;
-    const { data: nv } = await db.from("prospects").select("*").eq("dep", d).eq("email_etape", 0).eq("desinscrit", false)
+    const { data: nv } = await db.from("prospects").select("*").eq("dep", d).eq("email_etape", 0).eq("desinscrit", false).eq("hors_cible", false)
       .in("statut", ["a_contacter", "contacte", "interesse"]).not("email", "is", null).order("creation", { ascending: false, nullsFirst: false }).limit(reste);
     for (const p of nv || []) cibles.push({ p, etape: 1 });
     reste -= (nv || []).length;

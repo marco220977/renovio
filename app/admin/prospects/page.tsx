@@ -53,7 +53,7 @@ function PanneauEmail() {
       {ouvert && (
         <div className="space-y-2 text-sm">
           <div className="grid grid-cols-3 gap-2 text-center">
-            {[["Avec e-mail", st.avec_email], ["Reste à envoyer", st.a_envoyer], ["Aujourd'hui", st.aujourdhui], ["Envoyés", st.envoyes], ["Clics", st.clics], ["Inscrits", st.inscrits], ["Désinscrits", st.desinscrits], ["Erreurs", st.erreurs]].map(([l, v]) => (
+            {[["Avec e-mail", st.avec_email], ["Reste à envoyer", st.a_envoyer], ["Aujourd'hui", st.aujourdhui], ["Envoyés", st.envoyes], ["Clics", st.clics], ["Inscrits", st.inscrits], ["Désinscrits", st.desinscrits], ["Erreurs", st.erreurs], ["Hors cible (bureaux d'études)", (st as any).hors_cible ?? 0]].map(([l, v]) => (
               <div key={l as string} className="rounded-lg bg-slate-50 p-2"><p className="text-lg font-extrabold">{v as number}</p><p className="text-[11px] text-slate-500">{l}</p></div>
             ))}
           </div>
@@ -65,6 +65,7 @@ function PanneauEmail() {
           </label>
           <div className="space-y-2 rounded-xl border border-slate-200 p-3">
             <p className="font-bold">🧪 Test A/B : quel e-mail fait le plus d'inscrits ?</p>
+            {(R as any).ab_depuis && <p className="text-[11px] text-slate-500">Nouveaux e-mails courts, envoyés depuis le {new Date((R as any).ab_depuis + "T12:00:00").toLocaleDateString("fr-FR")}. A = lien d'inscription · B = profil prêt à activer en 1 clic.</p>}
             <div className="grid grid-cols-3 gap-1 text-center text-xs">
               <span></span><span className="font-bold">A · classique</span><span className="font-bold text-flame">B · pré-inscription</span>
               {([["Envoyés", "envoyes"], ["Clics", "clics"], ["Inscrits", "inscrits"], ["Désinscrits", "desinscrits"]] as const).map(([l, k]) => (
