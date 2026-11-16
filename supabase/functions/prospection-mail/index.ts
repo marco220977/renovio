@@ -23,7 +23,9 @@ function metierDe(p: any): { pro: string; pros: string; ex: string } {
   if (/architect|audit|bureau|[ée]tude/.test(t)) return { pro: "professionnel de la rénovation", pros: "professionnels de la rénovation", ex: "rénovation énergétique, audits, travaux complets" };
   return { pro: "artisan", pros: "artisans", ex: "rénovation, réparations, petits travaux" };
 }
-const titre = (s: string) => (s || "").toLowerCase().replace(/(^|[\s'-])\S/g, (m) => m.toUpperCase());
+const titre = (s: string) => (s || "").toLowerCase().replace(/(^|[\s'-])\S/g, (m) => m.toUpperCase())
+  .replace(/([\s-])(Le|La|Les|De|Du|Des|Sur|Sous|En|Et|Lès)(?=[\s-])/g, (_m, sep, mot) => sep + mot.toLowerCase());
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // E-mails courts, au ton personnel (moins « publicité », meilleure délivrabilité), terminés par une question.
 // Version A : lien vers la page d'inscription. Version B : lien d'activation du profil préparé (pré-inscription).
@@ -32,7 +34,7 @@ function contenuCommun(p: any, etape: number, lien: string, stop: string, versio
   const ville = titre(p.ville || "") || "votre secteur";
   const nom = titre(p.nom || "") || "votre entreprise";
   const de = /^[aeiouyhéèêàâîô]/i.test(nom) ? "d'" : "de ";
-  const sujet = etape === 1 ? `${titre(m.pro)} à ${ville}, une question rapide` : `Re : ${titre(m.pro)} à ${ville}, une question rapide`;
+  const sujet = etape === 1 ? `${majuscule(m.pro)} à ${ville}, une question rapide` : `Re : ${majuscule(m.pro)} à ${ville}, une question rapide`;
   const offre = `Pour les premiers inscrits : gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie.`;
   const corps = etape === 1 ? [
     `Bonjour,`,
