@@ -34,27 +34,41 @@ function contenuCommun(p: any, etape: number, lien: string, stop: string, versio
   const ville = titre(p.ville || "") || "votre secteur";
   const nom = titre(p.nom || "") || "votre entreprise";
   const de = /^[aeiouyhéèêàâîô]/i.test(nom) ? "d'" : "de ";
-  const sujet = etape === 1 ? `${majuscule(m.pro)} à ${ville}, une question rapide` : `Re : ${majuscule(m.pro)} à ${ville}, une question rapide`;
+  // Objet : A = question courte ; B = profil prêt, personnalisé avec le nom de l'entreprise (ce qui fait ouvrir)
+  const objet = version === "B" ? `${nom}, votre profil Rénolien est prêt` : `${majuscule(m.pro)} à ${ville}, une question rapide`;
+  const sujet = etape === 1 ? objet : `Re : ${objet}`;
   const offre = `Pour les premiers inscrits : gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie.`;
-  const corps = etape === 1 ? [
+  const signature = `Marco\nPlombier-chauffagiste, fondateur de Rénolien\nwww.renolien.fr`;
+  const corps = etape === 1 ? (version === "B" ? [
     `Bonjour,`,
-    `Je suis Marco, plombier-chauffagiste dans le Val-de-Marne. Je lance Rénolien : les particuliers d'Île-de-France y décrivent leurs travaux, et jusqu'à 5 artisans du secteur leur répondent. Pas d'enchères, 0 % de commission, vous ne payez que si un client vous choisit.`,
-    version === "B"
-      ? `J'ai préparé le profil ${de}${nom} (${ville}) à partir des registres publics. Rien n'est publié sans votre accord. ${offre}`
-      : `Je cherche des ${m.pros} sérieux autour de ${ville}. ${offre}`,
-    version === "B" ? `Activer votre profil en 1 clic : ${lien}` : `Inscription en 2 minutes : ${lien}`,
-    `Ça vous intéresse ?`,
-    `Marco\nRénolien · www.renolien.fr`,
+    `J'ai préparé le profil ${de}${nom} sur Rénolien, la nouvelle plateforme qui transmet aux artisans d'Île-de-France les demandes de travaux des particuliers de leur secteur. Il ne reste qu'à l'activer : rien n'est publié sans votre accord.`,
+    `Concrètement : des demandes près de chez vous (${ville} et alentours), 5 artisans maximum par chantier, pas d'enchères, 0 % de commission. Vous ne payez que si un client vous choisit.`,
+    offre,
+    `Activer mon profil (1 clic) : ${lien}`,
+    `Ça vous intéresse ? Répondez simplement à ce message.`,
+    signature,
   ] : [
     `Bonjour,`,
-    version === "B"
-      ? `Je me permets de revenir vers vous une seule fois : le profil Rénolien ${de}${nom} est toujours prêt, il ne reste qu'à l'activer. Je constitue en ce moment le réseau des premiers ${m.pros} autour de ${ville}.`
-      : `Je me permets de revenir vers vous une seule fois : je constitue en ce moment le réseau des premiers ${m.pros} autour de ${ville} sur Rénolien.`,
-    `${offre}`,
-    version === "B" ? `Activer votre profil : ${lien}` : `Inscription : ${lien}`,
+    `Je suis Marco, plombier-chauffagiste et fondateur de Rénolien : les particuliers d'Île-de-France y publient leurs travaux, et jusqu'à 5 artisans du secteur leur répondent. Pas d'enchères, 0 % de commission, vous ne payez que si un client vous choisit.`,
+    `Je recherche quelques ${m.pros} sérieux autour de ${ville}. ${offre}`,
+    `Inscription en 2 minutes : ${lien}`,
+    `Ça vous intéresse ? Répondez simplement à ce message.`,
+    signature,
+  ]) : (version === "B" ? [
+    `Bonjour,`,
+    `Je me permets de revenir vers vous une seule fois : le profil ${de}${nom} est toujours prêt sur Rénolien, il ne reste qu'à l'activer.`,
+    `Les premières demandes de particuliers autour de ${ville} iront aux artisans déjà inscrits. ${offre}`,
+    `Activer mon profil (1 clic) : ${lien}`,
     `Si ce n'est pas pour vous, dites-le-moi simplement et je ne vous écrirai plus.`,
-    `Marco\nRénolien · www.renolien.fr`,
-  ];
+    signature,
+  ] : [
+    `Bonjour,`,
+    `Je me permets de revenir vers vous une seule fois : je constitue en ce moment le réseau des premiers ${m.pros} autour de ${ville} sur Rénolien.`,
+    `Les premières demandes de particuliers du secteur iront aux artisans déjà inscrits. ${offre}`,
+    `Inscription en 2 minutes : ${lien}`,
+    `Si ce n'est pas pour vous, dites-le-moi simplement et je ne vous écrirai plus.`,
+    signature,
+  ]);
   const mention = `Vos coordonnées professionnelles proviennent des registres publics (Sirene, RGE de l'ADEME). Pour ne plus recevoir de message : ${stop}`;
   const texte = corps.join("\n\n") + "\n\n--\n" + mention;
   const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
