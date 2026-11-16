@@ -119,7 +119,8 @@ export default function Prospects() {
     let r = sb().from("prospects").select(sel, count ? { count: "exact" } : undefined);
     if (f.dep) r = r.eq("dep", f.dep);
     if (f.metier) r = r.eq("metier", f.metier);
-    if (f.statut) r = r.eq("statut", f.statut);
+    if (f.statut === "desinscrit") r = r.eq("desinscrit", true);
+    else if (f.statut) r = r.eq("statut", f.statut);
     if (f.contact) r = r.or("telephone.not.is.null,email.not.is.null");
     if (f.source) r = r.eq("source", f.source);
     const q = f.q.trim().replace(/[,()]/g, " ");
@@ -194,7 +195,7 @@ export default function Prospects() {
             <option value="">Tous métiers</option>{metiers.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
           <select className="input !py-2 text-sm" value={f.statut} onChange={(e) => set({ statut: e.target.value })}>
-            <option value="">Tous statuts</option>{STATUTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            <option value="">Tous statuts</option>{STATUTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}<option value="desinscrit">🚫 Désinscrits</option>
           </select>
         </div>
         <div className="flex items-center justify-between gap-2">
