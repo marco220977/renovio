@@ -64,19 +64,19 @@ function PanneauEmail() {
             </select>
           </label>
           <div className="space-y-2 rounded-xl border border-slate-200 p-3">
-            <p className="font-bold">🧪 Test A/B : quel e-mail fait le plus d'inscrits ?</p>
-            {(R as any).ab_depuis && <p className="text-[11px] text-slate-500">Nouveaux e-mails courts, envoyés depuis le {new Date((R as any).ab_depuis + "T12:00:00").toLocaleDateString("fr-FR")}. A = lien d'inscription · B = profil prêt à activer en 1 clic.</p>}
-            <div className="grid grid-cols-3 gap-1 text-center text-xs">
-              <span></span><span className="font-bold">A · classique</span><span className="font-bold text-flame">B · pré-inscription</span>
+            <p className="font-bold">🧪 Test A/B/C : quel e-mail fait le plus d'inscrits ?</p>
+            {(R as any).ab_depuis && <p className="text-[11px] text-slate-500">Nouveaux e-mails courts, envoyés depuis le {new Date((R as any).ab_depuis + "T12:00:00").toLocaleDateString("fr-FR")}. A = lien d'inscription · B = profil prêt à activer en 1 clic · C = recrutement « membre fondateur » (e-mail plus complet).</p>}
+            <div className="grid grid-cols-4 gap-1 text-center text-xs">
+              <span></span><span className="font-bold">A · classique</span><span className="font-bold text-flame">B · pré-inscription</span><span className="font-bold text-brand">C · fondateur</span>
               {([["Envoyés", "envoyes"], ["Clics", "clics"], ["Inscrits", "inscrits"], ["Désinscrits", "desinscrits"]] as const).map(([l, k]) => (
-                <Fragment key={k}><span className="text-left text-slate-500">{l}</span><b>{ab.A?.[k] ?? 0}</b><b>{ab.B?.[k] ?? 0}</b></Fragment>
+                <Fragment key={k}><span className="text-left text-slate-500">{l}</span><b>{ab.A?.[k] ?? 0}</b><b>{ab.B?.[k] ?? 0}</b><b>{ab.C?.[k] ?? 0}</b></Fragment>
               ))}
               <span className="text-left text-slate-500">Taux d'inscription</span>
-              {(["A", "B"] as const).map((v) => <b key={v} className="text-sm">{ab[v]?.envoyes ? `${Math.round((ab[v].inscrits / ab[v].envoyes) * 1000) / 10} %` : "—"}</b>)}
+              {(["A", "B", "C"] as const).map((v) => <b key={v} className="text-sm">{ab[v]?.envoyes ? `${Math.round((ab[v].inscrits / ab[v].envoyes) * 1000) / 10} %` : "—"}</b>)}
             </div>
             <label className="flex items-center justify-between gap-2 text-xs">Nouveaux e-mails
               <select className="input !w-44 !py-1.5 text-xs" value={R.mode || "ab"} onChange={(e) => regler({ mode: e.target.value })}>
-                <option value="ab">Moitié A, moitié B</option><option value="A">Tous en A (classique)</option><option value="B">Tous en B (pré-inscription)</option>
+                <option value="ab">Un tiers A, B et C</option><option value="A">Tous en A (classique)</option><option value="B">Tous en B (pré-inscription)</option><option value="C">Tous en C (fondateur)</option>
               </select>
             </label>
             <p className="text-[11px] text-slate-500">Les relances gardent la version du 1er e-mail. Attendez environ 2 semaines (500 envois) avant de choisir la gagnante.</p>
@@ -86,6 +86,8 @@ function PanneauEmail() {
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(2)}>Test A · relance</button>
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(1, "B")}>Test B · e-mail 1</button>
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(2, "B")}>Test B · relance</button>
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(1, "C")}>Test C · e-mail 1</button>
+            <button className="btn-ghost !py-2 text-xs" onClick={() => test(2, "C")}>Test C · relance</button>
           </div>
           <a href="/p/demo/demo" target="_blank" className="block text-center text-xs font-semibold text-brand">👁️ Voir la page de pré-inscription (aperçu)</a>
           <button className={`w-full !py-2.5 ${R.actif ? "btn-danger" : "btn-brand"}`}

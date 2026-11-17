@@ -27,8 +27,38 @@ const titre = (s: string) => (s || "").toLowerCase().replace(/(^|[\s'-])\S/g, (m
   .replace(/([\s-])(Le|La|Les|De|Du|Des|Sur|Sous|En|Et|Lès)(?=[\s-])/g, (_m, sep, mot) => sep + mot.toLowerCase());
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// Version C : e-mail « recrutement membre fondateur » (plateforme en création, constitution du réseau d'artisans)
+function versionC(m: { pros: string }, ville: string, etape: number, lien: string, offre: string, signature: string) {
+  if (etape === 1) return {
+    sujet: `Devenez membre fondateur de Rénolien – gratuit pour les artisans`,
+    corps: [
+      `Bonjour,`,
+      `Je me permets de vous contacter au sujet du lancement de Rénolien (www.renolien.fr), une nouvelle plateforme qui met en relation les particuliers d'Île-de-France et les artisans de la rénovation.`,
+      `Nous sommes actuellement en phase de création. Avant d'ouvrir la plateforme aux particuliers, nous constituons notre réseau d'entreprises qualifiées : quand les demandes de travaux arriveront, chaque client doit trouver un artisan sérieux près de chez lui. C'est pourquoi nous recrutons dès maintenant des ${m.pros} autour de ${ville}.`,
+      `Comment fonctionne Rénolien pour vous :\n• Le client décrit son projet et une estimation est préparée automatiquement.\n• Vous consultez les demandes de votre secteur et envoyez votre offre (5 artisans maximum par chantier, pas d'enchères).\n• Vous échangez avec le client par messagerie et organisez la visite.\n• Vous ne payez que si le client vous choisit, 0 % de commission.\n• Le client vous règle directement, sans intermédiaire.`,
+      `Notre offre de lancement : gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie. Les entreprises qui nous rejoignent maintenant obtiennent le statut de membre fondateur et seront les premières à recevoir les demandes de leur secteur.`,
+      `Inscription en 2 minutes : ${lien}`,
+      `Je reste à votre disposition pour toute question : répondez simplement à ce message.`,
+      signature,
+    ],
+  };
+  return {
+    sujet: `Rénolien – plus que quelques semaines pour devenir membre fondateur`,
+    corps: [
+      `Bonjour,`,
+      `Je reviens vers vous au sujet de Rénolien, la plateforme de mise en relation entre particuliers et artisans de la rénovation en Île-de-France, actuellement en phase de lancement.`,
+      `Nous finalisons la constitution de notre réseau de professionnels avant l'ouverture aux clients. Les entreprises inscrites dès maintenant seront les premières à recevoir les demandes de travaux autour de ${ville}.`,
+      `Pour rappel :\n• Gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie\n• Statut de membre fondateur\n• Aucun frais tant qu'un client ne vous a pas choisi\n• Paiement direct par vos clients, sans intermédiaire`,
+      `Pour réserver votre place dans votre secteur : ${lien}`,
+      `Si ce n'est pas pour vous, dites-le-moi simplement et je ne vous écrirai plus.`,
+      signature,
+    ],
+  };
+}
+
 // E-mails courts, au ton personnel (moins « publicité », meilleure délivrabilité), terminés par une question.
 // Version A : lien vers la page d'inscription. Version B : lien d'activation du profil préparé (pré-inscription).
+// Version C : e-mail plus complet « recrutement membre fondateur », lien vers la page d'inscription.
 function contenuCommun(p: any, etape: number, lien: string, stop: string, version: string) {
   const m = metierDe(p);
   const ville = titre(p.ville || "") || "votre secteur";
@@ -36,10 +66,14 @@ function contenuCommun(p: any, etape: number, lien: string, stop: string, versio
   const de = /^[aeiouyhéèêàâîô]/i.test(nom) ? "d'" : "de ";
   // Objet : A = question courte ; B = profil prêt, personnalisé avec le nom de l'entreprise (ce qui fait ouvrir)
   const objet = version === "B" ? `${nom}, votre profil Rénolien est prêt` : `${majuscule(m.pro)} à ${ville}, une question rapide`;
-  const sujet = etape === 1 ? objet : `Re : ${objet}`;
+  let sujet = etape === 1 ? objet : `Re : ${objet}`;
   const offre = `Pour les premiers inscrits : gratuit et illimité jusqu'au 1er janvier 2027, puis -30 % à vie.`;
   const signature = `Marco\nPlombier-chauffagiste, fondateur de Rénolien\nwww.renolien.fr`;
-  const corps = etape === 1 ? (version === "B" ? [
+  let corps: string[];
+  if (version === "C") {
+    const c = versionC(m, ville, etape, lien, offre, signature);
+    sujet = c.sujet; corps = c.corps;
+  } else corps = etape === 1 ? (version === "B" ? [
     `Bonjour,`,
     `J'ai préparé le profil ${de}${nom} sur Rénolien, la nouvelle plateforme qui transmet aux artisans d'Île-de-France les demandes de travaux des particuliers de leur secteur. Il ne reste qu'à l'activer : rien n'est publié sans votre accord.`,
     `Concrètement : des demandes près de chez vous (${ville} et alentours), 5 artisans maximum par chantier, pas d'enchères, 0 % de commission. Vous ne payez que si un client vous choisit.`,
@@ -123,7 +157,8 @@ Deno.serve(async (req) => {
   // Test : un e-mail d'exemple envoyé à l'administrateur
   if (!cron && body.test) {
     const { data: ex } = await db.from("prospects").select("*").not("email", "is", null).eq("dep", "94").limit(1).maybeSingle();
-    const res = await envoyer(ex || { siret: "00000000000000", nom: "PLOMBERIE EXEMPLE", cp: "94000", ville: "Créteil", metier: "Plomberie" }, Number(body.etape) || 1, adminEmail, body.version === "B" ? "B" : "A");
+    const vt = body.version === "B" || body.version === "C" ? body.version : "A";
+    const res = await envoyer(ex || { siret: "00000000000000", nom: "PLOMBERIE EXEMPLE", cp: "94000", ville: "Créteil", metier: "Plomberie" }, Number(body.etape) || 1, adminEmail, vt);
     return json(res.erreur ? { error: `Brevo : ${res.erreur}` } : { ok: true, a: adminEmail });
   }
   if (!R.actif) return json({ ok: true, message: "Prospection en pause" });
@@ -151,16 +186,21 @@ Deno.serve(async (req) => {
     reste -= (nv || []).length;
   }
 
-  // Test A/B : moitié e-mail classique (A), moitié pré-inscription (B), en alternant
+  // Test A/B/C : les nouveaux prospects sont répartis à parts égales entre les versions A, B et C, en alternant
   const mode = R.mode || "ab";
-  const { count: nA } = await db.from("prospects").select("siret", { count: "exact", head: true }).eq("version", "A");
-  const { count: nB } = await db.from("prospects").select("siret", { count: "exact", head: true }).eq("version", "B");
-  let suivant = (nA || 0) <= (nB || 0) ? "A" : "B";
+  const VERSIONS = ["A", "B", "C"];
+  const compte: Record<string, number> = {};
+  for (const v of VERSIONS) {
+    const { count } = await db.from("prospects").select("siret", { count: "exact", head: true }).eq("version", v);
+    compte[v] = count || 0;
+  }
   const versionDe = (p: any, etape: number) => {
     if (etape > 1 && p.version) return p.version;
-    if (mode === "A" || mode === "B") return mode;
-    const v = suivant; suivant = suivant === "A" ? "B" : "A"; return v;
+    if (VERSIONS.includes(mode)) return mode;
+    const v = VERSIONS[tour % VERSIONS.length]; tour++; return v;
   };
+  // Rotation A → B → C, en commençant par la version la moins envoyée
+  let tour = VERSIONS.indexOf(VERSIONS.reduce((a, b) => (compte[b] < compte[a] ? b : a)));
 
   let ok = 0, ko = 0;
   for (const { p, etape } of cibles) {
