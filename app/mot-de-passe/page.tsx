@@ -5,6 +5,7 @@ import MotDePasse from "@/components/MotDePasse";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
+import LogoMark from "@/components/LogoMark";
 
 function Form() {
   const router = useRouter();
@@ -42,7 +43,7 @@ function Form() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-orange-50 p-5">
       <form onSubmit={valider} className="card w-full max-w-md space-y-4 p-6">
-        <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></Link>
+        <Link href="/" className="text-xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></Link>
         {bienvenue && pret && <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">🎉 <b>Votre profil est activé !</b> Bienvenue parmi les membres fondateurs.</p>}
         <h1 className="text-2xl font-extrabold">{bienvenue ? "Choisissez votre mot de passe" : "Nouveau mot de passe"}</h1>
         {bienvenue && pret && <p className="text-sm text-slate-600">Pour vous reconnecter plus tard depuis n'importe quel appareil.</p>}

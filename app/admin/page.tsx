@@ -12,6 +12,7 @@ import Modal from "@/components/Modal";
 import OffrirEssai from "@/components/OffrirEssai";
 import { Etoiles, Metiers } from "@/components/Vues";
 import { FORMULES, STATUT_DEMANDE, STATUT_OFFRE, errMsg, statutDemande, type Artisan, type Demande, type Offre, type Profil } from "@/lib/mer";
+import LogoMark from "@/components/LogoMark";
 
 type P = Profil & { created_at: string };
 type Note = { artisan_id: string; note: number; nb_avis: number };
@@ -120,7 +121,7 @@ export default function Admin() {
     <div className="min-h-screen pb-10">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <span className="text-xl font-extrabold">Réno<span className="text-flame">lien</span> <span className="text-sm font-semibold text-slate-400">admin</span></span>
+          <span className="text-xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span> <span className="text-sm font-semibold text-slate-400">admin</span></span>
           <div className="flex gap-2 text-xs">
             <Link href="/admin/prospects" className="chip bg-flame-light text-flame">🎯 Prospects</Link>
             <Link href="/client" className="chip bg-slate-100 text-slate-600">Client</Link>

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import TradePicker from "@/components/TradePicker";
 import OffreLancement from "@/components/OffreLancement";
+import LogoMark from "@/components/LogoMark";
 
 const frError = (m: string) => /rate limit/i.test(m) ? "Trop d'inscriptions en peu de temps. Réessayez dans une heure."
   : /registered|already/i.test(m) ? "Un compte existe déjà avec cet e-mail. Connectez-vous."
@@ -76,7 +77,7 @@ function Form() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-orange-50 p-5">
       <form onSubmit={submit} className="card w-full max-w-md space-y-4 p-6">
-        <Link href="/" className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></Link>
+        <Link href="/" className="text-xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></Link>
         <h1 className="text-2xl font-extrabold">{signup ? "Créer mon compte" : "Connexion"}</h1>
         {signup && nomParrain && role === "artisan" && (
           <p className="rounded-xl bg-flame-light p-3 text-sm">🎁 Invité par <b>{nomParrain}</b> : <b>1 client offert</b> à l'inscription.</p>

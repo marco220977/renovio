@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import type { Profil, Role } from "@/lib/mer";
 import { BandeauNotif, useRafraichirPush } from "./Notifications";
+import LogoMark from "@/components/LogoMark";
 
 const Ctx = createContext<{ profil: Profil; recharger: () => Promise<void> } | null>(null);
 export const useProfil = () => useContext(Ctx)!;
@@ -46,7 +47,7 @@ export default function Espace({ role, children }: { role: "client" | "artisan";
       <div className="min-h-screen pb-24">
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-            <Link href={`/${role}`} className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></Link>
+            <Link href={`/${role}`} className="text-xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></Link>
             <div className="flex gap-1.5">
               {profil.role === "admin" && <Link href="/admin" className="chip bg-ink text-white">Admin</Link>}
               <span className="chip bg-slate-100 text-slate-600">{role === "artisan" ? "Espace artisan" : "Espace client"}</span>

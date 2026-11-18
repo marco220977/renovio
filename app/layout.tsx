@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   applicationName: APP,
   manifest: "/manifest.json",
+  icons: { icon: [{ url: "/favicon.png", type: "image/png" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }], apple: "/apple-touch-icon.png" },
   alternates: { canonical: "/" },
   openGraph: { type: "website", locale: "fr_FR", url: SITE, siteName: APP, title: TITRE, description: DESCRIPTION },
   twitter: { card: "summary_large_image", title: TITRE, description: DESCRIPTION },
@@ -26,7 +27,7 @@ const organisation = {
   "@type": "Organization",
   name: APP,
   url: SITE,
-  logo: `${SITE}/icon.svg`,
+  logo: `${SITE}/logo.png`,
   description: DESCRIPTION,
   areaServed: "FR",
 };

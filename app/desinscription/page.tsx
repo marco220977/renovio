@@ -3,6 +3,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { sb } from "@/lib/supabase";
+import LogoMark from "@/components/LogoMark";
 
 function Contenu() {
   const q = useSearchParams();
@@ -14,7 +15,7 @@ function Contenu() {
   }
   return (
     <main className="mx-auto max-w-md px-5 py-16 text-center">
-      <p className="text-2xl font-extrabold">Réno<span className="text-flame">lien</span></p>
+      <p className="text-2xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></p>
       {etat === "ok" ? (
         <>
           <h1 className="mt-8 text-xl font-bold">C'est fait ✔</h1>

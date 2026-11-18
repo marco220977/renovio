@@ -1,5 +1,6 @@
 import Link from "next/link";
 import OffreLancement from "@/components/OffreLancement";
+import LogoMark from "@/components/LogoMark";
 
 const etapesClient = [
   ["✍️", "Décrivez vos travaux", "En quelques phrases, avec des photos si vous voulez. L'IA vous pose 3 à 6 questions pour bien comprendre."],
@@ -19,7 +20,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
       <div className="mx-auto max-w-3xl px-5 pb-16">
         <nav className="flex items-center justify-between py-5">
-          <span className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></span>
+          <span className="text-2xl font-extrabold text-ink"><LogoMark />Réno<span className="text-flame">lien</span></span>
           <Link href="/connexion" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
 

@@ -3,6 +3,7 @@ import { METIERS_SEO, type MetierSeo } from "@/lib/seo";
 import { DEPS_SEO, villesDuDep, dansDep, type DepSeo } from "@/lib/seo-pro";
 import { FORMULES, texteClients, texteAttente } from "@/lib/formules";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
+import LogoMark from "@/components/LogoMark";
 
 const Maj = (s: string) => s[0].toUpperCase() + s.slice(1);
 
@@ -11,7 +12,7 @@ export function EnteteContenu({ children }: { children: React.ReactNode }) {
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50">
       <div className="mx-auto max-w-3xl px-5 pb-28">
         <nav className="flex items-center justify-between py-5">
-          <Link href="/entreprises" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span> <span className="text-sm font-semibold text-slate-400">Pro</span></Link>
+          <Link href="/entreprises" className="text-2xl font-extrabold text-ink"><LogoMark />Réno<span className="text-flame">lien</span> <span className="text-sm font-semibold text-slate-400">Pro</span></Link>
           <Link href="/connexion?role=artisan" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
         {children}

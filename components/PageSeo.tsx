@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ARTICLES } from "@/lib/articles";
 import { METIERS_SEO, DEPARTEMENTS, VILLES_SEO, aVille, villesProches, type MetierSeo, type VilleSeo } from "@/lib/seo";
+import LogoMark from "@/components/LogoMark";
 
 const INSCRIPTION = "/connexion?mode=signup&role=client";
 
 export function Entete() {
   return (
     <nav className="flex items-center justify-between py-5">
-      <Link href="/particuliers" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></Link>
+      <Link href="/particuliers" className="text-2xl font-extrabold text-ink"><LogoMark />Réno<span className="text-flame">lien</span></Link>
       <Link href="/connexion?role=client" className="btn-ghost !py-2 text-sm">Se connecter</Link>
     </nav>
   );

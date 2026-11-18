@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoMark from "@/components/LogoMark";
 
 export const metadata = {
   title: "Devis travaux de rénovation gratuits : salle de bain, plomberie, électricité…",
@@ -42,7 +43,7 @@ export default function Particuliers() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <div className="mx-auto max-w-3xl px-5 pb-28">
         <nav className="flex items-center justify-between py-5">
-          <Link href="/particuliers" className="text-2xl font-extrabold text-ink">Réno<span className="text-flame">lien</span></Link>
+          <Link href="/particuliers" className="text-2xl font-extrabold text-ink"><LogoMark />Réno<span className="text-flame">lien</span></Link>
           <Link href="/connexion?role=client" className="btn-ghost !py-2 text-sm">Se connecter</Link>
         </nav>
 

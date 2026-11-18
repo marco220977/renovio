@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { TRADES } from "@/lib/trades";
 import { useLancement } from "@/components/OffreLancement";
+import LogoMark from "@/components/LogoMark";
 
 type Infos = { erreur?: string; deja?: boolean; nom?: string; dirigeant?: string; forme?: string; adresse?: string; cp?: string; ville?: string;
   dep?: string; email?: string; telephone?: string; rge?: boolean; creation?: string; metiers?: string[]; departements?: string[] };
@@ -73,7 +74,7 @@ export default function PreInscription() {
   if (i.erreur || i.deja) return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-orange-50 p-5">
       <div className="card w-full max-w-md space-y-4 p-6 text-center">
-        <p className="text-xl font-extrabold">Réno<span className="text-flame">lien</span></p>
+        <p className="text-xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></p>
         {i.deja
           ? <><p className="font-bold">{i.nom} a déjà un compte Rénolien.</p><Link href="/connexion?role=artisan" className="btn-primary w-full">Me connecter</Link></>
           : <><p className="font-bold">Ce lien n'est plus valide.</p><Link href="/entreprises" className="btn-brand w-full">Découvrir Rénolien</Link></>}
@@ -84,7 +85,7 @@ export default function PreInscription() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-orange-50 pb-16">
       <div className="mx-auto max-w-lg px-4">
-        <p className="py-5 text-2xl font-extrabold">Réno<span className="text-flame">lien</span></p>
+        <p className="py-5 text-2xl font-extrabold"><LogoMark />Réno<span className="text-flame">lien</span></p>
         {demo && <p className="mb-3 rounded-xl bg-blue-50 p-3 text-sm text-blue-900">👁️ Aperçu de test : c'est la page que voit un artisan en cliquant sur « Valider mon profil ».</p>}
         {(!l || l.actif) && (
           <div className="rounded-2xl bg-gradient-to-r from-flame to-orange-400 p-4 text-white">
