@@ -10,7 +10,7 @@ type P = {
   source: string; domaines_rge: string | null; desinscrit: boolean; email_etape: number; email_dernier: string | null; email_clic: string | null; email_erreur: string | null;
 };
 type Stats = { reglages: { actif: boolean; par_jour: number; relance_jours: number; expediteur: string; mode?: string }; avec_email: number; a_envoyer: number;
-  envoyes: number; aujourdhui: number; erreurs: number; clics: number; desinscrits: number; inscrits: number };
+  envoyes: number; aujourdhui: number; erreurs: number; clics: number; robots?: number; desinscrits: number; inscrits: number };
 const STATUTS: [string, string, string][] = [
   ["a_contacter", "À contacter", "bg-slate-100 text-slate-700"], ["contacte", "Contacté", "bg-blue-100 text-blue-800"],
   ["interesse", "Intéressé", "bg-amber-100 text-amber-900"], ["inscrit", "Inscrit ✔", "bg-green-100 text-green-800"],
@@ -25,7 +25,7 @@ function PanneauEmail() {
   const [st, setSt] = useState<Stats | null>(null);
   const [ouvert, setOuvert] = useState(false);
   const [msg, setMsg] = useState("");
-  const [ab, setAb] = useState<Record<string, { envoyes: number; clics: number; inscrits: number; desinscrits: number }>>({});
+  const [ab, setAb] = useState<Record<string, { envoyes: number; clics: number; robots?: number; inscrits: number; desinscrits: number }>>({});
   const charger = () => {
     sb().rpc("stats_prospection").then(({ data }) => setSt(data as Stats));
     sb().rpc("stats_ab").then(({ data }) => setAb((data as any) || {}));
@@ -53,7 +53,7 @@ function PanneauEmail() {
       {ouvert && (
         <div className="space-y-2 text-sm">
           <div className="grid grid-cols-3 gap-2 text-center">
-            {[["Avec e-mail", st.avec_email], ["Reste à envoyer", st.a_envoyer], ["Aujourd'hui", st.aujourdhui], ["Envoyés", st.envoyes], ["Clics", st.clics], ["Inscrits", st.inscrits], ["Désinscrits", st.desinscrits], ["Erreurs", st.erreurs], ["Hors cible (bureaux d'études)", (st as any).hors_cible ?? 0]].map(([l, v]) => (
+            {[["Avec e-mail", st.avec_email], ["Reste à envoyer", st.a_envoyer], ["Aujourd'hui", st.aujourdhui], ["Envoyés", st.envoyes], ["Clics réels", st.clics], ["Clics robots (ignorés)", st.robots ?? 0], ["Inscrits", st.inscrits], ["Désinscrits", st.desinscrits], ["Erreurs", st.erreurs], ["Hors cible (bureaux d'études)", (st as any).hors_cible ?? 0]].map(([l, v]) => (
               <div key={l as string} className="rounded-lg bg-slate-50 p-2"><p className="text-lg font-extrabold">{v as number}</p><p className="text-[11px] text-slate-500">{l}</p></div>
             ))}
           </div>
@@ -68,7 +68,7 @@ function PanneauEmail() {
             {(R as any).ab_depuis && <p className="text-[11px] text-slate-500">Nouveaux e-mails courts, envoyés depuis le {new Date((R as any).ab_depuis + "T12:00:00").toLocaleDateString("fr-FR")}. A = lien d'inscription · B = profil prêt à activer en 1 clic · C = recrutement « membre fondateur » (e-mail plus complet).</p>}
             <div className="grid grid-cols-4 gap-1 text-center text-xs">
               <span></span><span className="font-bold">A · classique</span><span className="font-bold text-flame">B · pré-inscription</span><span className="font-bold text-brand">C · fondateur</span>
-              {([["Envoyés", "envoyes"], ["Clics", "clics"], ["Inscrits", "inscrits"], ["Désinscrits", "desinscrits"]] as const).map(([l, k]) => (
+              {([["Envoyés", "envoyes"], ["Clics réels", "clics"], ["Robots (ignorés)", "robots"], ["Inscrits", "inscrits"], ["Désinscrits", "desinscrits"]] as const).map(([l, k]) => (
                 <Fragment key={k}><span className="text-left text-slate-500">{l}</span><b>{ab.A?.[k] ?? 0}</b><b>{ab.B?.[k] ?? 0}</b><b>{ab.C?.[k] ?? 0}</b></Fragment>
               ))}
               <span className="text-left text-slate-500">Taux d'inscription</span>
@@ -79,7 +79,7 @@ function PanneauEmail() {
                 <option value="ab">Un tiers A, B et C</option><option value="A">Tous en A (classique)</option><option value="B">Tous en B (pré-inscription)</option><option value="C">Tous en C (fondateur)</option>
               </select>
             </label>
-            <p className="text-[11px] text-slate-500">Les relances gardent la version du 1er e-mail. Attendez environ 2 semaines (500 envois) avant de choisir la gagnante.</p>
+            <p className="text-[11px] text-slate-500">Les relances gardent la version du 1er e-mail. Les « clics » arrivés moins de 3 minutes après l'envoi viennent des antivirus des messageries : ils sont comptés à part. Choisissez la gagnante sur les inscrits, pas sur les clics.</p>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(1)}>Test A · e-mail 1</button>
