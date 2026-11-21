@@ -11,7 +11,7 @@ import Conversation from "@/components/Conversation";
 import Avenants from "@/components/Avenants";
 import Ecarts from "@/components/Ecarts";
 import Signaler from "@/components/Signaler";
-import { CahierVue, LignesVue, Metiers, Photos } from "@/components/Vues";
+import { CahierVue, LignesVue, Metiers, Photos, VideoDemande } from "@/components/Vues";
 import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
 import { Erreur, Info, useProfil } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
@@ -189,6 +189,7 @@ export default function DemandeArtisan() {
           </ul>
         )}
         <Photos paths={d.photos} />
+        <VideoDemande path={d.video} />
       </div>
       {d.cahier && <div className="card"><p className="mb-2 font-bold">📋 Cahier des charges (IA)</p><CahierVue cahier={d.cahier} /><button className="btn-ghost mt-3 w-full" onClick={() => ouvrirCahierPdf(d)}>📄 Cahier des charges en PDF</button></div>}
       {!offre && <Signaler demandeId={d.id} />}

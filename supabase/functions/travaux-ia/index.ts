@@ -49,7 +49,7 @@ function prompt(action: string, b: any): string {
   if (action === "questions") return `${BASE}
 Demande du client (code postal ${b.cp || "?"}) :
 """${b.description}"""
-${b.photos?.length ? "Des photos du lieu sont jointes." : ""}
+${b.photos?.length ? "Des photos du lieu sont jointes." : ""}${b.video ? " Les dernières images sont extraites d'une courte vidéo du lieu filmée par le client : sers-t'en pour mieux comprendre l'existant." : ""}
 D'abord, vérifie que c'est bien une demande de travaux, de réparation, d'installation ou d'entretien dans un logement, un local ou un extérieur
 (même mal écrite ou vague : \"j'ai un souci chez moi\" compte comme des travaux). Si ce n'est pas le cas (recette, devoir, question générale,
 conseil sans rapport avec un chantier, test, blague, texte sans sens) : mets est_travaux à false, explique en une phrase courte et polie dans message
@@ -63,7 +63,7 @@ Demande du client (code postal ${b.cp || "?"}, délai souhaité : ${b.delai || "
 """${b.description}"""
 Réponses du client aux questions :
 ${(b.reponses || []).map((r: any) => `- ${r.question} → ${r.reponse || "(sans réponse)"}`).join("\n")}
-${b.photos?.length ? "Des photos du lieu sont jointes." : ""}
+${b.photos?.length ? "Des photos du lieu sont jointes." : ""}${b.video ? " Les dernières images sont extraites d'une courte vidéo du lieu filmée par le client : sers-t'en pour mieux comprendre l'existant." : ""}
 Si la demande et les réponses ne décrivent pas réellement des travaux (recette, question sans rapport, réponses absurdes) :
 mets hors_sujet à true, lots vide, budgets à 0, et explique pourquoi dans resume. Sinon mets hors_sujet à false.
 Rédige le cahier des charges : le projet découpé en lots (un lot par corps de métier ou grande étape), chaque lot avec ses postes et des quantités
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
   if (action !== "devis" && !String(body.description || "").trim()) return json({ error: "Décrivez vos travaux" }, 400);
 
   const content: any[] = [];
-  for (const p of (body.photos || []).slice(0, 3)) {
+  for (const p of (body.photos || []).slice(0, 8)) { // 3 photos + 5 images extraites de la vidéo
     const m = /^data:(image\/\w+);base64,(.+)$/.exec(p || "");
     if (m) content.push({ type: "image", source: { type: "base64", media_type: m[1], data: m[2] } });
   }

@@ -11,6 +11,30 @@ import { aDuContenu, ecrireBrouillon, ecrirePhotos, effacerBrouillon, lireBrouil
 import { DELAIS, compresser, dataUrlToBlob, departementDe, errMsg, ia, type Cahier, type Question } from "@/lib/mer";
 
 type Photo = { grande: string; petite: string };
+type Video = { fichier: File; url: string; duree: number; images: string[] };
+const VIDEO_MAX_S = 60, VIDEO_MAX_MO = 100;
+
+// Extrait quelques images d'une vidéo (pour que l'IA « voie » le lieu filmé)
+async function imagesDeVideo(f: File, n = 5): Promise<{ duree: number; images: string[] }> {
+  const url = URL.createObjectURL(f);
+  const v = document.createElement("video");
+  v.preload = "auto"; v.muted = true; v.playsInline = true; v.src = url;
+  await new Promise<void>((ok, ko) => { v.onloadedmetadata = () => ok(); v.onerror = () => ko(new Error("Vidéo illisible")); });
+  const duree = isFinite(v.duration) ? v.duration : 0;
+  const images: string[] = [];
+  const c = document.createElement("canvas");
+  for (let i = 0; i < n && duree > 0; i++) {
+    v.currentTime = Math.min(duree - 0.1, (duree * (i + 0.5)) / n);
+    await new Promise<void>((ok) => { v.onseeked = () => ok(); setTimeout(ok, 3000); });
+    const k = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight || 1));
+    c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+    if (!c.width || !c.height) continue;
+    c.getContext("2d")!.drawImage(v, 0, 0, c.width, c.height);
+    images.push(c.toDataURL("image/jpeg", 0.7));
+  }
+  URL.revokeObjectURL(url);
+  return { duree, images };
+}
 
 // Questions à choix : plusieurs réponses possibles, enregistrées sous la forme « A, B, C ».
 // « Je ne sais pas » est exclusif : il remplace les autres choix (et inversement).
@@ -36,6 +60,8 @@ export default function Nouvelle() {
   const [ville, setVille] = useState("");
   const [delai, setDelai] = useState(DELAIS[2]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [video, setVideo] = useState<Video | null>(null);
+  const [videoMsg, setVideoMsg] = useState("");
   // Étape 2
   const [questions, setQuestions] = useState<Question[]>([]);
   const [reponses, setReponses] = useState<Record<string, string>>({});
@@ -51,6 +77,21 @@ export default function Nouvelle() {
   const [demandeId, setDemandeId] = useState<string | null>(null);
 
   const petites = () => photos.map((p) => p.petite);
+  // Images envoyées à l'IA : 3 photos + 5 images de la vidéo
+  const imagesIA = () => [...petites().slice(0, 3), ...(video?.images || [])];
+
+  async function ajouterVideo(f?: File) {
+    setVideoMsg("");
+    if (!f) return;
+    if (f.size > VIDEO_MAX_MO * 1024 * 1024) return setVideoMsg(`Vidéo trop lourde (${VIDEO_MAX_MO} Mo max). Filmez moins longtemps.`);
+    setVideoMsg("Préparation de la vidéo…");
+    try {
+      const { duree, images } = await imagesDeVideo(f);
+      if (duree > VIDEO_MAX_S + 1) return setVideoMsg(`Vidéo trop longue (${Math.round(duree)} s) : ${VIDEO_MAX_S} secondes maximum.`);
+      if (video) URL.revokeObjectURL(video.url);
+      setVideo({ fichier: f, url: URL.createObjectURL(f), duree, images }); setVideoMsg("");
+    } catch { setVideoMsg("Cette vidéo n'a pas pu être lue. Essayez de la filmer à nouveau."); }
+  }
 
   // ---- Sauvegarde automatique ----
   const pret = useRef(false);
@@ -90,6 +131,7 @@ export default function Nouvelle() {
   }
   function nouvelleVierge() { effacerBrouillon(profil.id); vider(); }
   function vider() {
+    setVideo(null); setVideoMsg("");
     setEtape(1); setDescription(""); setCp(""); setVille(""); setDelai(DELAIS[2]); setPhotos([]); setQuestions([]);
     setReponses({}); setTitre(""); setCahier(null); setMetiers([]); setAdresse(""); setDemandeId(null); setRepris(false); setErr("");
   }
@@ -111,7 +153,7 @@ export default function Nouvelle() {
     if (!departementDe(cp)) return setErr("Code postal invalide (5 chiffres).");
     setBusy("L'IA lit votre demande…");
     try {
-      const r = await ia<{ est_travaux?: boolean; message?: string; titre: string; metiers: string[]; questions: Question[] }>("questions", { description, cp, photos: petites() });
+      const r = await ia<{ est_travaux?: boolean; message?: string; titre: string; metiers: string[]; questions: Question[] }>("questions", { description, cp, photos: imagesIA(), video: !!video?.images.length });
       if (r.est_travaux === false) { setHorsSujet(r.message || ""); setBusy(""); return; }
       setTitre(r.titre || ""); setMetiers(r.metiers || []); setQuestions(r.questions || []); setEtape(2);
     } catch (e) { setErr(errMsg(e)); }
@@ -122,7 +164,7 @@ export default function Nouvelle() {
     setErr(""); setHorsSujet(""); setBusy("L'IA rédige votre cahier des charges…");
     try {
       const rep = questions.map((q) => ({ question: q.question, reponse: reponses[q.id] || "" }));
-      const c = await ia<Cahier & { hors_sujet?: boolean }>("cahier", { description, cp, delai, reponses: rep, photos: petites() });
+      const c = await ia<Cahier & { hors_sujet?: boolean }>("cahier", { description, cp, delai, reponses: rep, photos: imagesIA(), video: !!video?.images.length });
       if (c.hors_sujet || !c.lots?.length) { setHorsSujet(c.resume || ""); setEtape(1); setBusy(""); return; }
       setCahier(c); setTitre(c.titre || titre);
       if (c.metiers?.length) setMetiers(c.metiers);
@@ -147,8 +189,17 @@ export default function Nouvelle() {
           const { error } = await s.storage.from("demandes").upload(path, dataUrlToBlob(p.grande), { contentType: "image/jpeg" });
           if (!error) chemins.push(path);
         }
+        let cheminVideo: string | null = null;
+        if (video) {
+          setBusy("Envoi de la vidéo…");
+          const ext = (video.fichier.name.split(".").pop() || "mp4").toLowerCase().slice(0, 4);
+          const path = `${profil.id}/${crypto.randomUUID()}.${ext}`;
+          const { error } = await s.storage.from("demandes").upload(path, video.fichier, { contentType: video.fichier.type || "video/mp4" });
+          if (!error) cheminVideo = path;
+          setBusy("Publication…");
+        }
         const { data, error } = await s.from("demandes").insert({
-          titre, description, cp, ville, departement: departementDe(cp), delai, metiers, photos: chemins,
+          titre, description, cp, ville, departement: departementDe(cp), delai, metiers, photos: chemins, video: cheminVideo,
           reponses: questions.map((q) => ({ question: q.question, reponse: reponses[q.id] || "" })),
           cahier: { ...cahier, signature: undefined }, ia_signature: cahier?.signature || null,
           budget_min: cahier?.budget_min || null, budget_max: cahier?.budget_max || null,
@@ -208,7 +259,7 @@ export default function Nouvelle() {
             </div>
           </div>
           <div>
-            <label className="label">Photos (facultatif, 6 max)</label>
+            <label className="label">Photos et vidéo (facultatif)</label>
             <div className="flex flex-wrap gap-2">
               {photos.map((p, i) => (
                 <div key={i} className="relative">
@@ -229,7 +280,22 @@ export default function Nouvelle() {
                   </label>
                 </>
               )}
+              {video ? (
+                <div className="relative">
+                  <video src={video.url} className="h-20 w-20 rounded-xl bg-black object-cover" muted playsInline />
+                  <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[10px] font-semibold text-white">🎥 {Math.round(video.duree)} s</span>
+                  <button type="button" onClick={() => { URL.revokeObjectURL(video.url); setVideo(null); }}
+                    className="absolute -right-1 -top-1 h-6 w-6 rounded-full bg-ink text-xs text-white">×</button>
+                </div>
+              ) : (
+                <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-flame bg-flame-light text-2xl">
+                  🎥<span className="text-[10px] font-semibold text-flame">Vidéo</span>
+                  <input type="file" accept="video/*" capture="environment" className="hidden" onChange={(e) => { ajouterVideo(e.target.files?.[0]); e.target.value = ""; }} />
+                </label>
+              )}
             </div>
+            <p className="mt-1 text-xs text-slate-500">🎥 Une vidéo de {VIDEO_MAX_S} s maximum : faites le tour de la pièce en commentant, l'IA et les artisans comprendront mieux.</p>
+            {videoMsg && <p className="mt-1 text-xs font-semibold text-amber-700">{videoMsg}</p>}
           </div>
           {horsSujet && (
             <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">

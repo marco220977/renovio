@@ -41,7 +41,7 @@ export type Demande = {
   id: string; client_id: string; created_at: string; titre?: string; description: string;
   reponses: { question: string; reponse: string }[]; cahier?: Cahier | null; metiers: string[];
   cp: string; ville?: string; departement: string; delai?: string; budget_min?: number; budget_max?: number;
-  photos: string[]; statut: "brouillon" | "ouverte" | "fermee" | "en_cours" | "attribuee" | "annulee"; publiee_le?: string; ferme_le?: string;
+  photos: string[]; video?: string | null; statut: "brouillon" | "ouverte" | "fermee" | "en_cours" | "attribuee" | "annulee"; publiee_le?: string; ferme_le?: string;
 };
 
 export type Offre = {

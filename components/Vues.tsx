@@ -85,6 +85,14 @@ export function Photos({ paths }: { paths: string[] }) {
   );
 }
 
+/** Vidéo d'une demande (lien temporaire signé) */
+export function VideoDemande({ path }: { path?: string | null }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => { if (path) urlsPhotos([path]).then((u) => setUrl(u[0] || "")); }, [path]);
+  if (!path || !url) return null;
+  return <video src={url} controls playsInline preload="metadata" className="max-h-80 w-full rounded-xl bg-black" />;
+}
+
 export function Etoiles({ note, nb }: { note?: number; nb?: number }) {
   if (!nb) return <span className="text-xs text-slate-400">Pas encore d'avis</span>;
   return <span className="text-xs font-semibold text-amber-600">★ {String(note).replace(".", ",")} <span className="text-slate-400">({nb} avis)</span></span>;

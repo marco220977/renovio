@@ -9,7 +9,7 @@ import SignaturePad from "@/components/SignaturePad";
 import Conversation from "@/components/Conversation";
 import Avenants from "@/components/Avenants";
 import Ecarts from "@/components/Ecarts";
-import { CahierVue, Etoiles, LignesVue, Metiers, Photos } from "@/components/Vues";
+import { CahierVue, Etoiles, LignesVue, Metiers, Photos, VideoDemande } from "@/components/Vues";
 import { Erreur, Info } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
 import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
@@ -152,6 +152,7 @@ export default function DemandeClient() {
             <p className="whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm text-slate-600">{d.description}</p>
             {d.cahier && <CahierVue cahier={d.cahier} />}
             <Photos paths={d.photos} />
+            <VideoDemande path={d.video} />
           </>
         )}
         <button className="btn-ghost w-full" onClick={() => ouvrirCahierPdf(d)}>📄 Cahier des charges en PDF</button>
