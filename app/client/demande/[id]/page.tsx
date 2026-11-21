@@ -12,6 +12,7 @@ import Ecarts from "@/components/Ecarts";
 import { CahierVue, Etoiles, LignesVue, Metiers, Photos } from "@/components/Vues";
 import { Erreur, Info } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
+import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
 import {
   STATUT_DEMANDE, errMsg, prixTresBas, quand, scoreOffre, statutDemande, tempsRestant,
   type Artisan, type Demande, type Offre,
@@ -153,6 +154,7 @@ export default function DemandeClient() {
             <Photos paths={d.photos} />
           </>
         )}
+        <button className="btn-ghost w-full" onClick={() => ouvrirCahierPdf(d)}>📄 Cahier des charges en PDF</button>
       </div>
 
       {st === "brouillon" && (
