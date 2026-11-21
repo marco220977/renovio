@@ -218,9 +218,16 @@ export default function Nouvelle() {
                 </div>
               ))}
               {photos.length < 6 && (
-                <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-2xl text-slate-400">
-                  📷<input type="file" accept="image/*" multiple className="hidden" onChange={(e) => ajouterPhotos(e.target.files)} />
-                </label>
+                <>
+                  <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-flame bg-flame-light text-2xl">
+                    📷<span className="text-[10px] font-semibold text-flame">Prendre</span>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { ajouterPhotos(e.target.files); e.target.value = ""; }} />
+                  </label>
+                  <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-2xl text-slate-400">
+                    🖼️<span className="text-[10px] font-semibold">Galerie</span>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { ajouterPhotos(e.target.files); e.target.value = ""; }} />
+                  </label>
+                </>
               )}
             </div>
           </div>

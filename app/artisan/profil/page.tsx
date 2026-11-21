@@ -175,7 +175,10 @@ function Fiche() {
               <label className="cursor-pointer text-brand underline">Remplacer<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
             </div>
           ) : (
-            <label className="btn-ghost w-full cursor-pointer">📎 Envoyer mon attestation<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="btn-ghost cursor-pointer">📷 Prendre en photo<input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
+              <label className="btn-ghost cursor-pointer">📎 Fichier / PDF<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
+            </div>
           )}
           <p className="mt-1 text-xs text-slate-500">Visible uniquement par Rénolien. L'IA lit l'attestation (assureur, dates, activités couvertes) et la compare à votre fiche.</p>
         </div>
