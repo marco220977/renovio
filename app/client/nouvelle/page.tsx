@@ -54,9 +54,16 @@ export default function Nouvelle() {
 
   // ---- Sauvegarde automatique ----
   const pret = useRef(false);
+  const termine = useRef(false);
   const [repris, setRepris] = useState(false);
   useEffect(() => {
     const { data: b, photos: ph } = lireBrouillon(profil.id);
+    // Brouillon d'une demande déjà publiée (ou supprimée) : on repart d'une page vierge
+    if (b?.demandeId) {
+      sb().from("demandes").select("statut").eq("id", b.demandeId as string).maybeSingle().then(({ data }) => {
+        if (!data || data.statut !== "brouillon") { effacerBrouillon(profil.id); vider(); }
+      });
+    }
     if (b && aDuContenu(b)) {
       setEtape(Number(b.etape) || 1); setDescription(String(b.description || "")); setCp(String(b.cp || ""));
       setVille(String(b.ville || "")); setDelai(String(b.delai || DELAIS[2])); setQuestions((b.questions as Question[]) || []);
@@ -68,17 +75,21 @@ export default function Nouvelle() {
     pret.current = true;
   }, [profil.id]);
   useEffect(() => {
-    if (!pret.current) return;
-    const t = setTimeout(() => ecrireBrouillon(profil.id, {
+    if (!pret.current || termine.current) return;
+    const t = setTimeout(() => !termine.current && ecrireBrouillon(profil.id, {
       etape, description, cp, ville, delai, questions, reponses, titre, cahier, metiers, nom, tel, email, adresse, demandeId,
     }), 400);
     return () => clearTimeout(t);
   }, [profil.id, etape, description, cp, ville, delai, questions, reponses, titre, cahier, metiers, nom, tel, email, adresse, demandeId]);
-  useEffect(() => { if (pret.current) ecrirePhotos(profil.id, photos); }, [profil.id, photos]);
+  useEffect(() => { if (pret.current && !termine.current) ecrirePhotos(profil.id, photos); }, [profil.id, photos]);
 
   function recommencer() {
     if (!confirm("Effacer la demande en cours et recommencer ?")) return;
     effacerBrouillon(profil.id);
+    vider();
+  }
+  function nouvelleVierge() { effacerBrouillon(profil.id); vider(); }
+  function vider() {
     setEtape(1); setDescription(""); setCp(""); setVille(""); setDelai(DELAIS[2]); setPhotos([]); setQuestions([]);
     setReponses({}); setTitre(""); setCahier(null); setMetiers([]); setAdresse(""); setDemandeId(null); setRepris(false); setErr("");
   }
@@ -151,6 +162,7 @@ export default function Nouvelle() {
       if (e2) throw e2;
       const { error: e3 } = await s.rpc("publier_demande", { p_id: id });
       if (e3) throw e3;
+      termine.current = true;
       effacerBrouillon(profil.id);
       router.replace(`/client/demande/${id}?publiee=1`);
     } catch (e) { setErr(errMsg(e)); setBusy(""); }
@@ -166,7 +178,15 @@ export default function Nouvelle() {
         <div className="mt-1 h-1.5 rounded-full bg-slate-200"><div className="h-full rounded-full bg-flame transition-all" style={{ width: `${etape * 25}%` }} /></div>
       </div>
 
-      {repris && <p className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">↩️ Votre demande en cours a été reprise là où vous l'aviez laissée.</p>}
+      {repris && (
+        <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">
+          <p>↩️ Vous aviez commencé une demande : on l'a reprise là où vous l'aviez laissée.</p>
+          <div className="mt-2 flex gap-2">
+            <button type="button" className="btn-ghost flex-1 !py-2 text-sm" onClick={() => setRepris(false)}>Continuer celle-ci</button>
+            <button type="button" className="btn-primary flex-1 !py-2 text-sm" onClick={nouvelleVierge}>＋ Nouvelle demande</button>
+          </div>
+        </div>
+      )}
 
       {etape === 1 && (
         <div className="space-y-4">
