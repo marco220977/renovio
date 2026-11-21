@@ -12,6 +12,17 @@ import { DELAIS, compresser, dataUrlToBlob, departementDe, errMsg, ia, type Cahi
 
 type Photo = { grande: string; petite: string };
 
+// Questions à choix : plusieurs réponses possibles, enregistrées sous la forme « A, B, C ».
+// « Je ne sais pas » est exclusif : il remplace les autres choix (et inversement).
+const SEP = " · ";
+const choixDe = (v?: string) => (v ? v.split(SEP).filter(Boolean) : []);
+function basculerChoix(v: string | undefined, o: string) {
+  const l = choixDe(v);
+  if (o === "Je ne sais pas") return l.includes(o) ? "" : o;
+  const sans = l.filter((x) => x !== "Je ne sais pas");
+  return (sans.includes(o) ? sans.filter((x) => x !== o) : [...sans, o]).join(SEP);
+}
+
 export default function Nouvelle() {
   const router = useRouter();
   const { profil } = useProfil();
@@ -213,12 +224,19 @@ export default function Nouvelle() {
             <div key={q.id} className="card space-y-2">
               <p className="font-semibold">{q.question}</p>
               {q.type === "choix" && q.options?.length ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {Array.from(new Set([...q.options, "Je ne sais pas"])).map((o) => (
-                    <button key={o} type="button" onClick={() => setReponses({ ...reponses, [q.id]: o })}
-                      className={`chip border py-1.5 ${reponses[q.id] === o ? "border-ink bg-ink text-white" : "border-slate-200 bg-white text-slate-700"}`}>{o}</button>
-                  ))}
-                </div>
+                <>
+                  <p className="text-xs text-slate-500">Plusieurs réponses possibles</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from(new Set([...q.options, "Je ne sais pas"])).map((o) => {
+                      const choisis = choixDe(reponses[q.id]);
+                      const actif = choisis.includes(o);
+                      return (
+                        <button key={o} type="button" onClick={() => setReponses({ ...reponses, [q.id]: basculerChoix(reponses[q.id], o) })}
+                          className={`chip border py-1.5 ${actif ? "border-ink bg-ink text-white" : "border-slate-200 bg-white text-slate-700"}`}>{actif && "✓ "}{o}</button>
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
                 <div className="flex items-center gap-2">
                   <input className="input" inputMode={q.type === "nombre" ? "decimal" : "text"} value={reponses[q.id] || ""}
