@@ -68,6 +68,7 @@ function Form() {
     if (!email) return setMsg("Saisissez votre e-mail d'abord.");
     const { data, error } = await sb().functions.invoke("lien-connexion", { body: { email } });
     const st = (error as any)?.context?.status;
+    if ((data as any)?.inconnu) return setMsg("Aucun compte Rénolien avec cette adresse. Vérifiez l'adresse, ou créez votre compte avec « Inscription gratuite ».");
     if (error || (data as any)?.error) return setMsg(st === 429
       ? "Trop de demandes d'e-mail en peu de temps. Réessayez dans une heure, ou écrivez à renolien.contact@gmail.com."
       : "L'e-mail n'a pas pu être envoyé. Réessayez dans quelques minutes.");

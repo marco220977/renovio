@@ -16,11 +16,11 @@ Deno.serve(async (req) => {
   // Anti-abus : 3 envois maximum par adresse et par heure
   const { count } = await db.from("liens_envoyes").select("id", { count: "exact", head: true }).eq("email", email).gte("cree_le", new Date(Date.now() - 3600_000).toISOString());
   if ((count || 0) >= 3) return json({ error: "Trop de demandes pour cette adresse. Réessayez dans une heure." }, 429);
-  await db.from("liens_envoyes").insert({ email });
-
   const { data, error } = await db.auth.admin.generateLink({ type: "recovery", email });
   const th = data?.properties?.hashed_token;
-  if (error || !th) return json({ ok: true }); // pas de compte : on ne le dit pas
+  // Pas de compte avec cette adresse : on le dit clairement (rien n'est envoyé, rien n'est compté)
+  if (error || !th) return json({ inconnu: true });
+  await db.from("liens_envoyes").insert({ email });
 
   const lien = `${SITE}/mot-de-passe?th=${th}`;
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0f172a;font-size:15px;line-height:1.5">
