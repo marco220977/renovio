@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ARTICLES } from "@/lib/articles";
-import { METIERS_SEO, DEPARTEMENTS, VILLES_SEO, aVille, villesProches, type MetierSeo, type VilleSeo } from "@/lib/seo";
+import { METIERS_SEO, DEPARTEMENTS, VILLES_SEO, aVille, titreSeo, type MetierSeo, type VilleSeo } from "@/lib/seo";
+import { villesVoisines, texteLocal, prixReference } from "@/lib/seo-local";
 import LogoMark from "@/components/LogoMark";
 
 const INSCRIPTION = "/connexion?mode=signup&role=client";
@@ -33,6 +34,7 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
   const ou = v ? `${aVille(v.nom)} (${v.dep})` : "en Île-de-France";
   const faq: [string, string][] = [
     ...(v ? [[`Comment trouver un ${m.pro} ${aVille(v.nom)} ?`, `Décrivez ${m.sujet} sur Rénolien en indiquant votre code postal (${v.cp === "75000" ? "750xx" : v.cp}). Votre demande est montrée aux ${m.pros} qui interviennent dans le ${v.dep === "75" ? "département de Paris" : `département ${DEPARTEMENTS[v.dep]} (${v.dep})`}, et jusqu'à 5 d'entre eux vous envoient leur devis.`] as [string, string]] : []),
+    ...(v ? [[`Les ${m.pros} interviennent-ils aussi autour de ${v.nom} ?`, `Oui. Les artisans qui travaillent ${aVille(v.nom)} couvrent en général tout le secteur, notamment ${villesVoisines(v, 4).map((x) => `${x.nom} (${x.km} km)`).join(", ")}.`] as [string, string]] : []),
     ...m.faq,
     ["Rénolien est-il payant pour les particuliers ?", "Non, c'est gratuit et sans engagement. Vous payez uniquement les travaux, directement à l'artisan choisi."],
   ];
@@ -50,7 +52,10 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
       },
     ],
   };
-  const proches = v ? villesProches(v) : [];
+  const proches = v ? villesVoisines(v) : [];
+  const local = v ? texteLocal(m, v) : [];
+  const prix = prixReference(m);
+  const T = titreSeo(m);
   const autres = METIERS_SEO.filter((x) => x.slug !== m.slug);
 
   return (
@@ -65,7 +70,7 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
         <section className="pt-4">
           <span className="chip bg-flame-light text-flame">Gratuit · Sans engagement</span>
           <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
-            {m.emoji} {m.pro[0].toUpperCase() + m.pro.slice(1)} {ou} : comparez les devis
+            {m.emoji} {T} {ou} : comparez les devis
           </h1>
           <p className="mt-4 text-lg text-slate-600">{m.intro}</p>
           {v && (
@@ -84,6 +89,32 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
             {m.travaux.map((t) => <li key={t} className="card !py-3 text-sm">✓ {t}</li>)}
           </ul>
         </section>
+
+        {v && (
+          <section className="mt-12">
+            <h2 className="text-2xl font-extrabold">{m.sujet[0].toUpperCase() + m.sujet.slice(1)} {aVille(v.nom)} : ce qu'il faut savoir</h2>
+            {local.map((p) => <p key={p} className="mt-3 text-slate-700">{p}</p>)}
+            <p className="mt-3 text-sm text-slate-500">
+              Code postal {v.cp === "75000" ? "750xx" : v.cp} · {v.dep === "75" ? "Paris" : DEPARTEMENTS[v.dep]} ({v.dep}) ·{" "}
+              <Link href={`/travaux/${m.slug}`} className="underline">{T} en Île-de-France</Link>
+            </p>
+          </section>
+        )}
+
+        {prix.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-2xl font-extrabold">Prix indicatifs {v ? aVille(v.nom) : "en Île-de-France"}</h2>
+            <div className="card mt-4 !p-0">
+              {prix.map((x) => (
+                <div key={x.nom} className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-sm last:border-0">
+                  <span>{x.nom}</span>
+                  <span className="whitespace-nowrap font-semibold">{x.prix.toLocaleString("fr-FR")} € HT / {x.unite}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-slate-500">Prix de référence utilisés par l'estimation Rénolien, fourniture et pose sauf mention contraire. Chaque artisan applique ses propres tarifs dans son devis.</p>
+          </section>
+        )}
 
         <section className="mt-12">
           <h2 className="text-2xl font-extrabold">Comment ça marche</h2>
@@ -117,7 +148,7 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
         </section>
 
         <section className="mt-12 text-center">
-          <h2 className="text-2xl font-extrabold">Besoin d'un {m.pro} {v ? aVille(v.nom) : ""} ?</h2>
+          <h2 className="text-2xl font-extrabold">Besoin d'un {m.pro} {v ? aVille(v.nom) : "en Île-de-France"} ?</h2>
           <Link href={INSCRIPTION} className="btn-brand mt-5 w-full py-4 text-lg sm:w-auto sm:px-10">Recevoir mes devis gratuitement</Link>
         </section>
 
@@ -126,7 +157,7 @@ export function PageSeo({ m, v }: { m: MetierSeo; v?: VilleSeo }) {
             <>
               <h2 className="text-lg font-bold">{m.pros[0].toUpperCase() + m.pros.slice(1)} près de {v.nom}</h2>
               <p className="mt-2 flex flex-wrap gap-2">
-                {proches.map((x) => <Link key={x.slug} href={`/travaux/${m.slug}/${x.slug}`} className="chip bg-white text-slate-700">{x.nom}</Link>)}
+                {proches.map((x) => <Link key={x.slug} href={`/travaux/${m.slug}/${x.slug}`} className="chip bg-white text-slate-700">{T} {aVille(x.nom)} · {x.km} km</Link>)}
               </p>
               <h2 className="mt-6 text-lg font-bold">Autres travaux {aVille(v.nom)}</h2>
               <p className="mt-2 flex flex-wrap gap-2">

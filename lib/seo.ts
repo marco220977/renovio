@@ -228,16 +228,16 @@ const TITRES_SEO: Record<string, string> = {
   electricien: "Électricien",
   macon: "Maçon",
   plaquiste: "Plaquiste",
-  isolation: "Isolation",
-  peintre: "Peintre",
+  isolation: "Entreprise d'isolation",
+  peintre: "Peintre en bâtiment",
   carreleur: "Carreleur",
-  "parquet-sols": "Pose de parquet et sols",
-  menuisier: "Menuisier, fenêtres et portes",
+  "parquet-sols": "Poseur de parquet et sols",
+  menuisier: "Menuisier (fenêtres, portes)",
   couvreur: "Couvreur",
-  "ravalement-facade": "Ravalement de façade",
-  "renovation-salle-de-bain-cuisine": "Rénovation salle de bain, cuisine",
-  "terrassement-exterieurs": "Aménagement extérieur",
-  "petits-travaux": "Petits travaux et dépannage",
+  "ravalement-facade": "Entreprise de ravalement de façade",
+  "renovation-salle-de-bain-cuisine": "Rénovation salle de bain et cuisine",
+  "terrassement-exterieurs": "Terrassement et aménagement extérieur",
+  "petits-travaux": "Artisan multiservice, petits travaux",
 };
 export const titreSeo = (m: MetierSeo) => TITRES_SEO[m.slug] || m.pro[0].toUpperCase() + m.pro.slice(1);
 
@@ -245,12 +245,17 @@ export const titreSeo = (m: MetierSeo) => TITRES_SEO[m.slug] || m.pro[0].toUpper
 export function metaSeo(m: MetierSeo, v?: VilleSeo) {
   const t = titreSeo(m);
   const ou = v ? aVille(v.nom) : "en Île-de-France";
-  const title = v ? `${t} ${ou} (${v.dep}) : 5 devis gratuits` : `${t} en Île-de-France : 5 devis gratuits`;
+  // Google coupe vers 60 caractères : on retire le superflu si besoin
+  const essais = v
+    ? [`${t} ${ou} (${v.dep}) : devis gratuits`, `${t} ${ou} : devis gratuits`, `${t} ${ou}`]
+    : [`${t} en Île-de-France : devis gratuits`, `${t} en Île-de-France`];
+  const title = essais.find((x) => x.length <= 62) || essais[essais.length - 1];
   const de = /^[aeiouyéèêàâîôûh]/i.test(m.pros) ? "d'" : "de ";
   const longues = [
-    `✓ Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez ${m.sujet} en 2 min, comparez et choisissez. Sans engagement, 0 € pour vous.`,
-    `✓ Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez votre projet en 2 min, comparez. Sans engagement.`,
-    `✓ 5 devis gratuits ${ou}, artisans vérifiés. Décrivez votre projet en 2 min. Sans engagement.`,
+    `Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés (SIRET, décennale) ${ou}. Décrivez ${m.sujet} en 2 min, comparez. Sans engagement.`,
+    `Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez ${m.sujet} en 2 min, comparez. Sans engagement.`,
+    `Jusqu'à 5 devis gratuits ${de}${m.pros} vérifiés ${ou}. Décrivez votre projet en 2 min. Sans engagement.`,
+    `5 devis gratuits ${ou}, artisans vérifiés. Décrivez votre projet en 2 min. Sans engagement.`,
   ];
   const description = longues.find((d) => d.length <= 158) || longues[longues.length - 1];
   return { title, description };

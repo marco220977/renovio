@@ -101,6 +101,11 @@ export function PageEntreprise({ m, d }: { m: MetierSeo; d?: DepSeo }) {
         <div className="mt-6"><OffreLancement /></div>
       </section>
 
+      <Link href={`/travaux/${m.slug}`} className="card mt-6 block border-flame/40 hover:border-flame">
+        <span className="text-xs font-semibold uppercase text-slate-400">Vous êtes un particulier ?</span>
+        <span className="mt-1 block font-bold">{m.emoji} Trouver un {m.pro} {ou} et recevoir jusqu'à 5 devis gratuits →</span>
+      </Link>
+
       <section className="mt-12">
         <h2 className="text-2xl font-extrabold">Les chantiers que vous recevrez</h2>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
