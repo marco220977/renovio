@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { METIERS_SEO, type MetierSeo } from "@/lib/seo";
-import { DEPS_SEO, villesDuDep, dansDep, type DepSeo } from "@/lib/seo-pro";
+import { DEPS_SEO, villesDuDep, dansDep, metaPro, domaine, CONSEILS_PRO, DEP_PRO, type DepSeo } from "@/lib/seo-pro";
+import { GUIDES_PRO } from "@/lib/guides-pro";
 import { FORMULES, texteClients, texteAttente } from "@/lib/formules";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
 import LogoMark from "@/components/LogoMark";
@@ -19,6 +20,7 @@ export function EnteteContenu({ children }: { children: React.ReactNode }) {
         <footer className="mt-16 space-y-2 text-center text-xs text-slate-400">
           <p className="flex flex-wrap justify-center gap-4">
             <Link href="/entreprises">Artisans</Link>
+            <Link href="/entreprises/guides">Trouver des chantiers</Link>
             <Link href="/particuliers">Particuliers</Link>
             <Link href="/legal/cgv">CGV artisans</Link>
             <Link href="/legal/mentions-legales">Mentions légales</Link>
@@ -85,18 +87,20 @@ export function PageEntreprise({ m, d }: { m: MetierSeo; d?: DepSeo }) {
   const ou = d ? dansDep(d) : "en Île-de-France";
   const faq: [string, string][] = [
     [`Quels chantiers vais-je recevoir en tant que ${m.pro} ?`, `Les demandes de particuliers ${ou} qui concernent votre métier : ${m.travaux.slice(0, 3).join(", ").toLowerCase()}, etc. Vous choisissez vos métiers et vos départements dans votre profil.`],
+    [`Comment trouver des clients quand on est ${m.pro} ?`, `${(CONSEILS_PRO[m.slug] || [])[0] || ""} Inscrivez-vous aussi sur une plateforme qui vous envoie des demandes de votre secteur : sur Rénolien, envoyer une offre est gratuit.`],
     ...FAQ_PRO,
   ];
   const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, r]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: r } })) };
   return (
     <EnteteContenu>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
-      <p className="text-xs text-slate-500"><Link href="/entreprises">Artisans</Link> › <Link href={`/entreprises/${m.slug}`}>{Maj(m.pro)}</Link>{d && <> › {d.nom}</>}</p>
+      <p className="text-xs text-slate-500"><Link href="/entreprises">Artisans</Link>
+            <Link href="/entreprises/guides">Trouver des chantiers</Link> › <Link href={`/entreprises/${m.slug}`}>{Maj(m.pro)}</Link>{d && <> › {d.nom}</>}</p>
       <section className="pt-4">
         <span className="chip bg-flame-light text-flame">Pour les {m.pros}</span>
-        <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{m.emoji} {Maj(m.pro)} {ou} : trouvez de nouveaux chantiers</h1>
+        <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{m.emoji} {metaPro(m, d).h1}</h1>
         <p className="mt-4 text-lg text-slate-600">
-          Recevez des demandes de particuliers déjà décrites et chiffrées, près de chez vous. Faites votre offre en 1 clic avec vos tarifs, sans commission et sans enchère au moins cher.
+          {Maj(m.pro)} ? Recevez des demandes de particuliers {ou} déjà décrites et chiffrées. Faites votre offre en 1 clic avec vos tarifs, sans commission et sans enchère au moins cher. Vous ne payez que si un client vous choisit.
         </p>
         <div className="mt-6"><OffreLancement /></div>
       </section>
@@ -116,6 +120,18 @@ export function PageEntreprise({ m, d }: { m: MetierSeo; d?: DepSeo }) {
             Secteurs couverts {dansDep(d)} : {villesDuDep(d.code).map((v) => v.nom).join(", ")} et toutes les autres communes du département.
           </p>
         )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-2xl font-extrabold">Comment trouver des chantiers {domaine(m.slug)} {ou}</h2>
+        {d && DEP_PRO[d.code] && <p className="mt-3 text-slate-700">{DEP_PRO[d.code]}</p>}
+        <ul className="mt-4 space-y-2">
+          {(CONSEILS_PRO[m.slug] || []).map((c) => <li key={c} className="card !py-3 text-sm">💡 {c}</li>)}
+        </ul>
+        <p className="mt-4 text-sm text-slate-600">
+          Pour aller plus loin : <Link href="/entreprises/guides/trouver-des-chantiers-ile-de-france" className="font-semibold text-brand underline">les 9 méthodes pour trouver des chantiers en Île-de-France</Link>
+          {d && <> · <Link href={`/entreprises/chantiers/${d.slug}`} className="font-semibold text-brand underline">tous les chantiers {dansDep(d)}</Link></>}
+        </p>
       </section>
 
       <section className="mt-12">
@@ -147,6 +163,8 @@ export function PageEntreprise({ m, d }: { m: MetierSeo; d?: DepSeo }) {
             <p className="mt-2 flex flex-wrap gap-2">{DEPS_SEO.filter((x) => x.slug !== d.slug).map((x) => <Link key={x.slug} href={`/entreprises/${m.slug}/${x.slug}`} className="chip bg-white text-slate-700">{x.nom} ({x.code})</Link>)}</p>
           </>
         )}
+        <h2 className="mt-6 text-lg font-bold">Guides pour trouver des chantiers</h2>
+        <p className="mt-2 flex flex-wrap gap-2">{GUIDES_PRO.map((g) => <Link key={g.slug} href={`/entreprises/guides/${g.slug}`} className="chip bg-white text-slate-700">{g.emoji} {g.titre.split(" : ")[0].split(" (")[0]}</Link>)}</p>
         <h2 className="mt-6 text-lg font-bold">Autres métiers</h2>
         <p className="mt-2 flex flex-wrap gap-2">
           {METIERS_SEO.filter((x) => x.slug !== m.slug).map((x) => <Link key={x.slug} href={d ? `/entreprises/${x.slug}/${d.slug}` : `/entreprises/${x.slug}`} className="chip bg-white text-slate-700">{x.emoji} {x.pro}</Link>)}

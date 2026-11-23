@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
 import { METIERS_SEO, VILLES_SEO } from "@/lib/seo";
 import { DEPS_SEO } from "@/lib/seo-pro";
+import { GUIDES_PRO } from "@/lib/guides-pro";
 import { ARTICLES } from "@/lib/articles";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -14,6 +15,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...ARTICLES.map((a) => ({ url: `${SITE}/conseils/${a.slug}`, lastModified: new Date(a.date), changeFrequency: "monthly" as const, priority: 0.8 })),
     { url: `${SITE}/entreprises`, lastModified: maj, changeFrequency: "weekly", priority: 0.9 },
     ...METIERS_SEO.map((m) => ({ url: `${SITE}/entreprises/${m.slug}`, lastModified: maj, changeFrequency: "monthly" as const, priority: 0.7 })),
+    { url: `${SITE}/entreprises/guides`, lastModified: maj, changeFrequency: "weekly", priority: 0.8 },
+    ...GUIDES_PRO.map((g) => ({ url: `${SITE}/entreprises/guides/${g.slug}`, lastModified: new Date(g.date), changeFrequency: "monthly" as const, priority: 0.8 })),
+    ...DEPS_SEO.map((d) => ({ url: `${SITE}/entreprises/chantiers/${d.slug}`, lastModified: maj, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...METIERS_SEO.flatMap((m) => DEPS_SEO.map((d) => ({ url: `${SITE}/entreprises/${m.slug}/${d.slug}`, lastModified: maj, changeFrequency: "monthly" as const, priority: 0.6 }))),
   ];
   return [

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { METIERS_SEO, metierSeo } from "@/lib/seo";
+import { metaPro } from "@/lib/seo-pro";
 import { PageEntreprise } from "@/components/PageEntreprise";
 
 export const dynamicParams = false;
@@ -9,10 +10,11 @@ export const generateStaticParams = () => METIERS_SEO.map((m) => ({ metier: m.sl
 export function generateMetadata({ params }: { params: { metier: string } }): Metadata {
   const m = metierSeo(params.metier);
   if (!m) return {};
-  const P = m.pro[0].toUpperCase() + m.pro.slice(1);
+  const { title, description } = metaPro(m);
   return {
-    title: `${P} : trouvez des chantiers en Île-de-France sans commission`,
-    description: `${P}, recevez des demandes de particuliers près de chez vous et répondez en 1 clic avec vos tarifs. Gratuit pendant le lancement pour les membres fondateurs.`.slice(0, 160),
+    title: { absolute: title },
+    description,
+    openGraph: { title, description },
     alternates: { canonical: `/entreprises/${m.slug}` },
   };
 }

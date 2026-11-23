@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { METIERS_SEO } from "@/lib/seo";
+import { DEPS_SEO, dansDep } from "@/lib/seo-pro";
+import { GUIDES_PRO } from "@/lib/guides-pro";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
 import { EnteteContenu, ATOUTS, Tarifs, FaqPro, FAQ_PRO } from "@/components/PageEntreprise";
 
 export const metadata = {
-  title: "Artisans du bâtiment : trouvez des chantiers en Île-de-France, sans commission",
-  description: "Recevez des demandes de travaux de particuliers près de chez vous, faites votre devis en 1 clic. Phase de lancement : 100 % gratuit et illimité pour les membres fondateurs.",
+  title: { absolute: "Trouver des chantiers en Île-de-France, sans commission" },
+  description: "Plateforme pour artisans : recevez des demandes de travaux de particuliers à Paris, dans le 94 et le 77. Sans commission, gratuit pendant le lancement.",
   alternates: { canonical: "/entreprises" },
 };
 
@@ -17,7 +19,7 @@ export default function Entreprises() {
       <section className="pt-6 text-center">
         <span className="chip bg-flame-light text-flame">Artisans et entreprises du bâtiment</span>
         <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          Des chantiers près de chez vous, <span className="bg-gradient-to-r from-brand to-flame bg-clip-text text-transparent">le devis en 1 clic</span>
+          Trouver des chantiers en Île-de-France, <span className="bg-gradient-to-r from-brand to-flame bg-clip-text text-transparent">le devis en 1 clic</span>
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600">
           Des particuliers décrivent leurs travaux, l'IA prépare le cahier des charges. Vous recevez les demandes de vos métiers et de votre secteur, et vous répondez avec vos tarifs. Sans commission.
@@ -38,6 +40,26 @@ export default function Entreprises() {
           {METIERS_SEO.map((m) => (
             <Link key={m.slug} href={`/entreprises/${m.slug}`} className="card flex items-center gap-3 !py-3 hover:border-flame">
               <span className="text-2xl">{m.emoji}</span><span className="font-semibold">{m.pro[0].toUpperCase() + m.pro.slice(1)}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-2xl font-extrabold">Trouver des chantiers près de chez vous</h2>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          {DEPS_SEO.map((d) => (
+            <Link key={d.slug} href={`/entreprises/chantiers/${d.slug}`} className="card !py-3 text-center font-semibold hover:border-flame">Chantiers {dansDep(d)} ({d.code})</Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-2xl font-extrabold">Guides : comment trouver des clients</h2>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {GUIDES_PRO.map((g) => (
+            <Link key={g.slug} href={`/entreprises/guides/${g.slug}`} className="card flex items-center gap-3 !py-3 hover:border-flame">
+              <span className="text-2xl">{g.emoji}</span><span className="text-sm font-semibold">{g.h1}</span>
             </Link>
           ))}
         </div>
