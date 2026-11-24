@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LogoMark from "@/components/LogoMark";
+import Controles from "@/components/Controles";
 
 export const metadata = {
   title: "Devis travaux de rénovation gratuits : salle de bain, plomberie, électricité…",
@@ -89,6 +90,8 @@ export default function Particuliers() {
             ))}
           </div>
         </section>
+
+        <Controles />
 
         <section className="mt-16 rounded-2xl bg-ink p-5 text-white shadow-sm">
           <p className="text-sm font-semibold uppercase text-flame">Exemple</p>

@@ -18,6 +18,7 @@ function Fiche() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   const [analyse, setAnalyse] = useState(false);
+  const [analyseRc, setAnalyseRc] = useState(false);
   const [rgeEnCours, setRgeEnCours] = useState(false);
   const [rgeErr, setRgeErr] = useState("");
   const [siretInfo, setSiretInfo] = useState<{ etat: "cours" | "ok" | "erreur"; texte: string } | null>(null);
@@ -53,7 +54,7 @@ function Fiche() {
     if (siret.length === 14 && siret !== (a!.rge_details?.siret || "")) verifierRge(true);
   }
 
-  async function envoyerAttestation(f?: File) {
+  async function envoyerAttestation(f?: File, rc = false) {
     if (!f) return;
     if (f.size > 15e6) return setErr("Fichier trop lourd (15 Mo maximum).");
     setErr(""); setOk("");
@@ -63,14 +64,25 @@ function Fiche() {
       try { fichier = await (await fetch(await compresser(f, 2200, 0.88))).blob(); ext = "jpg"; type = "image/jpeg"; } catch {}
     } else if (f.type !== "application/pdf") return setErr("Envoyez une photo ou un PDF.");
     if (fichier.size > 10e6) return setErr("Fichier trop lourd (10 Mo maximum).");
-    const path = `${profil.id}/decennale-${Date.now()}.${ext}`;
+    const path = `${profil.id}/${rc ? "rcpro" : "decennale"}-${Date.now()}.${ext}`;
     const s = sb();
     const { error } = await s.storage.from("attestations").upload(path, fichier, { contentType: type });
     if (error) return setErr(errMsg(error));
-    const { error: e2 } = await s.from("artisans").update({ decennale_doc: path }).eq("id", profil.id);
+    const { error: e2 } = await s.from("artisans").update(rc ? { rcpro_doc: path } : { decennale_doc: path }).eq("id", profil.id);
     if (e2) return setErr(errMsg(e2));
-    set({ decennale_doc: path });
-    analyser();
+    if (rc) { set({ rcpro_doc: path, rcpro_analyse: null, rcpro_fin: null }); analyserRc(); }
+    else { set({ decennale_doc: path }); analyser(); }
+  }
+
+  async function analyserRc() {
+    setAnalyseRc(true); setErr(""); setOk("");
+    const { data, error } = await sb().functions.invoke("travaux-ia", { body: { action: "attestation_rcpro" } });
+    setAnalyseRc(false);
+    let msg = data?.error;
+    if (error) { msg = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch {} }
+    if (msg) return setErr(`Attestation RC Pro enregistrée, mais la lecture automatique a échoué : ${msg}`);
+    setA((x) => x && ({ ...x, rcpro_analyse: data.analyse, rcpro_fin: data.rcpro_fin }));
+    setOk(data.analyse?.valide ? "Attestation RC Pro lue et contrôlée ✔ Le badge « RC Pro » apparaît sur vos offres." : "Attestation RC Pro lue : quelques points sont à vérifier, voir ci-dessous.");
   }
 
   async function verifierRge(silencieux = false) {
@@ -94,8 +106,8 @@ function Fiche() {
     setOk(data.analyse?.alertes?.length ? "Attestation lue : quelques points sont à vérifier, voir ci-dessous." : "Attestation lue et contrôlée ✔");
   }
 
-  async function voirAttestation() {
-    const { data } = await sb().storage.from("attestations").createSignedUrl(a!.decennale_doc!, 600);
+  async function voirAttestation(rc = false) {
+    const { data } = await sb().storage.from("attestations").createSignedUrl((rc ? a!.rcpro_doc : a!.decennale_doc)!, 600);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   }
 
@@ -171,7 +183,7 @@ function Fiche() {
           {a.decennale_doc ? (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-green-700">✔ Attestation envoyée</span>
-              <button type="button" className="text-brand underline" onClick={voirAttestation}>Voir</button>
+              <button type="button" className="text-brand underline" onClick={() => voirAttestation()}>Voir</button>
               <label className="cursor-pointer text-brand underline">Remplacer<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0])} /></label>
             </div>
           ) : (
@@ -189,6 +201,30 @@ function Fiche() {
             {a.decennale_analyse ? "🔄 Relancer la lecture (après avoir modifié vos métiers ou votre SIRET, enregistrez d'abord)" : "🔎 Faire lire mon attestation par l'IA"}
           </button>
         )}
+        <div className="space-y-2 rounded-xl border border-slate-200 p-3">
+          <p className="font-bold text-sm">Assurance RC Pro <span className="font-normal text-slate-500">(facultative)</span></p>
+          <p className="text-xs text-slate-500">Ajoutez votre attestation de responsabilité civile professionnelle : une fois lue et contrôlée, le badge « RC Pro ✓ » s'affiche sur vos offres. Si votre attestation décennale inclut aussi la RC Pro, vous pouvez envoyer le même document.</p>
+          {a.rcpro_doc ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-green-700">✔ Attestation envoyée</span>
+              <button type="button" className="text-brand underline" onClick={() => voirAttestation(true)}>Voir</button>
+              <label className="cursor-pointer text-brand underline">Remplacer<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0], true)} /></label>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="btn-ghost cursor-pointer">📷 Prendre en photo<input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0], true)} /></label>
+              <label className="btn-ghost cursor-pointer">📎 Fichier / PDF<input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => envoyerAttestation(e.target.files?.[0], true)} /></label>
+            </div>
+          )}
+          {analyseRc && <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">🔎 Lecture de votre attestation RC Pro par l'IA… (20 secondes environ)</p>}
+          {!analyseRc && <AnalyseDecennale an={a.rcpro_analyse} />}
+          {!analyseRc && a.rcpro_doc && (
+            <button type="button" className="text-sm font-semibold text-brand" onClick={analyserRc}>{a.rcpro_analyse ? "🔄 Relancer la lecture" : "🔎 Faire lire mon attestation par l'IA"}</button>
+          )}
+          {(() => { const f = a.rcpro_analyse?.date_fin; if (!f) return null; const j = joursDecennale({ decennale_fin: f }) ?? 99;
+            return j < 0 ? <p className="text-sm text-red-700">⛔ RC Pro expirée : le badge n'est plus affiché. Envoyez la nouvelle attestation.</p>
+              : j <= 30 ? <p className="text-sm text-amber-800">⏰ RC Pro : expire dans {j} jour{j > 1 ? "s" : ""}.</p> : null; })()}
+        </div>
         <div className={`rounded-xl p-3 text-sm ${a.rge ? "bg-green-50 text-green-900" : "bg-slate-50 text-slate-700"}`}>
           <p className="font-bold">{a.rge ? "🌿 Certifié RGE (vérifié au registre ADEME)" : "Certification RGE"}</p>
           {rgeEnCours ? <p className="mt-1">🔎 Vérification au registre officiel…</p> : a.rge_details ? (

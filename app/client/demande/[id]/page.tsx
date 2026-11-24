@@ -13,6 +13,7 @@ import { CahierVue, Etoiles, LignesVue, Metiers, Photos, VideoDemande } from "@/
 import { Erreur, Info } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
 import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
+import BadgesConfiance from "@/components/BadgesConfiance";
 import {
   STATUT_DEMANDE, errMsg, prixTresBas, quand, scoreOffre, statutDemande, tempsRestant,
   type Artisan, type Demande, type Offre,
@@ -115,7 +116,8 @@ export default function DemandeClient() {
           <div>
             {premier && <span className="chip mb-1 bg-flame text-white">Meilleur score</span>}
             <p className="font-bold">{a?.raison_sociale || "Artisan"}</p>
-            <p className="text-xs text-slate-500">{a?.ville} {a?.verifie && "· ✔ Vérifié"} {a?.rge && "· RGE"} {(a as any)?.fondateur && "· 🚀 Fondateur"}</p>
+            <p className="text-xs text-slate-500">{a?.ville}</p>
+            <BadgesConfiance a={a} />
             <Etoiles note={notes[o.artisan_id]?.note} nb={notes[o.artisan_id]?.nb_avis} />
           </div>
           <div className="text-right">
@@ -302,6 +304,7 @@ export default function DemandeClient() {
             ) : (
               <>
                 {voir.statut === "envoyee" && <p className="rounded-xl bg-blue-50 p-2 text-xs text-blue-900">Devis provisoire, établi sur photos et description. Il sera confirmé ou ajusté après la visite de l'artisan.</p>}
+                <BadgesConfiance a={art(voir)} dates />
                 {art(voir)?.presentation && <p className="text-sm text-slate-600">{art(voir)?.presentation}</p>}
                 {voir.message && <p className="rounded-xl bg-slate-50 p-3 text-sm">💬 {voir.message}</p>}
                 <LignesVue lignes={voir.lignes} franchise={art(voir)?.tva_franchise} />

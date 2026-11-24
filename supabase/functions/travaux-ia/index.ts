@@ -4,6 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 //  - action "cahier"    : rédige le cahier des charges + fourchette de budget
 //  - action "devis"     : pré-remplit le devis de l'artisan à partir de ses tarifs
 //  - action "attestation" : lit l'attestation décennale déposée par l'artisan et la compare à sa fiche
+//  - action "attestation_rcpro" : même contrôle pour l'attestation de responsabilité civile professionnelle (RC Pro)
 // Secret requis : ANTHROPIC_API_KEY (Supabase > Edge Functions > Secrets). Optionnel : ANTHROPIC_MODEL.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -98,10 +99,12 @@ function frError(msg: string, status: number): string {
 
 // ---------- Lecture de l'attestation décennale ----------
 
-const SCHEMA_ATTESTATION = { type: "object", required: ["est_attestation_decennale", "lisible"], properties: {
-  est_attestation_decennale: { type: "boolean" }, lisible: { type: "boolean" },
+const schemaAttestation = (champ: string) => ({ type: "object", required: [champ, "lisible"], properties: {
+  [champ]: { type: "boolean" }, lisible: { type: "boolean" },
   assureur: str, numero_contrat: str, entreprise: str, siret: str, adresse: str,
-  date_debut: str, date_fin: str, activites: arr(str), metiers_couverts: arr(str), zone: str, remarques: arr(str) } };
+  date_debut: str, date_fin: str, activites: arr(str), metiers_couverts: arr(str), zone: str, remarques: arr(str) } });
+const SCHEMA_ATTESTATION = schemaAttestation("est_attestation_decennale");
+const SCHEMA_RCPRO = schemaAttestation("est_attestation_rcpro");
 
 const PROMPT_ATTESTATION = `Tu contrôles une attestation d'assurance pour une plateforme française de mise en relation avec des artisans du bâtiment.
 Lis le document joint et remplis l'outil « repondre » :
@@ -115,6 +118,11 @@ Lis le document joint et remplis l'outil « repondre » :
 - remarques : anomalies visibles (incohérences de dates, texte qui semble modifié, mentions obligatoires absentes, activités exclues…). Liste vide si rien.
 N'invente rien : laisse un champ vide si l'information n'est pas sur le document.`;
 
+const PROMPT_RCPRO = PROMPT_ATTESTATION.replace(
+  "- est_attestation_decennale : true seulement si c'est une attestation d'assurance de responsabilité civile décennale (pas une RC pro seule, pas un devis d'assurance, pas une facture).",
+  "- est_attestation_rcpro : true seulement si c'est une attestation d'assurance de responsabilité civile professionnelle (RC Pro, RC exploitation ou RC générale de l'entreprise), seule ou combinée avec la décennale. false pour un devis d'assurance, une facture ou une décennale qui ne mentionne aucune garantie de responsabilité civile.",
+);
+
 const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/\b(sarl|sas|sasu|eurl|ei|eirl|sa|sci|snc|ets|entreprise|societe|ste|et|de|du|la|le|les)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 function memeNom(a: string, b: string) {
@@ -122,22 +130,25 @@ function memeNom(a: string, b: string) {
   return x.length > 0 && x.some((w) => y.has(w));
 }
 
-async function analyserAttestation(req: Request, body: any, key: string) {
+async function analyserAttestation(req: Request, body: any, key: string, rc = false) {
+  const champDoc = rc ? "rcpro_doc" : "decennale_doc";
+  const nomAssurance = rc ? "responsabilité civile professionnelle" : "décennale";
   const url = Deno.env.get("SUPABASE_URL")!, service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   const admin = createClient(url, service, { auth: { persistSession: false } });
   const { data: u } = await admin.auth.getUser(jwt);
   if (!u?.user) return json({ error: "Connectez-vous" }, 401);
   const { data: a } = await admin.from("artisans").select("*").eq("id", u.user.id).maybeSingle();
-  if (!a?.decennale_doc) return json({ error: "Aucune attestation envoyée" }, 400);
-  if (!String(a.decennale_doc).startsWith(`${u.user.id}/`)) return json({ error: "Accès refusé" }, 403);
+  const chemin = a?.[champDoc];
+  if (!chemin) return json({ error: "Aucune attestation envoyée" }, 400);
+  if (!String(chemin).startsWith(`${u.user.id}/`)) return json({ error: "Accès refusé" }, 403);
 
-  const { data: f, error: e } = await admin.storage.from("attestations").download(a.decennale_doc);
+  const { data: f, error: e } = await admin.storage.from("attestations").download(chemin);
   if (e || !f) return json({ error: "Attestation introuvable" }, 404);
   const buf = new Uint8Array(await f.arrayBuffer());
   let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
   const b64 = btoa(bin);
-  const ext = String(a.decennale_doc).split(".").pop()!.toLowerCase();
+  const ext = String(chemin).split(".").pop()!.toLowerCase();
   const type = f.type && f.type !== "application/octet-stream" ? f.type
     : ext === "pdf" ? "application/pdf" : ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
   let doc: any;
@@ -150,9 +161,9 @@ async function analyserAttestation(req: Request, body: any, key: string) {
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5-5", max_tokens: 3000,
-      tools: [{ name: "repondre", description: "Donne la réponse au format demandé.", input_schema: SCHEMA_ATTESTATION }],
+      tools: [{ name: "repondre", description: "Donne la réponse au format demandé.", input_schema: rc ? SCHEMA_RCPRO : SCHEMA_ATTESTATION }],
       tool_choice: { type: "auto" },
-      messages: [{ role: "user", content: [doc, { type: "text", text: PROMPT_ATTESTATION + "\n\nRéponds uniquement en appelant l'outil « repondre »." }] }],
+      messages: [{ role: "user", content: [doc, { type: "text", text: (rc ? PROMPT_RCPRO : PROMPT_ATTESTATION) + "\n\nRéponds uniquement en appelant l'outil « repondre »." }] }],
     }),
   });
   const j = await r.json().catch(() => ({}));
@@ -167,7 +178,7 @@ async function analyserAttestation(req: Request, body: any, key: string) {
   const auj = new Date().toISOString().slice(0, 10);
   const dateOk = (d?: string) => /^\d{4}-\d{2}-\d{2}$/.test(d || "");
   if (!out.lisible) alertes.push("Document peu lisible : envoyez une photo plus nette ou le PDF.");
-  if (!out.est_attestation_decennale) alertes.push("Ce document ne semble pas être une attestation d'assurance décennale.");
+  if (!(rc ? out.est_attestation_rcpro : out.est_attestation_decennale)) alertes.push(`Ce document ne semble pas être une attestation d'assurance ${nomAssurance}.`);
   const siretDoc = String(out.siret || "").replace(/\D/g, ""), siret = String(a.siret || "").replace(/\D/g, "");
   if (siretDoc && siret) {
     if (siretDoc.slice(0, 9) === siret.slice(0, 9)) ok.push("SIRET identique à la fiche");
@@ -182,14 +193,20 @@ async function analyserAttestation(req: Request, body: any, key: string) {
   if (dateOk(out.date_debut) && out.date_debut > auj) alertes.push("La période de validité n'a pas encore commencé.");
   const couverts: string[] = Array.isArray(out.metiers_couverts) ? out.metiers_couverts.filter((m: string) => IDS.includes(m)) : [];
   const nonCouverts = (a.metiers || []).filter((m: string) => !couverts.includes(m));
-  if (nonCouverts.length) alertes.push(`Métiers cochés non couverts par l'assurance : ${nonCouverts.join(", ")}.`);
-  else if ((a.metiers || []).length) ok.push("Tous les métiers cochés sont couverts");
+  if (nonCouverts.length && !rc) alertes.push(`Métiers cochés non couverts par l'assurance : ${nonCouverts.join(", ")}.`);
+  else if (!rc && (a.metiers || []).length) ok.push("Tous les métiers cochés sont couverts");
+  const bloquantes = alertes.length; // remarques ci-dessous : informatives, elles n'empêchent pas le badge RC Pro
   for (const rq of (out.remarques || []).slice(0, 5)) alertes.push(`À vérifier : ${rq}`);
 
   const analyse = {
     ...out, metiers_couverts: couverts, date_fin: dateOk(out.date_fin) ? out.date_fin : null, date_debut: dateOk(out.date_debut) ? out.date_debut : null,
-    alertes, ok, doc: a.decennale_doc, analyse_le: new Date().toISOString(),
+    alertes, ok, doc: chemin, analyse_le: new Date().toISOString(), ...(rc ? { valide: bloquantes === 0 } : {}),
   };
+  if (rc) {
+    const { error: e3 } = await admin.from("artisans").update({ rcpro_analyse: analyse, rcpro_fin: analyse.date_fin }).eq("id", a.id);
+    if (e3) { console.error(e3); return json({ error: "Enregistrement de l'analyse impossible" }, 500); }
+    return json({ analyse, rcpro_fin: analyse.date_fin });
+  }
   const maj: Record<string, unknown> = { decennale_analyse: analyse };
   if (analyse.date_fin) maj.decennale_fin = analyse.date_fin;
   if (!a.decennale && out.assureur) maj.decennale = [out.assureur, out.numero_contrat && `n° ${out.numero_contrat}`].filter(Boolean).join(" ");
@@ -215,6 +232,7 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const action = String(body.action || "");
   if (action === "attestation") return await analyserAttestation(req, body, key);
+  if (action === "attestation_rcpro") return await analyserAttestation(req, body, key, true);
   const text = prompt(action, body);
   if (!text) return json({ error: "Action inconnue" }, 400);
   if (action !== "devis" && !String(body.description || "").trim()) return json({ error: "Décrivez vos travaux" }, 400);

@@ -2,7 +2,7 @@
 // Tableau de bord administrateur : chiffres clés, artisans (vérifier / suspendre), clients, demandes.
 import { useEffect, useMemo, useState } from "react";
 import AnalyseDecennale from "@/components/AnalyseDecennale";
-import { joursDecennale, finDecennale } from "@/lib/decennale";
+import { joursDecennale, finDecennale, rcproValide } from "@/lib/decennale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -235,6 +235,10 @@ export default function Admin() {
                 <span className={(joursDecennale(a) ?? 1) < 0 ? "text-red-600" : ""}>{a.decennale || "—"}{finDecennale(a) && ` (fin ${dateFr(finDecennale(a))})`}
                   {a.decennale_doc ? <button className="ml-1 text-brand underline" onClick={async () => { const { data } = await sb().storage.from("attestations").createSignedUrl(a.decennale_doc!, 600); if (data?.signedUrl) window.open(data.signedUrl, "_blank"); }}>attestation ↗</button> : <span className="ml-1 text-xs text-red-600">(pas d'attestation)</span>}</span>
                 {a.decennale_analyse && <div className="col-span-2"><AnalyseDecennale an={a.decennale_analyse} admin /></div>}
+                <span className="text-slate-500">RC Pro</span>
+                <span>{a.rcpro_doc ? <>{rcproValide(a) ? `✔ jusqu'au ${dateFr(rcproValide(a))}` : a.rcpro_analyse ? "non validée" : "non lue"}
+                  <button className="ml-1 text-brand underline" onClick={async () => { const { data } = await sb().storage.from("attestations").createSignedUrl(a.rcpro_doc!, 600); if (data?.signedUrl) window.open(data.signedUrl, "_blank"); }}>attestation ↗</button></> : "—"}</span>
+                {a.rcpro_analyse && <div className="col-span-2"><AnalyseDecennale an={a.rcpro_analyse} admin /></div>}
                 <span className="text-slate-500">RGE / TVA</span><span>{a.rge ? `RGE ✔ (registre ADEME${a.rge_details?.fin ? `, jusqu'au ${dateFr(a.rge_details.fin)}` : ""})` : a.rge_details ? "non RGE (vérifié)" : "non vérifié"} · {a.tva_franchise ? "franchise" : "assujetti"}
                   {a.rge && a.rge_details?.domaines?.length > 0 && <span className="block text-xs text-slate-500">{a.rge_details.domaines.join(" · ")}</span>}</span>
                 <span className="text-slate-500">Abonnement</span><span>{FORMULES.find((f) => f.id === a.abonnement)?.nom || "Découverte"}{a.abonnement_fin && ` (jusqu'au ${dateFr(a.abonnement_fin)})`}</span>

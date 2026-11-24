@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { dateFr, eur } from "@/lib/calc";
-import { joursDecennale } from "@/lib/decennale";
+import { joursDecennale, rcproValide } from "@/lib/decennale";
 import { Metiers } from "@/components/Vues";
 import { FORMULES, STATUT_OFFRE, errMsg, tempsRestant, type Artisan } from "@/lib/mer";
 
@@ -59,6 +59,7 @@ export default function VoirCommeArtisan() {
         <p className="flex flex-wrap gap-1 pt-1">
           {a.verifie ? <span className="chip bg-green-100 text-green-800">✔ Vérifié</span> : <span className="chip bg-amber-100 text-amber-800">À vérifier</span>}
           {a.rge && <span className="chip bg-emerald-100 text-emerald-800">RGE</span>}
+          {rcproValide(a) && <span className="chip bg-indigo-100 text-indigo-800">RC Pro</span>}
           {a.fondateur && <span className="chip bg-orange-100 text-orange-800">🚀 Fondateur</span>}
           <span className="chip bg-slate-100 text-slate-700">{v.telephones ? `🔔 notifications téléphone (${v.telephones})` : "🔕 notifications téléphone non activées"}</span>
           {v.profil?.notif_email === false && <span className="chip bg-slate-100 text-slate-700">e-mails coupés</span>}

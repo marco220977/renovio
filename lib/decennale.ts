@@ -12,3 +12,17 @@ export function joursDecennale(a: Parameters<typeof finDecennale>[0]): number | 
   const fin = new Date(f + (f.length === 10 ? "T23:59:59" : ""));
   return Math.ceil((fin.getTime() - Date.now()) / 86400000);
 }
+
+const aujourdhui = () => new Date().toISOString().slice(0, 10);
+
+/** Décennale lue par l'IA et encore valable : affichée « Décennale contrôlée » aux clients */
+export function decennaleControlee(a: { decennale_analyse?: any; decennale_fin?: string | null } | null | undefined): string | null {
+  const f = finDecennale(a);
+  return a?.decennale_analyse && f && f >= aujourdhui() ? f : null;
+}
+
+/** RC Pro lue par l'IA, sans alerte bloquante et encore valable */
+export function rcproValide(a: { rcpro_analyse?: any; rcpro_fin?: string | null } | null | undefined): string | null {
+  const f = a?.rcpro_analyse?.date_fin || a?.rcpro_fin;
+  return a?.rcpro_analyse?.valide && f && f >= aujourdhui() ? f : null;
+}

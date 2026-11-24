@@ -11,6 +11,7 @@ export type Artisan = {
   telephone?: string; email?: string; metiers: string[]; departements: string[]; decennale?: string; decennale_fin?: string | null;
   rge?: boolean; tva_franchise?: boolean; presentation?: string; verifie?: boolean; statut?: string;
   abonnement?: Abonnement; abonnement_fin?: string | null; bonus_offres?: number; stripe_subscription_id?: string | null; decennale_doc?: string | null; decennale_analyse?: any; rge_details?: any;
+  rcpro_doc?: string | null; rcpro_fin?: string | null; rcpro_analyse?: any; fondateur?: boolean;
 };
 
 export type { Abonnement } from "./formules";
