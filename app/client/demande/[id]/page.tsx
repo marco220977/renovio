@@ -14,6 +14,8 @@ import { Erreur, Info } from "@/components/Espace";
 import { telechargerDevis } from "@/lib/devis-pdf";
 import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
 import BadgesConfiance from "@/components/BadgesConfiance";
+import Comparatif from "@/components/Comparatif";
+import Aides, { AideOffre, useProfilAides } from "@/components/Aides";
 import {
   STATUT_DEMANDE, errMsg, prixTresBas, quand, scoreOffre, statutDemande, tempsRestant,
   type Artisan, type Demande, type Offre,
@@ -36,6 +38,7 @@ export default function DemandeClient() {
   const [avisFait, setAvisFait] = useState(false);
   const [voir, setVoir] = useState<Offre | null>(null);
   const [onglet, setOnglet] = useState<"devis" | "messages">("devis");
+  const pa = useProfilAides(d);
   const [signer, setSigner] = useState(false);
   const [cahierOuvert, setCahierOuvert] = useState(false);
   const [autres, setAutres] = useState(false);
@@ -128,6 +131,7 @@ export default function DemandeClient() {
         </div>
         <p className="text-sm text-slate-600">Démarrage sous {o.delai_jours ?? "?"} j{o.duree_jours ? ` · ${o.duree_jours} j de travaux` : ""}</p>
         {e && e.nb >= 2 && e.ecart > 5 && <p className="text-xs text-amber-800">Ses devis définitifs sont en moyenne {String(e.ecart).replace(".", ",")} % plus chers après visite.</p>}
+        <AideOffre o={o} a={a} profil={pa.profil} />
         {prixTresBas(o.total_ttc, d) && <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800">⚠️ Prix très bas par rapport à l'estimation : demandez le détail avant de choisir.</p>}
       </button>
     );
@@ -270,6 +274,8 @@ export default function DemandeClient() {
             </div>
           )}
           {!choisie && envoyees.length > 0 && <p className="text-xs text-slate-500">Classement sur 100 : prix (40), avis (30), délai (15), profil vérifié (15). Prix provisoires, confirmés après visite.</p>}
+          {!choisie && <Aides d={d} offres={envoyees} artisans={artisans} pa={pa} />}
+          {!choisie && <Comparatif d={d} offres={classees.map((c) => c.o)} artisans={artisans} onVoir={(o) => { setVoir(o); setOnglet("devis"); setSigner(false); }} />}
           {(!choisie || autres) && classees.map(({ o, score }, i) => carteOffre(o, score, !choisie && i === 0))}
         </div>
       )}

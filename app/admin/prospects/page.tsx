@@ -37,9 +37,9 @@ function PanneauEmail() {
     const { error } = await sb().rpc("regler_prospection", { p });
     if (error) setMsg(error.message); else charger();
   }
-  async function test(etape: number, version = "A") {
+  async function test(etape: number, version = "A", type = "") {
     setMsg("Envoi du test…");
-    const { data, error } = await sb().functions.invoke("prospection-mail", { body: { test: true, etape, version } });
+    const { data, error } = await sb().functions.invoke("prospection-mail", { body: { test: true, etape, version, type } });
     let m = data?.error;
     if (error) { m = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) m = j.error; } catch {} }
     setMsg(m ? `❌ ${m}` : `✔ E-mail de test envoyé à ${data.a}. Regardez votre boîte (et les spams).`);
@@ -88,6 +88,11 @@ function PanneauEmail() {
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(2, "B")}>Test B · relance</button>
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(1, "C")}>Test C · e-mail 1</button>
             <button className="btn-ghost !py-2 text-xs" onClick={() => test(2, "C")}>Test C · relance</button>
+          </div>
+          <div className="space-y-1 rounded-xl border border-flame/40 bg-orange-50 p-3">
+            <p className="font-bold">🎯 Prospection sur demande</p>
+            <p className="text-[11px] text-slate-600">Quand un vrai client publie une demande et que moins de 3 artisans inscrits peuvent y répondre, jusqu'à {(R as any).par_demande || 25} entreprises du même département et du même métier reçoivent aussitôt « Un client cherche un … à … » (même ville d'abord, jamais 2 e-mails en 3 jours). Jamais pour les comptes de test. Elle s'arrête aussi quand la prospection est en pause.</p>
+            <button className="btn-ghost w-full !py-2 text-xs" onClick={() => test(1, "A", "demande")}>Test · e-mail « Un client cherche… » (dernière demande publiée)</button>
           </div>
           <a href="/p/demo/demo" target="_blank" className="block text-center text-xs font-semibold text-brand">👁️ Voir la page de pré-inscription (aperçu)</a>
           <button className={`w-full !py-2.5 ${R.actif ? "btn-danger" : "btn-brand"}`}

@@ -1,5 +1,7 @@
 // Fonction « prospection-mail » : envoie chaque jour les e-mails de prospection aux artisans (via Brevo).
 // Appelée par la tâche planifiée (en-tête x-cron) ou par l'admin (bouton « Envoyer un test »).
+// Avec { demande_id } (appel de la base à la publication d'une demande peu couverte) : e-mail « Un client cherche un … à … »
+// aux entreprises du même secteur et du même métier (fonction SQL prospects_pour_demande).
 // Secret requis : BREVO_API_KEY.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -113,6 +115,52 @@ function contenuCommun(p: any, etape: number, lien: string, stop: string, versio
   return { sujet, texte, html };
 }
 
+// ---------- E-mail déclenché par une vraie demande ----------
+const PRO_METIER: Record<string, [string, RegExp]> = {
+  plomberie: ["plombier", /plomb|sanitaire|chauffe-eau|thermodyn/i],
+  chauffage: ["chauffagiste", /chauff|pompe|clim|chaudi|po[eê]le|thermodyn/i],
+  electricite: ["électricien", /[ée]lectri|photovolta/i],
+  maconnerie: ["maçon", /ma[cç]on|construction/i],
+  platrerie: ["plaquiste", /pl[aâ]tr/i],
+  isolation: ["artisan en isolation", /isol/i],
+  peinture: ["peintre", /peint/i],
+  carrelage: ["carreleur", /carrel|sols/i],
+  sols: ["poseur de sols", /carrel|sols/i],
+  menuiserie: ["menuisier", /menuis|fen[eê]tre|volet/i],
+  couverture: ["couvreur", /couvert|charpente|toiture/i],
+  facade: ["façadier", /fa[cç]ade|[ée]tanch|murs par l.ext/i],
+  agencement: ["artisan", /plomb|carrel|finitions|multiservice/i],
+  exterieur: ["artisan", /terrass|ma[cç]on/i],
+  multiservice: ["artisan multiservice", /finitions|multiservice/i],
+};
+const eurs = (n: number) => Math.round(n).toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ") + " €";
+
+function contenuDemande(p: any, d: any, lien: string, stop: string) {
+  const texte = `${p.metier || ""} ${p.domaines_rge || ""}`;
+  const id = (d.metiers || []).find((m: string) => PRO_METIER[m]?.[1].test(texte)) || d.metiers?.[0];
+  const pro = PRO_METIER[id]?.[0] || "artisan";
+  const ville = titre(d.ville || "") || d.cp;
+  const projet = (d.titre || "").trim();
+  const budget = d.budget_max ? `Budget estimé : ${eurs(d.budget_min)} à ${eurs(d.budget_max)} TTC.` : "";
+  const fin = d.ferme_le ? new Date(d.ferme_le).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }) : "";
+  const sujet = `Un client cherche un ${pro} à ${ville}`;
+  const corps = [
+    `Bonjour,`,
+    `Un particulier vient de publier une demande de travaux sur Rénolien à ${ville} (${d.cp})${projet ? ` : « ${projet} »` : ""}. ${budget}`.trim(),
+    `Le cahier des charges est déjà rédigé (postes, quantités), avec les photos du client. Il reste de la place pour des entreprises de votre secteur : jusqu'à 5 artisans peuvent lui envoyer un devis${fin ? `, jusqu'à ${fin}` : ""}.`,
+    `L'inscription est gratuite pendant le lancement (statut membre fondateur, puis -30 % à vie) : pas d'enchères, 0 % de commission, le client vous règle directement.`,
+    `Je m'inscris pour lui répondre (2 minutes) : ${lien}`,
+    `Des questions ? Répondez simplement à ce message.`,
+    `Marco\nPlombier-chauffagiste, fondateur de Rénolien\nwww.renolien.fr`,
+  ];
+  const mention = `Vos coordonnées professionnelles proviennent des registres publics (Sirene, RGE de l'ADEME). Pour ne plus recevoir de message : ${stop}`;
+  const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#111">` +
+    corps.map((c) => `<p>${esc(c).replace(/\n/g, "<br>").replace(esc(lien), `<a href="${lien}">www.renolien.fr/entreprises</a>`)}</p>`).join("") +
+    `<p style="font-size:12px;color:#666">${esc(mention).replace(esc(stop), `<a href="${stop}" style="color:#666">se désinscrire</a>`)}</p></div>`;
+  return { sujet, texte: corps.join("\n\n") + "\n\n--\n" + mention, html };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
@@ -154,6 +202,24 @@ Deno.serve(async (req) => {
     return r.ok ? { id: j.messageId as string } : { erreur: `${r.status} ${j.message || ""}`.trim() };
   }
 
+  // Test de l'e-mail « Un client cherche… » : envoyé à l'administrateur pour une demande donnée (ou la dernière publiée)
+  if (!cron && body.test && body.type === "demande") {
+    let q = db.from("demandes").select("*").not("publiee_le", "is", null).order("publiee_le", { ascending: false }).limit(1);
+    if (body.demande_id) q = db.from("demandes").select("*").eq("id", body.demande_id).limit(1);
+    const { data: ds } = await q;
+    const d = ds?.[0];
+    if (!d) return json({ error: "Aucune demande publiée" }, 404);
+    const c = contenuDemande({ metier: "" }, d, `${SITE}/entreprises`, `${SITE}/desinscription`);
+    const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": cle!, "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ sender: { email: R.expediteur, name: R.nom }, replyTo: { email: R.reponse }, to: [{ email: adminEmail }],
+        subject: `[TEST] ${c.sujet}`, textContent: c.texte, htmlContent: c.html, tags: ["test"] }),
+    });
+    const j = await r.json().catch(() => ({}));
+    return json(r.ok ? { ok: true, a: adminEmail } : { error: `Brevo : ${r.status} ${j.message || ""}` });
+  }
+
   // Test : un e-mail d'exemple envoyé à l'administrateur
   if (!cron && body.test) {
     const { data: ex } = await db.from("prospects").select("*").not("email", "is", null).eq("dep", "94").limit(1).maybeSingle();
@@ -162,6 +228,44 @@ Deno.serve(async (req) => {
     return json(res.erreur ? { error: `Brevo : ${res.erreur}` } : { ok: true, a: adminEmail });
   }
   if (!R.actif) return json({ ok: true, message: "Prospection en pause" });
+
+  // Demande publiée sans assez d'artisans : e-mails ciblés aux entreprises du secteur (appel de la base uniquement)
+  if (cron && body.demande_id) {
+    const { data: d } = await db.from("demandes").select("*").eq("id", body.demande_id).maybeSingle();
+    if (!d || d.statut !== "ouverte") return json({ ok: true, message: "Demande introuvable ou fermée" });
+    const debutJ = new Date(); debutJ.setUTCHours(0, 0, 0, 0);
+    const { count: dejaJ } = await db.from("prospects_emails").select("id", { count: "exact", head: true }).gte("envoye_le", debutJ.toISOString()).is("erreur", null);
+    // Au plus R.par_demande e-mails (25 par défaut), sans dépasser R.max_jour (280) envois dans la journée, toutes prospections confondues
+    const n = Math.min(Number(R.par_demande) || 25, Math.max(0, (Number(R.max_jour) || 280) - (dejaJ || 0)));
+    if (!n) return json({ ok: true, envoyes: 0, message: "Quota du jour atteint" });
+    const { data: ps } = await db.rpc("prospects_pour_demande", { p_demande: d.id, p_limite: n });
+    let ok = 0, ko = 0;
+    for (const p of (ps || []) as any[]) {
+      const { data: jeton } = await db.rpc("jeton_prospect", { p_siret: p.siret });
+      const lien = `${SITE}/e/${p.siret}/${jeton}`;
+      const stop = `${SITE}/desinscription?s=${p.siret}&t=${jeton}`;
+      const c = contenuDemande(p, d, lien, stop);
+      const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: { "api-key": cle!, "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({
+          sender: { email: R.expediteur, name: R.nom }, replyTo: { email: R.reponse },
+          to: [{ email: p.email }], subject: c.sujet, textContent: c.texte, htmlContent: c.html,
+          headers: { "List-Unsubscribe": `<${stop}>` }, tags: ["prospection-demande"],
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      const erreur = r.ok ? null : `${r.status} ${j.message || ""}`.trim();
+      await db.from("prospects_emails").insert({ siret: p.siret, etape: 0, email: p.email, message_id: j.messageId || null, erreur, demande_id: d.id });
+      if (erreur) { ko++; if (/^(401|403)/.test(erreur)) break; }
+      else {
+        ok++;
+        await db.from("prospects").update({ email_dernier: new Date().toISOString(), statut: p.statut === "a_contacter" ? "contacte" : p.statut }).eq("siret", p.siret);
+      }
+      await new Promise((res) => setTimeout(res, 120));
+    }
+    return json({ ok: true, demande: d.id, envoyes: ok, erreurs: ko });
+  }
 
   // Quota du jour
   const debut = new Date(); debut.setUTCHours(0, 0, 0, 0);
