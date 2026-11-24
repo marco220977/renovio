@@ -1,0 +1,3 @@
+-- 25/11/2026 : les comptes de test (est_test) peuvent répondre aux demandes de test sans décennale valide.
+-- Seul changement dans envoyer_offre : la condition « décennale valide » est précédée de « not est_test(a.id) and ».
+-- (Fonction complète appliquée en base via la migration « test_sans_decennale ».)
