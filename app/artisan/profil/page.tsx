@@ -7,6 +7,7 @@ import { Erreur, Info, useProfil } from "@/components/Espace";
 import MonCompte from "@/components/MonCompte";
 import { errMsg, compresser, type Artisan } from "@/lib/mer";
 import AnalyseDecennale from "@/components/AnalyseDecennale";
+import MesRealisations from "@/components/MesRealisations";
 import { AdresseAuto, CpVille } from "@/components/Adresse";
 import { dateFr, joursDecennale } from "@/lib/decennale";
 
@@ -254,6 +255,7 @@ function Fiche() {
         <a href="/artisan/abonnement" className="btn-ghost">💳 Abonnement</a>
         <a href="/artisan/parrainage" className="btn-brand">🎁 Parrainer</a>
       </div>
+      {a.slug && <MesRealisations a={a} />}
       <MonCompte role="artisan" />
     </div>
   );

@@ -4,8 +4,12 @@ import { METIERS_SEO, VILLES_SEO } from "@/lib/seo";
 import { DEPS_SEO } from "@/lib/seo-pro";
 import { GUIDES_PRO } from "@/lib/guides-pro";
 import { ARTICLES } from "@/lib/articles";
+import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/config";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const maj = new Date();
   const seo: MetadataRoute.Sitemap = [
     { url: `${SITE}/travaux`, lastModified: maj, changeFrequency: "weekly", priority: 0.8 },
@@ -20,8 +24,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...DEPS_SEO.map((d) => ({ url: `${SITE}/entreprises/chantiers/${d.slug}`, lastModified: maj, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...METIERS_SEO.flatMap((m) => DEPS_SEO.map((d) => ({ url: `${SITE}/entreprises/${m.slug}/${d.slug}`, lastModified: maj, changeFrequency: "monthly" as const, priority: 0.6 }))),
   ];
+  // Vitrines des artisans vérifiés (hors comptes de test)
+  let vitrines: MetadataRoute.Sitemap = [];
+  try {
+    const { data } = await createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } }).rpc("vitrines_publiques");
+    vitrines = ((data as { slug: string; maj: string }[]) || []).map((v) => ({ url: `${SITE}/pro/${v.slug}`, lastModified: new Date(v.maj), changeFrequency: "weekly" as const, priority: 0.7 }));
+  } catch { /* plan du site sans les vitrines si la base ne répond pas */ }
   return [
     ...seo,
+    ...vitrines,
     { url: `${SITE}/`, lastModified: maj, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE}/particuliers`, lastModified: maj, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE}/legal/cgu`, lastModified: maj, changeFrequency: "yearly", priority: 0.2 },

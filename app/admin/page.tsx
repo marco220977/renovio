@@ -13,6 +13,7 @@ import OffrirEssai from "@/components/OffrirEssai";
 import { Etoiles, Metiers } from "@/components/Vues";
 import { FORMULES, STATUT_DEMANDE, STATUT_OFFRE, errMsg, statutDemande, type Artisan, type Demande, type Offre, type Profil } from "@/lib/mer";
 import LogoMark from "@/components/LogoMark";
+import AdminPhotos from "@/components/AdminPhotos";
 
 type P = Profil & { created_at: string };
 type Note = { artisan_id: string; note: number; nb_avis: number };
@@ -140,6 +141,8 @@ export default function Admin() {
             </div>
           ))}
         </div>
+
+        <AdminPhotos />
 
         <button className="btn-brand w-full py-3" onClick={() => setEssai(true)}>🎁 Offrir un essai aux artisans</button>
 

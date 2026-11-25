@@ -8,6 +8,7 @@ import TradePicker from "@/components/TradePicker";
 import { CahierVue } from "@/components/Vues";
 import { Erreur, useProfil } from "@/components/Espace";
 import { aDuContenu, ecrireBrouillon, ecrirePhotos, effacerBrouillon, lireBrouillon } from "@/lib/brouillon";
+import { lireInvite, ecrireInvite, type Invite } from "@/lib/realisations";
 import { DELAIS, compresser, dataUrlToBlob, departementDe, errMsg, ia, type Cahier, type Question } from "@/lib/mer";
 
 type Photo = { grande: string; petite: string };
@@ -60,6 +61,9 @@ export default function Nouvelle() {
   const [ville, setVille] = useState("");
   const [delai, setDelai] = useState(DELAIS[2]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  // Artisan choisi depuis sa vitrine (« Demander un devis à cet artisan ») : prévenu en priorité
+  const [invite, setInvite] = useState<Invite | null>(null);
+  useEffect(() => { setInvite(lireInvite()); }, []);
   const [video, setVideo] = useState<Video | null>(null);
   const [videoMsg, setVideoMsg] = useState("");
   // Étape 2
@@ -203,17 +207,19 @@ export default function Nouvelle() {
           reponses: questions.map((q) => ({ question: q.question, reponse: reponses[q.id] || "" })),
           cahier: { ...cahier, signature: undefined }, ia_signature: cahier?.signature || null,
           budget_min: cahier?.budget_min || null, budget_max: cahier?.budget_max || null,
+          artisan_invite: invite?.id || null,
         }).select("id").single();
         if (error) throw error;
         id = data.id as string; setDemandeId(id);
       } else {
-        await s.from("demandes").update({ metiers, titre, description, ia_signature: cahier?.signature || null }).eq("id", id);
+        await s.from("demandes").update({ metiers, titre, description, ia_signature: cahier?.signature || null, artisan_invite: invite?.id || null }).eq("id", id);
       }
       const { error: e2 } = await s.from("demande_contacts").upsert({ demande_id: id, nom, telephone: tel, email, adresse });
       if (e2) throw e2;
       const { error: e3 } = await s.rpc("publier_demande", { p_id: id });
       if (e3) throw e3;
       termine.current = true;
+      ecrireInvite(null);
       effacerBrouillon(profil.id);
       router.replace(`/client/demande/${id}?publiee=1`);
     } catch (e) { setErr(errMsg(e)); setBusy(""); }
@@ -228,6 +234,13 @@ export default function Nouvelle() {
         </div>
         <div className="mt-1 h-1.5 rounded-full bg-slate-200"><div className="h-full rounded-full bg-flame transition-all" style={{ width: `${etape * 25}%` }} /></div>
       </div>
+
+      {invite && (
+        <div className="flex items-start gap-2 rounded-xl bg-orange-50 p-3 text-sm text-orange-900">
+          <p className="flex-1">⭐ Demande pour <b>{invite.nom}</b> : il sera prévenu en priorité (si vos travaux correspondent à ses métiers et à sa zone). D'autres artisans contrôlés pourront aussi vous répondre.</p>
+          <button type="button" className="text-lg leading-none text-orange-400" aria-label="Retirer" onClick={() => { ecrireInvite(null); setInvite(null); }}>×</button>
+        </div>
+      )}
 
       {repris && (
         <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-900">

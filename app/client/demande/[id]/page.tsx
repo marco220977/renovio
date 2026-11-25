@@ -15,6 +15,8 @@ import { telechargerDevis } from "@/lib/devis-pdf";
 import { ouvrirCahierPdf } from "@/lib/cahier-pdf";
 import BadgesConfiance from "@/components/BadgesConfiance";
 import Comparatif from "@/components/Comparatif";
+import Galerie from "@/components/Galerie";
+import { photoUrl, type Realisation } from "@/lib/realisations";
 import Aides, { AideOffre, useProfilAides } from "@/components/Aides";
 import {
   STATUT_DEMANDE, errMsg, prixTresBas, quand, scoreOffre, statutDemande, tempsRestant,
@@ -32,6 +34,7 @@ export default function DemandeClient() {
   const [d, setD] = useState<Demande | null>(null);
   const [offres, setOffres] = useState<Offre[]>([]);
   const [artisans, setArtisans] = useState<Record<string, Artisan>>({});
+  const [photos, setPhotos] = useState<Record<string, Realisation[]>>({});
   const [notes, setNotes] = useState<Record<string, Note>>({});
   const [ecarts, setEcarts] = useState<Record<string, Ecart>>({});
   const [contact, setContact] = useState<Contact | null>(null);
@@ -62,6 +65,11 @@ export default function DemandeClient() {
         s.from("artisans_notes").select("*").in("artisan_id", ids),
         s.rpc("ecarts_artisans", { p_ids: ids }),
       ]);
+      s.from("realisations").select("*").in("artisan_id", ids).eq("statut", "publiee").order("ordre").then(({ data: r }) => {
+        const p: Record<string, Realisation[]> = {};
+        for (const x of (r as Realisation[]) || []) (p[x.artisan_id!] ||= []).push(x);
+        setPhotos(p);
+      });
       setArtisans(Object.fromEntries(((a as Artisan[]) || []).map((x) => [x.id, x])));
       setNotes(Object.fromEntries(((n as Note[]) || []).map((x) => [x.artisan_id, x])));
       setEcarts(Object.fromEntries(((e as Ecart[]) || []).map((x) => [x.artisan_id, x])));
@@ -131,6 +139,15 @@ export default function DemandeClient() {
         </div>
         <p className="text-sm text-slate-600">Démarrage sous {o.delai_jours ?? "?"} j{o.duree_jours ? ` · ${o.duree_jours} j de travaux` : ""}</p>
         {e && e.nb >= 2 && e.ecart > 5 && <p className="text-xs text-amber-800">Ses devis définitifs sont en moyenne {String(e.ecart).replace(".", ",")} % plus chers après visite.</p>}
+        {!!photos[o.artisan_id]?.length && (
+          <span className="flex gap-1.5">
+            {photos[o.artisan_id].slice(0, 3).map((r) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={r.id} src={photoUrl(r.chemin)} alt={r.legende || "Réalisation"} loading="lazy" className="h-14 w-14 rounded-lg object-cover" />
+            ))}
+            {photos[o.artisan_id].length > 3 && <span className="self-center text-xs text-slate-500">+{photos[o.artisan_id].length - 3} photos</span>}
+          </span>
+        )}
         <AideOffre o={o} a={a} profil={pa.profil} />
         {prixTresBas(o.total_ttc, d) && <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-800">⚠️ Prix très bas par rapport à l'estimation : demandez le détail avant de choisir.</p>}
       </button>
@@ -311,6 +328,8 @@ export default function DemandeClient() {
               <>
                 {voir.statut === "envoyee" && <p className="rounded-xl bg-blue-50 p-2 text-xs text-blue-900">Devis provisoire, établi sur photos et description. Il sera confirmé ou ajusté après la visite de l'artisan.</p>}
                 <BadgesConfiance a={art(voir)} dates />
+                {!!photos[voir.artisan_id]?.length && <Galerie photos={photos[voir.artisan_id]} />}
+                {art(voir)?.slug && art(voir)?.verifie && <a href={`/pro/${art(voir)!.slug}`} target="_blank" className="text-sm font-semibold text-brand">Voir sa vitrine (présentation, réalisations, avis) ↗</a>}
                 {art(voir)?.presentation && <p className="text-sm text-slate-600">{art(voir)?.presentation}</p>}
                 {voir.message && <p className="rounded-xl bg-slate-50 p-3 text-sm">💬 {voir.message}</p>}
                 <LignesVue lignes={voir.lignes} franchise={art(voir)?.tva_franchise} />
