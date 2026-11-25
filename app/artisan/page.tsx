@@ -13,6 +13,7 @@ export default function DemandesDispo() {
   const { profil } = useProfil();
   const [a, setA] = useState<Artisan | null>(null);
   const [liste, setListe] = useState<Demande[] | null>(null);
+  const [test, setTest] = useState(false); // compte de test : répond à toutes les demandes de test, sans conditions
   const [quota, setQuota] = useState<{ quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; abonnement?: string } | null>(null);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function DemandesDispo() {
         s.from("offres").select("demande_id").eq("artisan_id", profil.id),
       ]);
       s.rpc("mon_quota").then(({ data }) => setQuota(data));
+      s.rpc("est_test", { p: profil.id }).then(({ data }) => setTest(!!data));
       const deja = new Set(((mes as { demande_id: string }[]) || []).map((x) => x.demande_id));
       // Les règles de la base ne renvoient que les demandes de vos métiers et départements ; on retire celles déjà traitées
       // (le filtre « visible » écarte aussi les demandes qu'un compte admin voit grâce à ses droits)
@@ -32,7 +34,7 @@ export default function DemandesDispo() {
     })();
   }, [profil.id]);
 
-  const manque = !a ? [] : [
+  const manque = !a || test ? [] : [
     !a.departements?.length && "vos départements d'intervention",
     !a.metiers?.length && "vos métiers",
     (a.siret || "").replace(/\D/g, "").length !== 14 && "votre SIRET",
@@ -43,6 +45,7 @@ export default function DemandesDispo() {
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold">Demandes près de chez vous</h1>
       <InstallerApp variante="bandeau" pour="artisan" />
+      {test && <p className="rounded-xl bg-violet-50 p-3 text-xs text-violet-900">🧪 Compte de test : vous voyez toutes les demandes de test ouvertes et pouvez y répondre, sans condition de zone, de métiers, de SIRET ni d'assurance.</p>}
       {(() => { const j = joursDecennale(a); if (j === null || j > 30) return null;
         return <Link href="/artisan/profil" className={`card block text-sm ${j < 0 ? "border-red-300 bg-red-50 text-red-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
           {j < 0 ? "⛔ Votre assurance décennale a expiré : le badge « Vérifié » est retiré." : `⏰ Votre assurance décennale expire dans ${j} jour${j > 1 ? "s" : ""}.`} <b>Envoyer la nouvelle attestation →</b></Link>; })()}

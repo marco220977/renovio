@@ -1,5 +1,5 @@
--- Comptes de test (13/11/2026) : table comptes_test (admin seulement), est_test(uuid).
--- Les artisans de test ne voient / ne reçoivent que les demandes des clients de test (et inversement),
--- ne sont pas comptés dans les chiffres (admin, infos_lancement) et ne déclenchent ni bienvenue ni alerte admin.
--- Modifié : demande_visible_artisan, notif_demande, infos_lancement, trg_bienvenue_artisan, envoyer_offre (contrôle est_test).
--- Comptes marqués : Pariest chauffage (zoe304946), SARL EDM (solutions.mpc), client teste220977.
+-- 25/11/2026 : comptes de test (table comptes_test) — voient et peuvent répondre à TOUTES les demandes de test ouvertes.
+-- demande_visible_artisan : (est_test(a.id) or (zone et métiers correspondent))
+-- envoyer_offre : SIRET, zone/métiers et quota (controle_envoi) non exigés pour un compte de test (décennale déjà exemptée)
+-- notif_demande : les comptes de test sont prévenus de toutes les demandes de test
+-- (Appliqué en base via les migrations « comptes_test_repondent_partout » et « notif_demande_comptes_test ».)
