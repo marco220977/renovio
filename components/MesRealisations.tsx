@@ -23,6 +23,8 @@ export default function MesRealisations({ a }: { a: Artisan & { slug?: string | 
   const [ville, setVille] = useState(a.ville || "");
   const [certifie, setCertifie] = useState(false);
   const [busy, setBusy] = useState("");
+  // Ajout groupé : plusieurs photos choisies d'un coup dans la galerie, une légende chacune
+  const [lot, setLot] = useState<{ url: string; legende: string }[]>([]);
   const [err, setErr] = useState("");
 
   const charger = () => sb().from("realisations").select("*").eq("artisan_id", a.id).order("ordre").order("created_at")
@@ -34,6 +36,42 @@ export default function MesRealisations({ a }: { a: Artisan & { slug?: string | 
     setErr("");
     try { const u = await compresser(f, 1600, 0.8); if (quoi === "apres") setApres(u); else setAvant(u); }
     catch { setErr("Photo illisible : essayez une autre image (JPG ou PNG)."); }
+  }
+
+  async function choisirPlusieurs(files: FileList | null) {
+    if (!files?.length) return;
+    setErr("");
+    const place = MAX - liste.length - lot.length;
+    const choisis = Array.from(files).slice(0, Math.max(0, place));
+    if (files.length > place) setErr(`Vous pouvez encore ajouter ${place} photo${place > 1 ? "s" : ""} (12 au total) : les autres n'ont pas été prises.`);
+    setBusy("Préparation des photos…");
+    const ok: { url: string; legende: string }[] = [];
+    for (const f of choisis) { try { ok.push({ url: await compresser(f, 1600, 0.8), legende: "" }); } catch { /* image illisible ignorée */ } }
+    setLot((l) => [...l, ...ok]);
+    setBusy("");
+  }
+
+  async function envoyerLot() {
+    if (!lot.length) return;
+    if (!certifie) return setErr("Cochez la case : les photos doivent venir de vos propres chantiers.");
+    setErr("");
+    const s = sb();
+    let ordre = liste.length ? Math.max(...liste.map((r) => r.ordre || 0)) + 1 : 0;
+    const reste = [...lot];
+    for (let k = 0; k < lot.length; k++) {
+      setBusy(`Envoi ${k + 1}/${lot.length}…`);
+      const chemin = `${a.id}/${Date.now()}-${k}.jpg`;
+      try {
+        const { error: e1 } = await s.storage.from("realisations").upload(chemin, dataUrlToBlob(lot[k].url), { contentType: "image/jpeg" });
+        if (e1) throw e1;
+        const { error: e2 } = await s.from("realisations").insert({ chemin, legende: lot[k].legende.trim() || null, metier: metier || null, ville: ville.trim() || null, ordre: ordre++, certifie: true });
+        if (e2) { await s.storage.from("realisations").remove([chemin]); throw e2; }
+        reste.shift();
+      } catch (e) { setErr(`${errMsg(e)} (${reste.length} photo${reste.length > 1 ? "s" : ""} non envoyée${reste.length > 1 ? "s" : ""})`); break; }
+    }
+    setLot(reste);
+    setBusy("");
+    await charger();
   }
 
   async function envoyer() {
@@ -111,7 +149,48 @@ export default function MesRealisations({ a }: { a: Artisan & { slug?: string | 
         </div>
       )}
 
-      {liste.length < MAX && !ajout && <button type="button" className="btn-ghost w-full" onClick={() => setAjout(true)}>➕ Ajouter une réalisation</button>}
+      {liste.length < MAX && !ajout && !lot.length && (
+        <div className="grid grid-cols-2 gap-2">
+          <label className="btn-brand cursor-pointer !py-2.5 text-sm">🖼️ Plusieurs photos<input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { choisirPlusieurs(e.target.files); e.target.value = ""; }} /></label>
+          <button type="button" className="btn-ghost !py-2.5 text-sm" onClick={() => setAjout(true)}>➕ Avant / après</button>
+        </div>
+      )}
+      {busy && !lot.length && !ajout && <p className="text-sm text-slate-500">{busy}</p>}
+
+      {lot.length > 0 && (
+        <div className="space-y-2 rounded-xl bg-slate-50 p-3">
+          <p className="text-sm font-semibold">{lot.length} photo{lot.length > 1 ? "s" : ""} à envoyer</p>
+          {lot.map((x, k) => (
+            <div key={k} className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={x.url} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+              <input className="input !py-2 text-sm" maxLength={120} placeholder="Légende (facultatif)" value={x.legende}
+                onChange={(e) => setLot((l) => l.map((y, j) => j === k ? { ...y, legende: e.target.value } : y))} />
+              <button type="button" className="px-1 text-lg text-slate-400" aria-label="Retirer" onClick={() => setLot((l) => l.filter((_, j) => j !== k))}>×</button>
+            </div>
+          ))}
+          {liste.length + lot.length < MAX && (
+            <label className="btn-ghost cursor-pointer !py-2 text-xs">➕ En choisir d'autres<input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { choisirPlusieurs(e.target.files); e.target.value = ""; }} /></label>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div><label className="label">Métier (toutes)</label>
+              <select className="input" value={metier} onChange={(e) => setMetier(e.target.value)}>
+                <option value="">—</option>
+                {(a.metiers || []).map((m) => <option key={m} value={m}>{TRADE[m]?.label || m}</option>)}
+              </select></div>
+            <div><label className="label">Ville (toutes)</label>
+              <input className="input" maxLength={60} value={ville} onChange={(e) => setVille(e.target.value)} /></div>
+          </div>
+          <p className="text-xs text-slate-500">Évitez les visages, plaques d'immatriculation et numéros de rue : ces photos seraient refusées.</p>
+          <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={certifie} onChange={(e) => setCertifie(e.target.checked)} />
+            Je certifie que ces photos ont été prises sur mes propres chantiers et que j'ai le droit de les publier.</label>
+          {err && <p className="text-sm text-red-700">{err}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => { setLot([]); setErr(""); }}>Annuler</button>
+            <button type="button" className="btn-brand" disabled={!!busy} onClick={envoyerLot}>{busy || `Envoyer (${lot.length})`}</button>
+          </div>
+        </div>
+      )}
 
       {ajout && (
         <div className="space-y-2 rounded-xl bg-slate-50 p-3">
@@ -155,7 +234,7 @@ export default function MesRealisations({ a }: { a: Artisan & { slug?: string | 
           </div>
         </div>
       )}
-      {!ajout && err && <p className="text-sm text-red-700">{err}</p>}
+      {!ajout && !lot.length && err && <p className="text-sm text-red-700">{err}</p>}
     </div>
   );
 }
