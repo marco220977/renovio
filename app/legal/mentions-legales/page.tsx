@@ -8,9 +8,9 @@ export default function Page() {
     <LegalPage title="Mentions légales">
       <h2>Éditeur du service</h2>
       <p>
-        Le service {L.app}, accessible à l'adresse {L.url}, est édité par <V>{L.editor}</V>, <V>{L.form}</V>
-        {L.capital ? `, au capital de ${L.capital}` : ""}, immatriculée sous le numéro SIRET <V>{L.siret}</V> (<V>{L.rcs}</V>),
-        dont le siège est situé <V>{L.address}</V>. TVA : <V>{L.vat}</V>.
+        Le service {L.app}, accessible à l'adresse {L.url}, est édité par <V>{L.editor}</V>{L.form && <>, <V>{L.form}</V></>}
+        {L.capital ? `, au capital de ${L.capital}` : ""}{L.siret && <>, immatriculée sous le numéro SIRET <V>{L.siret}</V>{L.rcs && <> (<V>{L.rcs}</V>)</>}</>},
+        dont le siège est situé <V>{L.address}</V>.{L.vat && <> TVA : <V>{L.vat}</V>.</>}
       </p>
       <p>Directeur de la publication : <V>{L.director}</V>. Contact : <V>{L.email}</V>.</p>
 

@@ -23,7 +23,7 @@ export default function Page() {
           ))}
         </tbody>
       </table>
-      <p>Les prix s'entendent <V>[HT, TVA en sus au taux en vigueur / TVA non applicable, art. 293 B du CGI]</V>.</p>
+      <p>Les prix s'entendent hors taxes ; la TVA éventuellement applicable est ajoutée au taux en vigueur.</p>
       <ul>
         <li>L'envoi d'une offre n'est pas décompté. Un « client » est décompté lorsqu'un Client choisit l'offre de l'Artisan. Si le Client renonce à ce choix avant l'envoi du devis définitif (avant la visite), le crédit est rendu à l'Artisan. Le devis définitif, les modifications et les avenants ne sont pas décomptés.</li>
         <li>Le nombre d'offres en attente de réponse en même temps est limité selon la formule. Une offre choisie, refusée, retirée ou expirée libère une place.</li>

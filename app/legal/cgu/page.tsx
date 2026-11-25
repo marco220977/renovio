@@ -102,8 +102,8 @@ export default function Page() {
 
       <h2>13. Litiges</h2>
       <p>
-        Les présentes conditions sont soumises au droit français. En cas de litige avec l'Éditeur, le Client consommateur peut recourir
-        gratuitement au médiateur de la consommation : <V>{L.mediateur}</V>. Les litiges entre un Client et un Artisan relatifs aux travaux
+        Les présentes conditions sont soumises au droit français.{L.mediateur && <> En cas de litige avec l'Éditeur, le Client consommateur peut recourir
+        gratuitement au médiateur de la consommation : <V>{L.mediateur}</V>.</>} Les litiges entre un Client et un Artisan relatifs aux travaux
         relèvent de leur relation contractuelle. Contact : <V>{L.email}</V>.
       </p>
     </LegalPage>
