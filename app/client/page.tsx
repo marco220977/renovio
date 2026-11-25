@@ -6,6 +6,7 @@ import { dateFr } from "@/lib/calc";
 import { aDuContenu, lireBrouillon, type Brouillon } from "@/lib/brouillon";
 import { useProfil } from "@/components/Espace";
 import { STATUT_DEMANDE, statutDemande, tempsRestant, type Demande } from "@/lib/mer";
+import InstallerApp from "@/components/InstallerApp";
 
 type Ligne = Demande & { offres: { count: number }[] };
 
@@ -39,6 +40,7 @@ export default function MesDemandes() {
         <h1 className="text-2xl font-extrabold">Mes demandes</h1>
         <Link href="/client/nouvelle" className="btn-brand !py-2 text-sm">＋ Nouvelle</Link>
       </div>
+      <InstallerApp variante="bandeau" pour="client" />
       {brouillon && (
         <Link href="/client/nouvelle" className="card block space-y-1 border-2 border-dashed border-flame">
           <div className="flex items-start justify-between gap-2">

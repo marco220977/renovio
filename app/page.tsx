@@ -2,6 +2,7 @@ import Link from "next/link";
 import OffreLancement from "@/components/OffreLancement";
 import LogoMark from "@/components/LogoMark";
 import Controles from "@/components/Controles";
+import InstallerApp from "@/components/InstallerApp";
 
 const etapesClient = [
   ["✍️", "Décrivez vos travaux", "En quelques phrases, avec des photos si vous voulez. L'IA vous pose 3 à 6 questions pour bien comprendre."],
@@ -59,6 +60,8 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
         </section>
 
         <Controles />
+
+        <div className="mt-10"><InstallerApp /></div>
 
         <section className="mt-16 card">
           <h2 className="text-2xl font-extrabold">Artisans : des chantiers, pas des contacts</h2>

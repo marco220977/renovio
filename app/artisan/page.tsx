@@ -7,6 +7,7 @@ import { eur } from "@/lib/calc";
 import { Metiers } from "@/components/Vues";
 import { useProfil } from "@/components/Espace";
 import { tempsRestant, type Artisan, type Demande } from "@/lib/mer";
+import InstallerApp from "@/components/InstallerApp";
 
 export default function DemandesDispo() {
   const { profil } = useProfil();
@@ -41,6 +42,7 @@ export default function DemandesDispo() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold">Demandes près de chez vous</h1>
+      <InstallerApp variante="bandeau" pour="artisan" />
       {(() => { const j = joursDecennale(a); if (j === null || j > 30) return null;
         return <Link href="/artisan/profil" className={`card block text-sm ${j < 0 ? "border-red-300 bg-red-50 text-red-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}>
           {j < 0 ? "⛔ Votre assurance décennale a expiré : le badge « Vérifié » est retiré." : `⏰ Votre assurance décennale expire dans ${j} jour${j > 1 ? "s" : ""}.`} <b>Envoyer la nouvelle attestation →</b></Link>; })()}
