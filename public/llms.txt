@@ -1,0 +1,46 @@
+# Rénolien
+
+> Rénolien (renolien.fr) est une plateforme française de mise en relation pour les travaux de rénovation. Le particulier décrit son projet, une IA prépare un cahier des charges et une estimation de budget, puis des artisans vérifiés (SIRET, assurance décennale, RGE) envoient leurs devis. Gratuit et sans engagement pour les particuliers.
+
+## Pour les particuliers
+- Service gratuit, sans engagement
+- Jusqu'à 5 devis d'artisans à comparer, réponses annoncées sous 72 h
+- Comparatif des devis poste par poste
+- Estimation des aides MaPrimeRénov'
+- Coordonnées transmises uniquement à l'artisan retenu
+- Avis réservés aux clients ayant signé un devis
+- Aucun paiement entre client et artisan ne passe par la plateforme
+
+## Contrôles des artisans
+- SIRET vérifié dans le répertoire INSEE
+- Assurance décennale vérifiée ; badge « Vérifié » retiré automatiquement à expiration et artisan bloqué jusqu'à la nouvelle attestation
+- Mention RGE vérifiée dans le registre de l'ADEME
+- RC Pro vérifiée si l'artisan la dépose (badge dédié)
+
+## Pour les artisans
+- Demandes filtrées par métier et par département
+- Devis pré-remplis avec leurs propres tarifs
+- Une seule offre par artisan et par demande
+- Phase de lancement (jusqu'au 1er janvier 2027) : inscription gratuite, statut « membre fondateur », sans abonnement ni carte bancaire
+- Après le lancement : -30 % à vie pour les membres fondateurs, formule Découverte gratuite
+
+## Métiers couverts
+Plombier, chauffagiste, électricien, maçon, plaquiste, isolation, peintre, carreleur, parquet et sols, menuisier, couvreur, ravalement de façade, rénovation de salle de bain, rénovation de cuisine, terrassement et extérieurs, petits travaux.
+
+## Zones
+Île-de-France : Paris (75), Val-de-Marne (94) et Seine-et-Marne (77). Pages dédiées pour plus de 40 villes, dont Créteil, Vitry-sur-Seine, Champigny-sur-Marne, Saint-Maur-des-Fossés, Villeneuve-Saint-Georges, Meaux, Chelles, Melun, Torcy, Lagny-sur-Marne, Fontainebleau et Provins.
+
+## Pages principales
+- [Accueil](https://www.renolien.fr/)
+- [Particuliers](https://www.renolien.fr/particuliers)
+- [Artisans et entreprises](https://www.renolien.fr/entreprises)
+- [Trouver un artisan par métier et par ville](https://www.renolien.fr/travaux)
+- [Questions fréquentes des particuliers](https://www.renolien.fr/particuliers)
+- [Conseils travaux](https://www.renolien.fr/conseils)
+- [Guides pour les artisans](https://www.renolien.fr/entreprises/guides)
+- [Exemple : plombier à Créteil](https://www.renolien.fr/travaux/plombier/creteil)
+- [Inscription artisan](https://www.renolien.fr/connexion?mode=signup&role=artisan)
+- [Mentions légales](https://www.renolien.fr/legal/mentions-legales)
+
+## Contact
+renolien.contact@gmail.com

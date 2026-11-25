@@ -19,18 +19,41 @@ export const metadata: Metadata = {
   openGraph: { type: "website", locale: "fr_FR", url: SITE, siteName: APP, title: TITRE, description: DESCRIPTION },
   twitter: { card: "summary_large_image", title: TITRE, description: DESCRIPTION },
   robots: { index: true, follow: true },
-  ...(process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION } } : {}),
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION } : {}),
+    ...(process.env.NEXT_PUBLIC_BING_VERIFICATION ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_VERIFICATION } } : {}),
+  },
 };
 export const viewport: Viewport = { themeColor: "#0f1b2d", width: "device-width", initialScale: 1, maximumScale: 1 };
 
 const organisation = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: APP,
-  url: SITE,
-  logo: `${SITE}/logo.png`,
-  description: DESCRIPTION,
-  areaServed: "FR",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE}/#organisation`,
+      name: APP,
+      url: SITE,
+      logo: `${SITE}/logo.png`,
+      description: DESCRIPTION,
+      email: "renolien.contact@gmail.com",
+      sameAs: ["https://www.instagram.com/renolien.fr"],
+      areaServed: [
+        { "@type": "AdministrativeArea", name: "Paris" },
+        { "@type": "AdministrativeArea", name: "Val-de-Marne" },
+        { "@type": "AdministrativeArea", name: "Seine-et-Marne" },
+      ],
+      knowsAbout: ["rénovation", "plomberie", "chauffage", "électricité", "isolation", "devis de travaux", "MaPrimeRénov'", "artisans RGE"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#site`,
+      name: APP,
+      url: SITE,
+      inLanguage: "fr-FR",
+      publisher: { "@id": `${SITE}/#organisation` },
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
