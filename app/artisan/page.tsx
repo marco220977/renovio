@@ -79,7 +79,7 @@ export default function DemandesDispo() {
       {liste?.length === 0 && !manque.length && (
         <div className="card text-center text-sm text-slate-600">
           <p className="text-4xl">📭</p>
-          <p className="mt-2">Aucune nouvelle demande pour vos métiers dans vos départements pour l'instant.</p>
+          <p className="mt-2">{test ? "Aucune demande de test ouverte pour l'instant : publiez-en une avec votre compte client de test." : "Aucune nouvelle demande pour vos métiers dans vos départements pour l'instant."}</p>
           <p className="mt-1 text-xs text-slate-400">Astuce : préparez vos tarifs pour répondre en 1 clic.</p>
         </div>
       )}
