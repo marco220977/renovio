@@ -51,7 +51,11 @@ export default function Page() {
 
       <h2>6. Durées de conservation</h2>
       <ul>
-        <li>Les données du compte sont conservées tant que le compte existe. Elles sont effacées lorsque l'utilisateur supprime son compte.</li>
+        <li>Les données du compte sont conservées tant que le compte existe. Lorsque l'utilisateur supprime son compte, ses données et ses fichiers (photos des demandes, attestations, photos de réalisations) sont effacés.</li>
+        <li><b>Attestations d'assurance</b> (décennale, RC Pro) : seule la dernière attestation envoyée est conservée ; l'ancienne est effacée dès qu'une nouvelle la remplace. Elles ne sont visibles que par l'Artisan et l'administrateur.</li>
+        <li><b>Photos des demandes de travaux</b> : conservées avec la demande tant que le compte du Client existe. Le Client peut les faire effacer à tout moment en supprimant son compte ou sur simple demande par e-mail.</li>
+        <li><b>Photos de réalisations</b> des Artisans : publiées après validation, conservées jusqu'à leur retrait par l'Artisan ou la suppression de son compte.</li>
+        <li><b>Messages et avis</b> : conservés tant que les comptes concernés existent. Un avis retiré par la modération est effacé.</li>
         <li>Les factures d'abonnement sont conservées 10 ans (obligation comptable).</li>
         <li>Les Clients et les Artisans sont invités à télécharger leurs devis signés : chacun doit conserver ses propres documents (10 ans pour les professionnels).</li>
       </ul>

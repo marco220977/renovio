@@ -14,5 +14,5 @@ export const LEGAL = {
   director: "Marco",
   city: "Villeneuve-Saint-Georges",
   mediateur: "",
-  updated: "10 novembre 2026",
+  updated: "25 novembre 2026",
 };

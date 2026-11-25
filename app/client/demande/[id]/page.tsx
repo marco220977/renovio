@@ -17,6 +17,7 @@ import BadgesConfiance from "@/components/BadgesConfiance";
 import Comparatif from "@/components/Comparatif";
 import Galerie from "@/components/Galerie";
 import { photoUrl, type Realisation } from "@/lib/realisations";
+import SignalerContenu from "@/components/SignalerContenu";
 import Aides, { AideOffre, useProfilAides } from "@/components/Aides";
 import {
   STATUT_DEMANDE, errMsg, prixTresBas, quand, scoreOffre, statutDemande, tempsRestant,
@@ -334,6 +335,7 @@ export default function DemandeClient() {
                 {voir.message && <p className="rounded-xl bg-slate-50 p-3 text-sm">💬 {voir.message}</p>}
                 <LignesVue lignes={voir.lignes} franchise={art(voir)?.tva_franchise} />
                 <p className="text-xs text-slate-500">SIRET {art(voir)?.siret} · Décennale : {art(voir)?.decennale} · Offre valable {voir.validite_jours} jours{voir.confirmee_le && ` · définitif du ${quand(voir.confirmee_le)}`}</p>
+                <SignalerContenu quoi="cet artisan ou cette offre" nom={art(voir)?.raison_sociale} lien={`https://www.renolien.fr/client/demande/${d.id}`} />
               </>
             )}
           </div>

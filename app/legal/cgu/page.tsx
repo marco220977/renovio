@@ -86,6 +86,13 @@ export default function Page() {
         <li>Demander, communiquer ou suggérer des coordonnées (téléphone, e-mail, adresse, site, réseau social, messagerie) dans la messagerie avant que le Client ait choisi l'Artisan. Ces informations sont masquées automatiquement ; les tentatives répétées d'un Artisan peuvent entraîner la suspension de son compte.</li>
       </ul>
       <p>En cas de manquement, l'Éditeur peut suspendre ou supprimer le compte concerné, après avoir informé l'utilisateur sauf urgence.</p>
+      <p>
+        <b>Signaler un contenu.</b> Toute personne peut signaler un Artisan, une offre, un avis ou un contenu qu'elle estime illicite ou contraire
+        aux présentes conditions, grâce au lien « Signaler » présent sur les fiches des Artisans et les offres, ou par e-mail à <V>{L.email}</V>,
+        en indiquant le contenu concerné et le motif. Les Artisans peuvent aussi signaler une demande hors sujet. L'Éditeur examine chaque
+        signalement, informe son auteur de la suite donnée et, s'il retire un contenu ou suspend un compte, en informe l'utilisateur concerné
+        avec le motif de sa décision. Cette adresse est aussi le point de contact unique de la Plateforme pour les autorités et les utilisateurs.
+      </p>
 
       <h2>10. Responsabilité</h2>
       <p>

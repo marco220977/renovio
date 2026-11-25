@@ -71,6 +71,9 @@ function Fiche() {
     if (error) return setErr(errMsg(error));
     const { error: e2 } = await s.from("artisans").update(rc ? { rcpro_doc: path } : { decennale_doc: path }).eq("id", profil.id);
     if (e2) return setErr(errMsg(e2));
+    // L'ancienne attestation remplacée est effacée (on ne garde que la dernière)
+    const ancien = rc ? a?.rcpro_doc : a?.decennale_doc;
+    if (ancien && ancien !== path) await s.storage.from("attestations").remove([ancien]);
     if (rc) { set({ rcpro_doc: path, rcpro_analyse: null, rcpro_fin: null }); analyserRc(); }
     else { set({ decennale_doc: path }); analyser(); }
   }

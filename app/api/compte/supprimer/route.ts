@@ -15,9 +15,9 @@ export async function POST() {
       try { await stripe().subscriptions.cancel(a.stripe_subscription_id); } catch (e) { console.error("Stripe", e); }
       await admin.from("artisans").update({ abonnement: "gratuit", abonnement_fin: null, stripe_subscription_id: null }).eq("id", user.id);
     }
-    // Fichiers (photos des demandes, attestations)
+    // Fichiers (photos des demandes, attestations, photos de réalisations)
     if (admin) {
-      for (const bucket of ["demandes", "attestations"]) {
+      for (const bucket of ["demandes", "attestations", "realisations"]) {
         const { data: files } = await admin.storage.from(bucket).list(user.id, { limit: 1000 });
         if (files?.length) await admin.storage.from(bucket).remove(files.map((f) => `${user.id}/${f.name}`));
       }

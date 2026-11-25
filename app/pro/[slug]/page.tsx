@@ -11,6 +11,7 @@ import BadgesConfiance from "@/components/BadgesConfiance";
 import Galerie from "@/components/Galerie";
 import BoutonDevisArtisan from "@/components/BoutonDevisArtisan";
 import LogoMark from "@/components/LogoMark";
+import SignalerContenu from "@/components/SignalerContenu";
 import type { Artisan } from "@/lib/mer";
 
 export const dynamic = "force-dynamic";
@@ -143,6 +144,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
           <div className="mx-auto max-w-2xl"><BoutonDevisArtisan id={v.id} nom={nom} slug={v.slug} className="!py-3" /></div>
         </div>
         <p className="text-center text-xs text-slate-400">Informations publiées par l'entreprise et contrôlées par Rénolien. <Link href="/legal/cgu" className="underline">CGU</Link></p>
+        <p className="text-center"><SignalerContenu quoi="cet artisan ou un avis" nom={nom} lien={`https://www.renolien.fr/pro/${v.slug}`} /></p>
       </div>
     </main>
   );
