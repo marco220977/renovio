@@ -98,10 +98,10 @@ begin
       montee_prevue = case when a.formule_evolutive and a.stripe_subscription_id is not null then nxt else montee_prevue end
       where id = a.id;
     perform notifier(a.id, 'avance', '🎉 Un client de plus vous a choisi !',
-      'Vous avez dépassé les clients inclus dans votre formule ce mois-ci : ce client est pris en avance sur le mois prochain. ' ||
+      'Vos devis se démarquent face à la concurrence : vous avez été choisi plus souvent que prévu ce mois-ci. Ce client est pris en avance sur le mois prochain, il ne vous coûte rien de plus. ' ||
       case when a.formule_evolutive and a.stripe_subscription_id is not null and nxt is not null
         then 'Formule évolutive : vous passerez automatiquement en ' || nom || ' le 1er du mois prochain.'
-        when nxt is not null then 'Passez en ' || nom || ' pour avoir plus de clients chaque mois et continuer à envoyer des offres.'
+        when nxt is not null then 'C''est le bon moment pour passer en ' || nom || ' : vos devis convainquent, profitez-en pour gagner plus de chantiers chaque mois.'
         else '' end ||
       ' Tant que l''avance n''est pas remboursée, vous ne pouvez pas envoyer de nouvelle offre (vos offres déjà envoyées restent visibles).',
       '/artisan/abonnement', 'avance:' || p_offre, interval '100 years');

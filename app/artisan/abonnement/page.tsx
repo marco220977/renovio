@@ -72,7 +72,7 @@ function Abonnement() {
           {q.quota !== null && (
             <div className="h-2 rounded-full bg-slate-200"><div className={`h-full rounded-full ${q.utilise >= q.quota ? "bg-red-500" : "bg-flame"}`} style={{ width: `${Math.min(100, (q.utilise / q.quota) * 100)}%` }} /></div>
           )}
-          {!!q.dette && <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">⏩ <b>{q.dette} client(s) pris en avance</b> sur le mois prochain : vos clients ont bien été servis. Vous pourrez envoyer de nouvelles offres dès que l'avance sera remboursée (1ᵉʳ du mois, client offert ou formule supérieure).</p>}
+          {!!q.dette && <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">🏆 <b>Bravo, vos devis font la différence !</b> {q.dette} client(s) de plus que prévu vous ont choisi ce mois-ci : ils sont pris en avance sur le mois prochain et ont bien été servis. Vous pourrez envoyer de nouvelles offres dès que l'avance sera remboursée (1ᵉʳ du mois, client offert ou formule supérieure).</p>}
           {q.montee && <p className="rounded-lg bg-green-50 p-2 text-sm text-green-900">⬆️ Formule évolutive : vous passerez en <b>{FORMULES.find((f) => f.id === q.montee)?.nom}</b> le 1ᵉʳ du mois prochain.</p>}
           {q.plafond != null && <p className="text-xs text-slate-500">📨 {q.attente || 0} / {q.plafond} offres en attente de réponse</p>}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
@@ -95,7 +95,10 @@ function Abonnement() {
       {q && actuelle.id !== "illimite" && !gratuitLancement && (
         <label className="card flex items-start gap-3 !p-3 text-sm">
           <input type="checkbox" className="mt-1 h-5 w-5 shrink-0" checked={!!q.evolutive} onChange={(e) => basculerEvolutive(e.target.checked)} />
-          <span><b>⬆️ Formule évolutive</b> — si plus de clients que prévu vous choisissent dans le mois, ils sont toujours servis et vous passez automatiquement à la formule supérieure le 1ᵉʳ du mois suivant (au tarif en vigueur, prélevé par Stripe). Vous pouvez redescendre à tout moment. {!q.stripe && <span className="text-slate-500">S'applique une fois abonné à une formule payante.</span>}</span>
+          <span><b>⬆️ Formule évolutive : votre formule grandit avec vos chantiers</b><br />
+            Si plus de clients que prévu vous choisissent dans le mois, vous ne perdez aucun d'entre eux : ils sont tous servis, et vous passez automatiquement à la formule supérieure le 1ᵉʳ du mois suivant (au tarif en vigueur, prélevé par Stripe).<br />
+            <span className="text-green-800">👉 Monter de formule, c'est bon signe : ça veut dire que vos devis sont mieux placés que ceux de vos concurrents et que les clients vous choisissent. Vous ne payez plus que lorsque vous gagnez plus.</span><br />
+            Vous pouvez redescendre à tout moment. {!q.stripe && <span className="text-slate-500">S'applique une fois abonné à une formule payante.</span>}</span>
         </label>
       )}
       <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">🔒 <b>Prix garanti tant que vous restez abonné.</b> Le tarif que vous payez au moment de votre abonnement ne bouge pas, même si nos prix augmentent ensuite. Il est perdu en cas de résiliation. <a href="/legal/cgv" className="underline">Voir les conditions</a></p>

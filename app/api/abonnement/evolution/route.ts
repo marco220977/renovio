@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       await admin.from("artisans").update({ montee_prevue: null }).eq("id", a.id);
       await admin.rpc("notifier", {
         p_user: a.id, p_type: "montee", p_titre: `⬆️ Vous passez en formule ${f.nom}`,
-        p_texte: `Vous avez été choisi par plus de clients que prévu le mois dernier : votre formule évolutive vous fait passer en ${f.nom} (${f.quota ? `${f.quota} clients par mois` : "clients illimités"}). Vous pouvez revenir à votre formule précédente à tout moment dans « Abonnement ».`,
+        p_texte: `Félicitations : le mois dernier, vos devis se sont mieux placés que ceux de vos concurrents et plus de clients que prévu vous ont choisi. Votre formule évolutive vous fait passer en ${f.nom} (${f.quota ? `${f.quota} clients par mois` : "clients illimités"}). Vous pouvez revenir à votre formule précédente à tout moment dans « Abonnement ».`,
         p_lien: "/artisan/abonnement",
       });
       res.push({ id: a.id, ok: true });
