@@ -45,6 +45,11 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
             </Link>
           </div>
           <p className="mt-3 text-sm text-slate-500">Gratuit pour les particuliers. Sans engagement.</p>
+          <Link href="/entreprises" className="mt-4 block rounded-2xl border-2 border-flame bg-orange-50 p-4 text-left">
+            <p className="font-extrabold text-orange-900">🧰 Artisans : vous payez seulement si un client vous choisit</p>
+            <p className="mt-1 text-sm text-orange-900">Envoyer une offre est gratuit, 0 % de commission. 🎁 <b>Pas de client, pas de facture</b> : aucun client dans le mois, le mois suivant est offert.</p>
+            <p className="mt-1 text-sm font-bold text-flame">Découvrir l'offre artisans →</p>
+          </Link>
         </section>
 
         <section className="mt-16">
