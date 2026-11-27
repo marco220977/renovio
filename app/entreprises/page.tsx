@@ -2,6 +2,7 @@ import Link from "next/link";
 import { METIERS_SEO } from "@/lib/seo";
 import { DEPS_SEO, dansDep } from "@/lib/seo-pro";
 import { GUIDES_PRO } from "@/lib/guides-pro";
+import PasDeClient from "@/components/PasDeClient";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
 import { EnteteContenu, ATOUTS, Tarifs, FaqPro, FAQ_PRO } from "@/components/PageEntreprise";
 
@@ -25,7 +26,8 @@ export default function Entreprises() {
           Des particuliers décrivent leurs travaux, l'IA prépare le cahier des charges. Vous recevez les demandes de vos métiers et de votre secteur, et vous répondez avec vos tarifs. Sans commission.
         </p>
       </section>
-      <div className="mt-8"><OffreLancement /></div>
+      <div className="mt-6"><PasDeClient /></div>
+      <div className="mt-4"><OffreLancement /></div>
 
       <section className="mt-12">
         <h2 className="text-center text-2xl font-extrabold">Ce que vous y gagnez</h2>

@@ -3,6 +3,7 @@ import { METIERS_SEO, type MetierSeo } from "@/lib/seo";
 import { DEPS_SEO, villesDuDep, dansDep, metaPro, domaine, CONSEILS_PRO, DEP_PRO, type DepSeo } from "@/lib/seo-pro";
 import { GUIDES_PRO } from "@/lib/guides-pro";
 import { FORMULES, texteClients, texteAttente } from "@/lib/formules";
+import PasDeClient from "@/components/PasDeClient";
 import OffreLancement, { INSCRIPTION_PRO } from "@/components/OffreLancement";
 import LogoMark from "@/components/LogoMark";
 
@@ -102,7 +103,8 @@ export function PageEntreprise({ m, d }: { m: MetierSeo; d?: DepSeo }) {
         <p className="mt-4 text-lg text-slate-600">
           {Maj(m.pro)} ? Recevez des demandes de particuliers {ou} déjà décrites et chiffrées. Faites votre offre en 1 clic avec vos tarifs, sans commission et sans enchère au moins cher. Vous ne payez que si un client vous choisit.
         </p>
-        <div className="mt-6"><OffreLancement /></div>
+        <div className="mt-6"><PasDeClient /></div>
+        <div className="mt-4"><OffreLancement /></div>
       </section>
 
       <Link href={`/travaux/${m.slug}`} className="card mt-6 block border-flame/40 hover:border-flame">

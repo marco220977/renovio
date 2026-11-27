@@ -1,3 +1,4 @@
+import PasDeClient from "@/components/PasDeClient";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -35,7 +36,8 @@ export default function Page({ params }: { params: { dep: string } }) {
         <span className="chip bg-flame-light text-flame">Artisans du {d.code}</span>
         <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">Trouver des chantiers {dansDep(d)} ({d.code})</h1>
         <p className="mt-4 text-lg text-slate-600">Recevez des demandes de travaux de particuliers {dansDep(d)}, déjà décrites avec photos et cahier des charges. Envoyer une offre est gratuit, sans commission : vous ne payez que si un client vous choisit.</p>
-        <div className="mt-6"><OffreLancement /></div>
+        <div className="mt-6"><PasDeClient /></div>
+        <div className="mt-4"><OffreLancement /></div>
       </section>
 
       <section className="mt-12">
