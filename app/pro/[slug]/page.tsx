@@ -54,7 +54,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   if (!v) notFound();
   const nom = nomPropre(v.raison_sociale), ville = villeTitre(v.ville);
   // BadgesConfiance attend une fiche artisan : le SIRET n'est jamais envoyé ici, seulement le fait qu'il soit valide
-  const pourBadges = { ...v, siret: v.siret ? "00000000000000" : "" } as unknown as Artisan;
+  const pourBadges = { ...v, created_at: v.membre_depuis, statut: "actif", siret: v.siret ? "00000000000000" : "" } as unknown as Artisan;
   const depuis = new Date(v.membre_depuis).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   const jsonLd = {
     "@context": "https://schema.org", "@type": "HomeAndConstructionBusiness", name: nom,
