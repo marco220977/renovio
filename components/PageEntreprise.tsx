@@ -37,7 +37,7 @@ export const ATOUTS: [string, string, string][] = [
   ["🤖", "Votre devis prêt en 1 clic", "L'IA pré-remplit le devis avec vos propres tarifs. Vous ajustez, vous envoyez. Fini les soirées sur les devis."],
   ["🔒", "Pas d'enchère au moins cher", "Une seule offre par artisan, invisible des concurrents. Le client compare aussi vos avis, votre délai et votre sérieux."],
   ["🏠", "Vous voyez le chantier avant de vous engager", "Le client vous choisit, vous passez faire la visite, puis vous envoyez votre devis définitif. Les écarts sont expliqués au client."],
-  ["💶", "Vous payez seulement quand un client vous choisit", "Envoyer une offre est gratuit. Pas de crédit perdu pour un devis sans réponse, et 0 % de commission sur vos chantiers."],
+  ["💶", "Vous payez seulement quand un client vous choisit", "Envoyer une offre est gratuit, 0 % de commission. Aucun client dans le mois malgré vos offres ? Le mois suivant est offert : pas de client, pas de facture."],
   ["✍️", "Devis signé en ligne", "Signature électronique, avenants pour les travaux en plus, messagerie et rendez-vous : tout est écrit."],
 ];
 
@@ -45,7 +45,7 @@ export function Tarifs() {
   return (
     <section className="mt-12">
       <h2 className="text-2xl font-extrabold">Tarifs simples, sans engagement</h2>
-      <p className="mt-1 text-sm text-slate-600"><b className="text-flame">Pendant la phase de lancement, tout est gratuit et illimité pour les membres fondateurs, puis -30 % à vie.</b> Ensuite, <b>vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu s'il renonce avant la visite. Abonnement mensuel sans engagement, aucune commission.</p>
+      <p className="mt-1 text-sm text-slate-600"><b className="text-flame">Pendant la phase de lancement, tout est gratuit et illimité pour les membres fondateurs, puis -30 % à vie.</b> Ensuite, <b>vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu s'il renonce avant la visite. Et si aucun client ne vous choisit dans le mois (avec au moins 3 offres envoyées), <b>le mois suivant est offert</b>. Abonnement mensuel sans engagement, aucune commission.</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {FORMULES.map((f) => (
           <div key={f.id} className={`card !py-3 ${f.id === "illimite" ? "border-2 border-flame" : ""}`}>

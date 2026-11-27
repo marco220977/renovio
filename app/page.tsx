@@ -12,6 +12,7 @@ const etapesClient = [
 ];
 
 const atoutsArtisan = [
+  ["💶", "Vous payez seulement si un client vous choisit", "Envoyer une offre est gratuit, 0 % de commission. Et si aucun client ne vous choisit dans le mois, le mois suivant est offert : pas de client, pas de facture."],
   ["📥", "Des demandes près de chez vous", "Filtrées par vos métiers et vos départements, déjà décrites et chiffrées."],
   ["🤖", "Votre devis prêt en 1 clic", "L'IA le pré-remplit avec vos propres tarifs. Vous ajustez et vous envoyez."],
   ["🔒", "Pas d'enchère au moins cher", "Une seule offre par artisan, invisible des concurrents. Le client compare aussi les avis et le délai."],
@@ -65,6 +66,7 @@ export default function Home({ searchParams }: { searchParams?: { compte?: strin
 
         <section className="mt-16 card">
           <h2 className="text-2xl font-extrabold">Artisans : des chantiers, pas des contacts</h2>
+          <p className="mt-3 rounded-xl bg-orange-50 p-3 text-center font-bold text-orange-900">🎁 Pas de client, pas de facture.</p>
           <div className="mt-4 space-y-4">
             {atoutsArtisan.map(([icon, t, d]) => (
               <div key={t} className="flex gap-3">
