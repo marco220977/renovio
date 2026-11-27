@@ -84,6 +84,7 @@ function Abonnement() {
         </div>
       )}
       <p className="text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite. Le compteur repart à zéro le 1ᵉʳ de chaque mois. Sans engagement, résiliable à tout moment.</p>
+      <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">🔒 <b>Prix garanti tant que vous restez abonné.</b> Le tarif que vous payez au moment de votre abonnement ne bouge pas, même si nos prix augmentent ensuite. Il est perdu en cas de résiliation. <a href="/legal/cgv" className="underline">Voir les conditions</a></p>
       <div className="space-y-3">
         {FORMULES.map((f) => (
           <div key={f.id} className={`card space-y-2 ${f.id === "pro" ? "border-2 border-flame" : ""} ${f.id === actuelle.id ? "bg-slate-50" : ""}`}>

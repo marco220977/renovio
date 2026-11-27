@@ -53,8 +53,13 @@ export default function Page() {
         <li>L'Éditeur peut résilier l'abonnement d'un Artisan qui ne respecte pas les conditions générales d'utilisation (fausses informations, assurance non valable, comportements interdits), après information sauf urgence.</li>
       </ul>
 
-      <h2>5. Prix</h2>
-      <p>L'Éditeur peut modifier ses tarifs moyennant un préavis de 30 jours. L'Artisan qui refuse le nouveau tarif peut résilier avant son entrée en vigueur.</p>
+      <h2>5. Prix et garantie de tarif</h2>
+      <ul>
+        <li>Garantie de tarif : le prix mensuel applicable à l'abonnement payant de l'Artisan au jour de sa souscription (remise éventuelle comprise) est garanti tant que cet abonnement reste actif sans interruption. Les changements de tarifs décidés par l'Éditeur s'appliquent aux nouvelles souscriptions, sans effet sur les abonnements en cours.</li>
+        <li>La garantie prend fin en cas de résiliation, de passage en formule Découverte, de défaut de paiement non régularisé ou de résiliation par l'Éditeur pour manquement. Une nouvelle souscription se fait alors au tarif en vigueur à cette date. Un changement de formule se fait au tarif en vigueur de la nouvelle formule, qui est alors garanti dans les mêmes conditions.</li>
+        <li>Par exception, en cas d'augmentation importante et justifiée de ses coûts (prestataires techniques, paiement, hébergement, envois de SMS ou d'e-mails, taxes ou obligations légales nouvelles), l'Éditeur peut réviser le tarif des abonnements en cours, avec un préavis d'au moins 2 mois par e-mail. L'Artisan qui refuse le nouveau tarif peut résilier sans frais avant son entrée en vigueur.</li>
+        <li>Les modifications de TVA ou de taxes applicables s'appliquent de plein droit.</li>
+      </ul>
 
       <h2>6. Absence de droit de rétractation</h2>
       <p>L'abonnement étant souscrit par un professionnel pour les besoins de son activité, le droit de rétractation du Code de la consommation ne s'applique pas, sauf cas prévus par la loi.</p>
