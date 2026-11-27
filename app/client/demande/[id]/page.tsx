@@ -48,6 +48,7 @@ export default function DemandeClient() {
   const [autres, setAutres] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [renoncer, setRenoncer] = useState<{ motif: "" | "trop_cher" | "demande_inexacte"; precision: string } | null>(null);
   const [note, setNote] = useState(5);
   const [commentaire, setCommentaire] = useState("");
 
@@ -223,7 +224,9 @@ export default function DemandeClient() {
           )}
           <Conversation demandeId={d.id} artisanId={choisie.artisan_id} moi="client" />
           <button className="w-full text-sm text-red-600" disabled={busy}
-            onClick={() => confirm(`Ne plus travailler avec ${art(choisie)?.raison_sociale} ? Vous pourrez choisir une autre offre.`) && rpc("renoncer_choix", { p_offre: choisie.id })}>
+            onClick={() => choisie.statut === "confirmee"
+              ? setRenoncer({ motif: "", precision: "" })
+              : confirm(`Ne plus travailler avec ${art(choisie)?.raison_sociale} ? Vous pourrez choisir une autre offre.`) && rpc("renoncer_choix", { p_offre: choisie.id })}>
             Choisir un autre artisan
           </button>
           {envoyees.length > 0 && <p className="text-center text-xs text-slate-500">{envoyees.length} autre(s) offre(s) restent disponibles si vous changez d'avis.</p>}
@@ -346,6 +349,32 @@ export default function DemandeClient() {
               {voir.statut === "confirmee" && <button className="btn-brand flex-1" onClick={() => setSigner(true)}>✍️ Signer</button>}
             </div>
           )}
+        </Modal>
+      )}
+
+      {renoncer && choisie && (
+        <Modal title="Pourquoi ne pas donner suite ?" onClose={() => setRenoncer(null)}>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">Vous ne travaillerez plus avec <b>{art(choisie)?.raison_sociale}</b> et pourrez choisir une autre offre. Votre réponse aide Rénolien à rester juste avec les artisans.</p>
+            {([
+              ["trop_cher", "💶 Le devis définitif est trop cher", "Le prix après visite ne me convient pas."],
+              ["demande_inexacte", "📝 Ma demande ne correspondait pas à la réalité", "Photos ou description incomplètes, travaux plus importants que prévu…"],
+            ] as const).map(([k, t, sous]) => (
+              <button key={k} onClick={() => setRenoncer({ ...renoncer, motif: k })}
+                className={`block w-full rounded-xl border p-3 text-left ${renoncer.motif === k ? "border-brand bg-brand/5" : "border-slate-200"}`}>
+                <span className="font-semibold">{t}</span>
+                <span className="block text-xs text-slate-500">{sous}</span>
+              </button>
+            ))}
+            <textarea className="input min-h-20" placeholder="Précision (facultatif)" value={renoncer.precision}
+              onChange={(e) => setRenoncer({ ...renoncer, precision: e.target.value })} />
+            <button className="btn-brand w-full py-3" disabled={busy || !renoncer.motif}
+              onClick={async () => {
+                if (await rpc("renoncer_choix", { p_offre: choisie.id, p_motif: renoncer.motif, p_precision: renoncer.precision })) setRenoncer(null);
+              }}>
+              Confirmer et choisir un autre artisan
+            </button>
+          </div>
         </Modal>
       )}
     </div>
