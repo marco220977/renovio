@@ -7,7 +7,7 @@ import { Erreur, Info } from "@/components/Espace";
 import { FORMULES } from "@/lib/mer";
 import { texteClients, texteAttente } from "@/lib/formules";
 
-type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; resilie?: boolean; stripe?: boolean; fondateur?: boolean; lancement?: boolean; lancement_fin?: string; remise?: number };
+type Quota = { abonnement: string; fin?: string | null; quota: number | null; utilise: number; bonus?: number; attente?: number; plafond?: number | null; en_pause?: number; dette?: number; evolutive?: boolean; montee?: string | null; resilie?: boolean; stripe?: boolean; fondateur?: boolean; lancement?: boolean; lancement_fin?: string; remise?: number };
 
 function Abonnement() {
   const params = useSearchParams();
@@ -33,6 +33,13 @@ function Abonnement() {
     const r = await fetch(route, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
     const j = await r.json().catch(() => ({}));
     if (j.url) location.href = j.url; else { setErr(j.error || "Erreur"); setBusy(""); }
+  }
+
+  async function basculerEvolutive(v: boolean) {
+    setErr("");
+    const { error } = await sb().rpc("definir_formule_evolutive", { p: v });
+    if (error) return setErr(error.message);
+    setQ(q && { ...q, evolutive: v, montee: v ? q.montee : null });
   }
 
   const actuelle = FORMULES.find((f) => f.id === q?.abonnement) || FORMULES[0];
@@ -65,7 +72,8 @@ function Abonnement() {
           {q.quota !== null && (
             <div className="h-2 rounded-full bg-slate-200"><div className={`h-full rounded-full ${q.utilise >= q.quota ? "bg-red-500" : "bg-flame"}`} style={{ width: `${Math.min(100, (q.utilise / q.quota) * 100)}%` }} /></div>
           )}
-          {!!q.en_pause && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-900">🔒 {q.en_pause} offre(s) en pause, invisibles pour les clients. Passez à une formule supérieure pour les réactiver immédiatement.</p>}
+          {!!q.dette && <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">⏩ <b>{q.dette} client(s) pris en avance</b> sur le mois prochain : vos clients ont bien été servis. Vous pourrez envoyer de nouvelles offres dès que l'avance sera remboursée (1ᵉʳ du mois, client offert ou formule supérieure).</p>}
+          {q.montee && <p className="rounded-lg bg-green-50 p-2 text-sm text-green-900">⬆️ Formule évolutive : vous passerez en <b>{FORMULES.find((f) => f.id === q.montee)?.nom}</b> le 1ᵉʳ du mois prochain.</p>}
           {q.plafond != null && <p className="text-xs text-slate-500">📨 {q.attente || 0} / {q.plafond} offres en attente de réponse</p>}
           {payant && q.fin && <p className="text-xs text-slate-500">Valable jusqu'au {dateFr(q.fin)}</p>}
           {!!q.bonus && <p className="text-sm font-semibold text-green-700">🎁 {q.bonus} client(s) offert(s) en réserve</p>}
@@ -83,7 +91,13 @@ function Abonnement() {
           ))}
         </div>
       )}
-      <p className="text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite. Le compteur repart à zéro le 1ᵉʳ de chaque mois. Sans engagement, résiliable à tout moment.</p>
+      <p className="text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite. Le compteur repart à zéro le 1ᵉʳ de chaque mois. Si vous dépassez, le client est quand même servi : il est pris en avance sur le mois suivant. Sans engagement, résiliable à tout moment.</p>
+      {q && actuelle.id !== "illimite" && !gratuitLancement && (
+        <label className="card flex items-start gap-3 !p-3 text-sm">
+          <input type="checkbox" className="mt-1 h-5 w-5 shrink-0" checked={!!q.evolutive} onChange={(e) => basculerEvolutive(e.target.checked)} />
+          <span><b>⬆️ Formule évolutive</b> — si plus de clients que prévu vous choisissent dans le mois, ils sont toujours servis et vous passez automatiquement à la formule supérieure le 1ᵉʳ du mois suivant (au tarif en vigueur, prélevé par Stripe). Vous pouvez redescendre à tout moment. {!q.stripe && <span className="text-slate-500">S'applique une fois abonné à une formule payante.</span>}</span>
+        </label>
+      )}
       <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">🔒 <b>Prix garanti tant que vous restez abonné.</b> Le tarif que vous payez au moment de votre abonnement ne bouge pas, même si nos prix augmentent ensuite. Il est perdu en cas de résiliation. <a href="/legal/cgv" className="underline">Voir les conditions</a></p>
       <div className="space-y-3">
         {FORMULES.map((f) => (
