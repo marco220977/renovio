@@ -91,6 +91,7 @@ function Abonnement() {
           ))}
         </div>
       )}
+      <p className="rounded-xl bg-orange-50 p-3 text-sm text-orange-900">🎁 <b>Pas de client, pas de facture.</b> Si aucun client ne vous a choisi pendant votre mois d'abonnement alors que vous avez envoyé au moins 3 offres, le mois suivant vous est offert automatiquement.</p>
       <p className="text-sm text-slate-600"><b>Vous ne payez que les clients qui vous choisissent.</b> Envoyer une offre ne coûte rien : un crédit est décompté seulement quand un client choisit votre offre, et il vous est rendu si le client renonce avant la visite. Le compteur repart à zéro le 1ᵉʳ de chaque mois. Si vous dépassez, le client est quand même servi : il est pris en avance sur le mois suivant. Sans engagement, résiliable à tout moment.</p>
       {q && actuelle.id !== "illimite" && !gratuitLancement && (
         <label className="card flex items-start gap-3 !p-3 text-sm">
